@@ -8,6 +8,7 @@ import MainLayout from './components/layout/MainLayout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegistrationPage from './pages/RegistrationPage';
+import AuctionsListPage from './pages/AuctionsListPage';
 // import AuctionsListPage from './pages/AuctionsListPage'; // Создадим далее
 // import AuctionDetailPage from './pages/AuctionDetailPage'; // Создадим далее
 // import NotFoundPage from './pages/NotFoundPage'; // Хорошо бы иметь
@@ -15,7 +16,6 @@ import RegistrationPage from './pages/RegistrationPage';
 import { AuthProvider } from './context/AuthContext';
 
 // Заглушки для страниц, которые еще не созданы
-const AuctionsListPage = () => <h2>Список Аукционов (скоро здесь будут аукционы!)</h2>;
 const NotFoundPage = () => <h2>404 - Страница не найдена</h2>;
 
 
@@ -28,7 +28,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegistrationPage />} />
-            <Route path="/auctions" element={<AuctionsListPage />} />
+            <Route path="/auctions" element={<AuctionsListPage />} /> {/* <--- Должен использовать импортированный компонент */}
             {/* <Route path="/auctions/:id" element={<AuctionDetailPage />} /> */}
             {/* Добавить маршруты для профиля, добавления лота, админки и т.д. */}
             <Route path="*" element={<NotFoundPage />} />
