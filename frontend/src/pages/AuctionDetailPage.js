@@ -2,47 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import LotCard from '../components/lots/LotCard';
-// import apiClient from '../services/apiClient'; // Раскомментируем позже
+import { getAuctionById } from '../services/apiClient'; // <--- Импортируем функцию
 import { useAuth } from '../context/AuthContext';
 import './AuctionDetailPage.css';
 
-// Mock данные для аукционов (чтобы найти нужный аукцион по ID)
-const mockAuctionsData = [
-    {
-        id: 1,
-        name_specificity: 'Антикварная мебель XVIII века',
-        auction_date: '2025-07-15T00:00:00Z',
-        auction_time: '14:00',
-        location: 'Выставочный зал "Эрмитаж"',
-        status: 'Запланирован',
-        description_full: 'Уникальная коллекция антикварной мебели эпохи Людовика XV, включая стулья, комоды и столы. Все предметы в отличном состоянии и имеют подтвержденную историю.',
-        lots: [
-            { id: 101, auction_id: 1, lot_number: 'A001', name_description: 'Стул "Бержер", орех, Франция, ~1760 г.', start_price: 1200, status: 'Ожидает аукциона', seller_user_id: 2 },
-            { id: 102, auction_id: 1, lot_number: 'A002', name_description: 'Комод с интарсией, красное дерево, ~1750 г.', start_price: 3500, status: 'Ожидает аукциона', seller_user_id: 2 },
-        ]
-    },
-    {
-        id: 2,
-        name_specificity: 'Картины русских художников XIX века (масло)',
-        auction_date: '2025-08-01T00:00:00Z',
-        auction_time: '11:00',
-        location: 'Галерея "Авангард"',
-        status: 'Активен',
-        description_full: 'Работы известных русских живописцев, включая пейзажи, портреты и жанровые сцены. Представлены такие мастера как Шишкин, Репин, Айвазовский (репродукции или малоизвестные работы для примера).',
-        lots: [
-            { id: 201, auction_id: 2, lot_number: 'B001', name_description: 'Этюд "Утро в сосновом лесу" (копия XIX в.)', start_price: 800, status: 'На аукционе', seller_user_id: 3 },
-            { id: 202, auction_id: 2, lot_number: 'B002', name_description: 'Портрет неизвестной дамы, холст, масло, ~1880 г.', start_price: 1500, status: 'На аукционе', seller_user_id: 3 },
-            { id: 203, auction_id: 2, lot_number: 'B003', name_description: 'Морской пейзаж "Закат над Крымом"', start_price: 2200, status: 'Продан', final_price: 2800, buyer_user_id: 1, seller_user_id: 3 }, // buyer_user_id: 1 - для примера "вы купили"
-        ]
-    },
-    // ... добавьте другие аукционы из mockAuctions (из AuctionsListPage) с полем lots, если нужно
-];
-
-
 const AuctionDetailPage = () => {
-    const { id: auctionId } = useParams(); // Получаем ID из URL
+    const { id: auctionId } = useParams();
     const [auction, setAuction] = useState(null);
-    const [lots, setLots] = useState([]);
+    // const [lots, setLots] = useState([]); // Лоты теперь будут внутри объекта auction
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const { isAuthenticated, user } = useAuth();
@@ -52,24 +19,13 @@ const AuctionDetailPage = () => {
             setLoading(true);
             setError('');
             try {
-                // ЗАГЛУШКА: Ищем аукцион и его лоты в mock данных
-                const foundAuction = mockAuctionsData.find(a => a.id.toString() === auctionId);
-                if (foundAuction) {
-                    // const response = await apiClient.get(`/auctions/${auctionId}`);
-                    // setAuction(response.data.auction_details);
-                    // setLots(response.data.lots);
-                    setTimeout(() => { // Имитация задержки сети
-                        setAuction(foundAuction);
-                        setLots(foundAuction.lots || []);
-                        setLoading(false);
-                    }, 500);
-                } else {
-                    setError('Аукцион не найден.');
-                    setLoading(false);
-                }
+                const response = await getAuctionById(auctionId); // <--- Используем apiClient
+                setAuction(response.data); // Предполагаем, что API возвращает объект аукциона с полем lots
+                // setLots(response.data.lots || []); // Если лоты приходят отдельно
             } catch (err) {
-                console.error(`Ошибка загрузки деталей аукциона ${auctionId}:`, err);
-                setError('Не удалось загрузить детали аукциона.');
+                console.error(`Ошибка загрузки деталей аукциона ${auctionId}:`, err.response?.data?.message || err.message);
+                setError(err.response?.data?.message || 'Не удалось загрузить детали аукциона.');
+            } finally {
                 setLoading(false);
             }
         };
@@ -80,18 +36,14 @@ const AuctionDetailPage = () => {
     }, [auctionId]);
 
     const handleBid = (lotId) => {
-        // TODO: Реализовать логику модального окна для подтверждения ставки
-        // и отправки запроса на бэкенд
         if (!isAuthenticated) {
             alert("Пожалуйста, войдите в систему, чтобы сделать ставку.");
             return;
         }
-        alert(`Заглушка: Пользователь ${user?.fullName} хочет сделать ставку на лот ID: ${lotId}`);
-        // Пример:
-        // showBidModal(lotId, currentHighestBid);
+        alert(`Заглушка: Пользователь ${user?.fullName} хочет сделать ставку на лот ID: ${lotId} аукциона ${auction?.name_specificity}`);
     };
 
-    const formatDate = (dateString) => {
+    const formatDate = (dateString) => { /* ... (без изменений) ... */
         if (!dateString) return 'Дата не указана';
         try {
             const date = new Date(dateString);
@@ -103,17 +55,20 @@ const AuctionDetailPage = () => {
         } catch (e) { return 'Неверная дата'; }
     };
 
+
     if (loading) {
         return <div className="auction-detail-loading">Загрузка деталей аукциона...</div>;
     }
 
     if (error) {
-        return <div className="auction-detail-error text-danger">{error}</div>;
+        return <div className="auction-detail-error text-danger">{error} <Link to="/auctions">Вернуться к списку</Link></div>;
     }
 
     if (!auction) {
         return <div className="auction-detail-error">Аукцион не найден. <Link to="/auctions">Вернуться к списку аукционов</Link></div>;
     }
+
+    const lots = auction.lots || []; // Получаем лоты из объекта аукциона
 
     return (
         <div className="auction-detail-page">
@@ -137,7 +92,6 @@ const AuctionDetailPage = () => {
                     </Link>
                 </div>
             )}
-
 
             <section className="lots-section">
                 <h2>Лоты на аукционе</h2>
