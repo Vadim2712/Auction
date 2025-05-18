@@ -1,17 +1,18 @@
 // src/pages/LoginPage.js
 import React, { useState } from 'react';
-// import { useNavigate } from 'react-router-dom'; // Для перенаправления после входа
-// import apiClient from '../services/api'; // Ваш сервис для API запросов
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // Импортируем хук
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    // const navigate = useNavigate();
+    const { login, loading } = useAuth(); // Получаем функцию login и состояние загрузки
+    const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setError(''); // Сброс предыдущих ошибок
+        setError('');
 
         if (!email || !password) {
             setError('Пожалуйста, заполните все поля.');
@@ -19,17 +20,11 @@ const LoginPage = () => {
         }
 
         try {
-            // ЗАГЛУШКА: Здесь будет вызов API для аутентификации
-            console.log('Попытка входа с:', { email, password });
-            // const response = await apiClient.post('/auth/login', { email, password });
-            // console.log('Успешный вход:', response.data);
-            // TODO: Сохранить токен, обновить состояние аутентификации пользователя
-            // navigate('/'); // Перенаправить на главную страницу или дашборд
-            alert('Заглушка: Успешный вход! (реальная логика API еще не подключена)');
+            await login(email, password); // Используем функцию login из контекста
+            navigate('/'); // Перенаправить на главную страницу или дашборд
         } catch (err) {
-            console.error('Ошибка входа:', err);
-            // setError(err.response?.data?.message || 'Ошибка входа. Пожалуйста, попробуйте снова.');
-            setError('Заглушка: Ошибка входа. Проверьте консоль.');
+            console.error('Ошибка входа на странице:', err);
+            setError(err.message || 'Ошибка входа. Пожалуйста, попробуйте снова.');
         }
     };
 
@@ -45,6 +40,7 @@ const LoginPage = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        disabled={loading}
                     />
                 </div>
                 <div>
@@ -55,13 +51,17 @@ const LoginPage = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={loading}
                     />
                 </div>
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <button type="submit">Войти</button>
+                {error && <p className="text-danger">{error}</p>}
+                <button type="submit" disabled={loading}>
+                    {loading ? 'Вход...' : 'Войти'}
+                </button>
             </form>
-            {/* Можно добавить ссылку на страницу регистрации */}
-            {/* <p>Нет аккаунта? <Link to="/register">Зарегистрироваться</Link></p> */}
+            <p style={{ textAlign: 'center', marginTop: '15px' }}>
+                Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+            </p>
         </div>
     );
 };
