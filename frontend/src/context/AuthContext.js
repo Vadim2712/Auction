@@ -1,102 +1,86 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from 'react';
-// import apiClient from '../services/apiClient'; // Ваш API клиент
+import { loginUser, registerUser }
+    //, checkTokenValidity // Если бы была такая функция на бэкенде
+    from '../services/apiClient'; // <--- Импортируем функции API
 
-// Создаем контекст
 const AuthContext = createContext(null);
 
-// Провайдер контекста
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null); // Информация о пользователе
+    const [user, setUser] = useState(null);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(true); // Для проверки токена при загрузке
+    const [loading, setLoading] = useState(true); // Изначально true для проверки токена
 
-    // Примечание: Реальная проверка токена и загрузка пользователя должна быть здесь
-    // useEffect(() => {
-    //   const token = localStorage.getItem('authToken');
-    //   if (token) {
-    //     // TODO: Верифицировать токен на бэкенде и получить данные пользователя
-    //     // apiClient.get('/auth/me').then(response => {
-    //     //   setUser(response.data.user);
-    //     //   setIsAuthenticated(true);
-    //     // }).catch(() => {
-    //     //   localStorage.removeItem('authToken');
-    //     //   setUser(null);
-    //     //   setIsAuthenticated(false);
-    //     // }).finally(() => setLoading(false));
-    //     // ЗАГЛУШКА:
-    //     console.log("Найден токен, но проверка не реализована");
-    //     setIsAuthenticated(false); // Пока нет проверки, считаем не аутентифицированным
-    //     setUser(null);
-    //   }
-    //   setLoading(false);
-    // }, []);
-
-    // ЗАГЛУШКА: убираем авто-проверку токена для простоты на данном этапе
     useEffect(() => {
-        setLoading(false);
-    }, [])
+        const verifyToken = async () => {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                try {
+                    // ЗАГЛУШКА: В реальном приложении здесь должен быть вызов к API для проверки токена
+                    // и получения данных пользователя. Например:
+                    // const response = await checkTokenValidity(token); // или apiClient.get('/auth/me');
+                    // setUser(response.data.user);
+                    // setIsAuthenticated(true);
+
+                    // Имитируем успешную проверку токена, если он есть (очень упрощенно)
+                    console.log("AuthContext: Найден токен, имитируем пользователя (ЗАГЛУШКА)");
+                    // Здесь можно попытаться распарсить токен, если он содержит user info,
+                    // но это небезопасно без серверной валидации.
+                    // Для заглушки просто создадим фейкового юзера, если есть токен.
+                    setUser({ id: 0, fullName: "Загруженный Пользователь", email: "token@example.com", role: "buyer" });
+                    setIsAuthenticated(true);
+
+                } catch (error) {
+                    console.error("AuthContext: Ошибка проверки токена (ЗАГЛУШКА)", error);
+                    localStorage.removeItem('authToken');
+                    setUser(null);
+                    setIsAuthenticated(false);
+                }
+            }
+            setLoading(false);
+        };
+        verifyToken();
+    }, []);
 
 
     const login = async (email, password) => {
         setLoading(true);
         try {
-            // ЗАГЛУШКА:
-            console.log("Попытка входа (AuthContext):", { email, password });
-            // const response = await apiClient.post('/auth/login', { email, password });
-            // const { token, user: userData } = response.data;
-            // localStorage.setItem('authToken', token);
-            // apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Для последующих запросов
-            // setUser(userData);
-            // setIsAuthenticated(true);
-            // setLoading(false);
-            // return userData;
-
-            // Имитация успешного входа для заглушки
-            const mockUser = { id: 1, fullName: "Тестовый Пользователь", email: email, role: "buyer" };
-            localStorage.setItem('authToken', 'fake-jwt-token'); // Имитируем сохранение токена
-            setUser(mockUser);
+            const response = await loginUser({ email, password }); // <--- Используем apiClient
+            const { token, user: userData } = response.data;
+            localStorage.setItem('authToken', token);
+            // apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Уже делается интерцептором
+            setUser(userData);
             setIsAuthenticated(true);
             setLoading(false);
-            console.log("AuthContext: Заглушка успешного входа", mockUser);
-            return mockUser;
-
+            return userData;
         } catch (error) {
-            console.error("Ошибка входа (AuthContext):", error);
+            console.error("Ошибка входа (AuthContext):", error.response?.data?.message || error.message);
             localStorage.removeItem('authToken');
             setUser(null);
             setIsAuthenticated(false);
             setLoading(false);
-            throw error;
+            throw error.response?.data || new Error('Ошибка входа');
         }
     };
 
     const register = async (userData) => {
         setLoading(true);
         try {
-            // ЗАГЛУШКА
-            console.log("Попытка регистрации (AuthContext):", userData);
-            // const response = await apiClient.post('/auth/register', userData);
-            // setLoading(false);
-            // return response.data; // Обычно регистрация не возвращает токен сразу, а требует логина
-
-            // Имитация успешной регистрации
+            const response = await registerUser(userData); // <--- Используем apiClient
             setLoading(false);
-            console.log("AuthContext: Заглушка успешной регистрации");
-            return { message: "Регистрация прошла успешно. Пожалуйста, войдите." };
+            return response.data;
         } catch (error) {
-            console.error("Ошибка регистрации (AuthContext):", error);
+            console.error("Ошибка регистрации (AuthContext):", error.response?.data?.message || error.message);
             setLoading(false);
-            throw error;
+            throw error.response?.data || new Error('Ошибка регистрации');
         }
     };
 
-
     const logout = () => {
-        // ЗАГЛУШКА
         console.log("Выход (AuthContext)");
         localStorage.removeItem('authToken');
-        // delete apiClient.defaults.headers.common['Authorization'];
+        // delete apiClient.defaults.headers.common['Authorization']; // Уже делается интерцептором при отсутствии токена
         setUser(null);
         setIsAuthenticated(false);
     };
@@ -108,7 +92,6 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-// Хук для использования контекста аутентификации
 export const useAuth = () => {
     return useContext(AuthContext);
 };

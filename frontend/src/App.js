@@ -29,6 +29,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegistrationPage />} />
             <Route path="/auctions" element={<AuctionsListPage />} /> {/* <--- Должен использовать импортированный компонент */}
+            <Route path="/auctions/:id" element={<AuctionDetailPage />} />
             {/* <Route path="/auctions/:id" element={<AuctionDetailPage />} /> */}
             {/* Добавить маршруты для профиля, добавления лота, админки и т.д. */}
             <Route path="*" element={<NotFoundPage />} />
