@@ -1,0 +1,64 @@
+/* src/pages/AuctionsListPage.css */
+.auctions-list-page {
+    padding: 20px 0;
+}
+
+.auctions-list-page-loading,
+.auctions-list-page-error {
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 40px 0;
+}
+
+.auctions-list-page .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.auctions-list-page .page-header h1 {
+    font-size: 2rem;
+    color: #333;
+    margin: 0;
+}
+
+/* Стили для кнопки "Создать новый аукцион" взяты из общих стилей .button */
+.auctions-list-page .button-primary {
+    /* Если хотите специфичный стиль для основной кнопки */
+    background-color: #007bff;
+    /* Уже есть в .button */
+}
+
+.auctions-list-page .button-primary:hover {
+    background-color: #0056b3;
+    /* Уже есть в .button:hover */
+}
+
+
+.auctions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* Адаптивная сетка */
+    gap: 20px;
+    /* Пространство между карточками */
+}
+
+/* Адаптивность для очень маленьких экранов */
+@media (max-width: 600px) {
+    .auctions-list-page .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .auctions-list-page .page-header h1 {
+        margin-bottom: 15px;
+    }
+
+    .auctions-grid {
+        grid-template-columns: 1fr;
+        /* Одна колонка на маленьких экранах */
+    }
+}
