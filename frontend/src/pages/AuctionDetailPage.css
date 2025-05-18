@@ -1,0 +1,77 @@
+/* src/pages/AuctionDetailPage.css */
+.auction-detail-page {
+    padding: 20px 0;
+}
+
+.auction-detail-loading,
+.auction-detail-error {
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 40px 0;
+}
+
+.auction-header {
+    background-color: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border: 1px solid #dee2e6;
+}
+
+.auction-header h1 {
+    font-size: 2.2rem;
+    color: #212529;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.auction-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    /* Расстояние между элементами меты */
+    font-size: 0.95rem;
+    color: #495057;
+    margin-bottom: 15px;
+}
+
+.auction-meta span {
+    display: inline-block;
+}
+
+.auction-description-full {
+    font-size: 1rem;
+    color: #343a40;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+.add-lot-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.lots-section h2 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.lots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .auction-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .lots-grid {
+        grid-template-columns: 1fr;
+    }
+}
