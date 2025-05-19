@@ -45,13 +45,15 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         setLoading(true);
+        console.log('[AuthContext] Attempting login for:', email);
         try {
-            const response = await loginUser({ email, password }); // <--- Используем apiClient
+            const response = await loginUser(email, password); // Вызов apiClient
+            console.log('[AuthContext] loginUser response:', response); // <--- Что пришло от apiClient
             const { token, user: userData } = response.data;
             localStorage.setItem('authToken', token);
-            // apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Уже делается интерцептором
             setUser(userData);
             setIsAuthenticated(true);
+            console.log('[AuthContext] Login successful, user set:', userData);
             setLoading(false);
             return userData;
         } catch (error) {
@@ -64,12 +66,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const register = async (userData) => {
+    const register = async (payload) => {
         setLoading(true);
+        console.log('[AuthContext] Attempting registration for:', payload.email);
         try {
-            const response = await registerUser(userData); // <--- Используем apiClient
+            const response = await registerUser(payload); // Вызов apiClient
+            console.log('[AuthContext] registerUser response:', response); // <--- Что пришло от apiClient
+            // Если registerUser сразу логинит:
+            if (response.data.token && response.data.user) {
+                localStorage.setItem('authToken', response.data.token);
+                setUser(response.data.user);
+                setIsAuthenticated(true);
+                console.log('[AuthContext] Registration successful, user set and logged in:', response.data.user);
+            } else {
+                console.log('[AuthContext] Registration successful, message:', response.data.message);
+                // Здесь можно не логинить автоматически, а просто показать сообщение и перенаправить на логин
+            }
             setLoading(false);
-            return response.data;
+            return response.data; // Возвращаем полный ответ для обработки на странице
         } catch (error) {
             console.error("Ошибка регистрации (AuthContext):", error.response?.data?.message || error.message);
             setLoading(false);

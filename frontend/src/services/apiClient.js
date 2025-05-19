@@ -1,7 +1,7 @@
 // src/services/apiClient.js
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/v1'; // Замените на URL вашего реального бэкенда
+const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -35,18 +35,22 @@ let mockUsersData = [
     { id: 104, email: 'buyer2@example.com', password: 'buyerpassword', fullName: 'Купилова Елизавета Артёмовна', role: 'buyer', passportData: '4444444444' },
     { id: 105, email: 'user@example.com', password: 'userpassword', fullName: 'Обычный Пользователь', role: 'buyer', passportData: '5555555555' }
 ];
-let nextUserId = 106; // Для генерации ID новых пользователей
+let nextUserId = 106;
+
+// Теперь можно выводить в консоль, mockUsersData инициализирована
+console.log('[apiClient.js] Module loaded. Initial mockUsersData:', JSON.parse(JSON.stringify(mockUsersData)));
+
 
 let mockAuctionsData = [
     {
         id: 1,
         name_specificity: 'Весенний аукцион антиквариата',
-        auction_date: '2025-06-15', // Используем формат YYYY-MM-DD для дат
+        auction_date: '2025-06-15',
         auction_time: '14:00',
         location: 'Гранд Отель, Бальный зал',
         description_full: 'Редкие предметы XVIII-XIX веков, включая мебель, картины и ювелирные изделия.',
         status: 'Идет торг',
-        created_by_user_id: 100, // admin
+        created_by_user_id: 100,
         lots: [
             {
                 id: 1, lot_number: 1, name: 'Старинные часы с боем',
@@ -86,33 +90,35 @@ let mockAuctionsData = [
     }
 ];
 let nextAuctionId = 3;
-let nextLotGlobalId = 3; // Глобальный ID для лотов, чтобы избежать коллизий
+let nextLotGlobalId = 3;
 
 // --- Auth API ---
 export const loginUser = (email, password) => {
-    console.log('apiClient: loginUser attempt for:', email);
+    console.log('[apiClient.js] loginUser called with:', email, password);
+    console.log('[apiClient.js] Current mockUsersData at loginUser start:', JSON.parse(JSON.stringify(mockUsersData)));
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const user = mockUsersData.find(u => u.email === email && u.password === password);
             if (user) {
-                console.log('apiClient: loginUser success for:', email, user);
+                console.log('[apiClient.js] loginUser success for:', email, user);
                 const token = `mockToken-${user.id}-${Date.now()}`;
-                const { password: userPassword, ...userWithoutPassword } = user; // Переименовал переменную, чтобы не было конфликта
+                const { password: userPassword, ...userWithoutPassword } = user;
                 resolve({ data: { token, user: userWithoutPassword } });
             } else {
-                console.error('apiClient: loginUser failed for:', email);
+                console.error('[apiClient.js] loginUser failed for:', email);
                 reject({ response: { status: 401, data: { message: 'Неверный email или пароль (apiClient)' } } });
             }
         }, 300);
     });
 };
 
-export const registerUser = (userData) => { // userData: { fullName, email, passportData, password }
-    console.log('apiClient: registerUser attempt for:', userData.email);
+export const registerUser = (userData) => {
+    console.log('[apiClient.js] registerUser called with:', userData);
+    console.log('[apiClient.js] Current mockUsersData at registerUser start:', JSON.parse(JSON.stringify(mockUsersData)));
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             if (mockUsersData.find(u => u.email === userData.email)) {
-                console.warn('apiClient: registerUser failed - email exists:', userData.email);
+                console.warn('[apiClient.js] registerUser failed - email exists:', userData.email);
                 return reject({ response: { status: 400, data: { message: 'Пользователь с таким email уже существует' } } });
             }
 
@@ -121,16 +127,13 @@ export const registerUser = (userData) => { // userData: { fullName, email, pass
                 email: userData.email,
                 password: userData.password,
                 fullName: userData.fullName,
-                role: userData.role || 'buyer', // По умолчанию 'buyer', если не передано
+                role: userData.role || 'buyer',
                 passportData: userData.passportData || '',
             };
             mockUsersData.push(newUser);
-            console.log('apiClient: registerUser success:', newUser);
-            console.log('apiClient: Current mockUsersData:', mockUsersData); // Посмотреть весь массив
+            console.log('[apiClient.js] registerUser success:', newUser);
+            console.log('[apiClient.js] mockUsersData AFTER push in registerUser:', JSON.parse(JSON.stringify(mockUsersData)));
 
-            // После успешной регистрации можно сразу вернуть данные пользователя (без логина)
-            // или потребовать отдельный логин. Для упрощения, вернем сообщение.
-            // Или, как было, автоматически "логиним":
             const token = `mockToken-${newUser.id}-${Date.now()}`;
             const { password, ...userWithoutPassword } = newUser;
             resolve({ data: { token, user: userWithoutPassword, message: 'Регистрация прошла успешно! Теперь вы можете войти.' } });
@@ -141,7 +144,7 @@ export const registerUser = (userData) => { // userData: { fullName, email, pass
 
 // --- Auctions API ---
 export const getAllAuctions = () => {
-    console.log('apiClient: getAllAuctions (ЗАГЛУШКА)');
+    console.log('[apiClient.js] getAllAuctions (ЗАГЛУШКА)');
     return new Promise((resolve) => {
         setTimeout(() => {
             resolve({
@@ -152,7 +155,6 @@ export const getAllAuctions = () => {
                     auction_time: a.auction_time,
                     location: a.location,
                     status: a.status,
-                    // Не возвращаем description_full и lots для списка
                 }))
             });
         }, 300);
@@ -160,12 +162,12 @@ export const getAllAuctions = () => {
 };
 
 export const getAuctionById = (auctionId) => {
-    console.log(`apiClient: getAuctionById ${auctionId} (ЗАГЛУШКА)`);
+    console.log(`[apiClient.js] getAuctionById ${auctionId} (ЗАГЛУШКА)`);
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const auction = mockAuctionsData.find(a => a.id === parseInt(auctionId));
             if (auction) {
-                resolve({ data: { ...auction, lots: auction.lots ? [...auction.lots] : [] } }); // Возвращаем копию
+                resolve({ data: { ...auction, lots: auction.lots ? [...auction.lots.map(l => ({ ...l }))] : [] } }); // Глубокое копирование лотов
             } else {
                 reject({ response: { status: 404, data: { message: 'Аукцион не найден (apiClient)' } } });
             }
@@ -173,24 +175,24 @@ export const getAuctionById = (auctionId) => {
     });
 };
 
-export const createAuction = (auctionData) => { // auctionData: { name_specificity, auction_date, auction_time, location, description_full, created_by_user_id }
-    console.log('apiClient: createAuction (ЗАГЛУШКА)', auctionData);
+export const createAuction = (auctionData) => {
+    console.log('[apiClient.js] createAuction (ЗАГЛУШКА)', auctionData);
     return new Promise((resolve) => {
         setTimeout(() => {
             const newAuction = {
                 ...auctionData,
                 id: nextAuctionId++,
                 lots: [],
-                status: 'Запланирован' // По умолчанию
+                status: 'Запланирован'
             };
             mockAuctionsData.push(newAuction);
-            resolve({ data: { ...newAuction } }); // Возвращаем копию
+            resolve({ data: { ...newAuction } });
         }, 300);
     });
 };
 
 export const updateAuctionStatus = (auctionId, newStatus) => {
-    console.log(`apiClient: updateAuctionStatus for auction ${auctionId} to ${newStatus}`);
+    console.log(`[apiClient.js] updateAuctionStatus for auction ${auctionId} to ${newStatus}`);
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const auctionIndex = mockAuctionsData.findIndex(a => a.id === parseInt(auctionId));
@@ -198,7 +200,7 @@ export const updateAuctionStatus = (auctionId, newStatus) => {
                 return reject({ response: { status: 404, data: { message: 'Аукцион не найден' } } });
             }
 
-            const auction = { ...mockAuctionsData[auctionIndex] }; // Работаем с копией
+            const auction = { ...mockAuctionsData[auctionIndex], lots: mockAuctionsData[auctionIndex].lots.map(l => ({ ...l })) }; // Глубокая копия
             auction.status = newStatus;
 
             if (newStatus === 'Завершен') {
@@ -214,16 +216,16 @@ export const updateAuctionStatus = (auctionId, newStatus) => {
                     return lotCopy;
                 });
             }
-            mockAuctionsData[auctionIndex] = auction; // Обновляем в основном массиве
-            console.log('Updated auction:', auction);
-            resolve({ data: { ...auction } });
+            mockAuctionsData[auctionIndex] = auction;
+            console.log('[apiClient.js] Updated auction in mockAuctionsData:', auction);
+            resolve({ data: { ...auction } }); // Возвращаем копию обновленного аукциона
         }, 300);
     });
 };
 
 // --- Lots API ---
-export const createLot = (auctionId, lotData) => { // lotData: { name, description, start_price, seller_id }
-    console.log(`apiClient: createLot for auction ${auctionId} (ЗАГЛУШКА)`, lotData);
+export const createLot = (auctionId, lotData) => {
+    console.log(`[apiClient.js] createLot for auction ${auctionId} (ЗАГЛУШКА)`, lotData);
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const auctionIndex = mockAuctionsData.findIndex(a => a.id === parseInt(auctionId));
@@ -232,13 +234,9 @@ export const createLot = (auctionId, lotData) => { // lotData: { name, descripti
             }
 
             const auction = mockAuctionsData[auctionIndex];
-            if (!auction.lots) { // На всякий случай, хотя должно быть []
-                auction.lots = [];
-            }
-
             const newLot = {
                 id: nextLotGlobalId++,
-                lot_number: auction.lots.length + 1,
+                lot_number: (auction.lots ? auction.lots.length : 0) + 1,
                 name: lotData.name,
                 description: lotData.description || '',
                 start_price: parseFloat(lotData.start_price),
@@ -251,25 +249,29 @@ export const createLot = (auctionId, lotData) => { // lotData: { name, descripti
                 final_buyer_id: null,
             };
 
-            auction.lots.push(newLot);
-            mockAuctionsData[auctionIndex] = { ...auction, lots: [...auction.lots] }; // Обновляем аукцион с новым лотом
-            resolve({ data: { ...newLot } }); // Возвращаем копию нового лота
+            // Обновляем аукцион, добавляя новый лот
+            const updatedLots = auction.lots ? [...auction.lots, newLot] : [newLot];
+            mockAuctionsData[auctionIndex] = { ...auction, lots: updatedLots };
+
+            resolve({ data: { ...newLot } });
         }, 300);
     });
 };
 
 export const placeBid = (auctionId, lotId, amount, userId) => {
-    console.log(`apiClient: placeBid on auction ${auctionId}, lot ${lotId} for amount ${amount} by user ${userId}`);
+    console.log(`[apiClient.js] placeBid on auction ${auctionId}, lot ${lotId} for amount ${amount} by user ${userId}`);
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            const auction = mockAuctionsData.find(a => a.id === parseInt(auctionId));
-            if (!auction) return reject({ response: { status: 404, data: { message: 'Аукцион не найден' } } });
+            const auctionIndex = mockAuctionsData.findIndex(a => a.id === parseInt(auctionId));
+            if (auctionIndex === -1) return reject({ response: { status: 404, data: { message: 'Аукцион не найден' } } });
+
+            const auction = mockAuctionsData[auctionIndex];
             if (auction.status !== 'Идет торг') return reject({ response: { status: 400, data: { message: 'Торги по этому аукциону неактивны' } } });
 
             const lotIndex = auction.lots.findIndex(l => l.id === parseInt(lotId));
             if (lotIndex === -1) return reject({ response: { status: 404, data: { message: 'Лот не найден' } } });
 
-            const lot = { ...auction.lots[lotIndex] }; // Работаем с копией
+            const lot = { ...auction.lots[lotIndex] };
 
             if (lot.status !== 'Идет торг' && lot.status !== 'Ожидает торгов') {
                 return reject({ response: { status: 400, data: { message: 'Ставки на этот лот не принимаются (статус лота)' } } });
@@ -284,19 +286,23 @@ export const placeBid = (auctionId, lotId, amount, userId) => {
 
             lot.current_price = bidAmount;
             lot.highest_bidder_id = parseInt(userId);
-            if (!lot.biddings) lot.biddings = [];
+            if (!lot.biddings) lot.biddings = []; // На всякий случай
             lot.biddings.push({ userId: parseInt(userId), amount: bidAmount, timestamp: new Date().toISOString() });
             if (lot.status === 'Ожидает торгов') lot.status = 'Идет торг';
 
-            auction.lots[lotIndex] = lot; // Обновляем лот в массиве аукциона
-            console.log('Updated lot after bid:', lot);
-            resolve({ data: { ...lot } }); // Возвращаем копию обновленного лота
+            const updatedLots = [...auction.lots];
+            updatedLots[lotIndex] = lot;
+            mockAuctionsData[auctionIndex] = { ...auction, lots: updatedLots };
+
+            console.log('[apiClient.js] Updated lot after bid:', lot);
+            resolve({ data: { ...lot } });
         }, 300);
     });
 };
 
 // --- User/Activity API ---
 export const getUserById = (userId) => {
+    console.log(`[apiClient.js] getUserById for user ${userId}`);
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const user = mockUsersData.find(u => u.id === parseInt(userId));
@@ -311,7 +317,7 @@ export const getUserById = (userId) => {
 };
 
 export const getMyActivity = (userId) => {
-    console.log(`apiClient: getMyActivity for user ${userId}`);
+    console.log(`[apiClient.js] getMyActivity for user ${userId}`);
     return new Promise((resolve) => {
         setTimeout(() => {
             const myLeadingBids = [];
@@ -334,7 +340,7 @@ export const getMyActivity = (userId) => {
                                 ...lot,
                                 auctionId: auction.id,
                                 auctionName: auction.name_specificity,
-                                auctionStatus: auction.status // будет 'Завершен'
+                                auctionStatus: auction.status
                             });
                         }
                     });
@@ -345,4 +351,4 @@ export const getMyActivity = (userId) => {
     });
 };
 
-export default apiClient;
+export default apiClient; // Экспортируем экземпляр axios
