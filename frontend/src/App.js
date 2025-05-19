@@ -1,22 +1,23 @@
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MainLayout from './components/layout/MainLayout';
+import { AuthProvider } from './context/AuthContext';
 
+import MainLayout from './components/layout/MainLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegistrationPage from './pages/RegistrationPage';
 import AuctionsListPage from './pages/AuctionsListPage';
 import AuctionDetailPage from './pages/AuctionDetailPage';
-import CreateAuctionPage from './pages/CreateAuctionPage'; // <--- Импортируем новую страницу
+import CreateAuctionPage from './pages/CreateAuctionPage';
 import AddLotPage from './pages/AddLotPage';
-import NotFoundPage from './pages/NotFoundPage'; // Если NotFoundPage у вас отдельно
+import MyActivityPage from './pages/MyActivityPage'; // Страница активности пользователя
+// import MyListingsPage from './pages/MyListingsPage'; // Раскомментируйте, когда создадим
+import NotFoundPage from './pages/NotFoundPage';
 
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/auth/ProtectedRoute'; // <--- Импортируем ProtectedRoute
-
-// const NotFoundPage = () => <h2>404 - Страница не найдена</h2>; // Если не импортируете
+import './App.css'; // Основные стили приложения
 
 function App() {
   return (
@@ -24,32 +25,50 @@ function App() {
       <Router>
         <MainLayout>
           <Routes>
-            {/* ... (существующие маршруты) ... */}
+            {/* Публичные маршруты */}
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegistrationPage />} />
             <Route path="/auctions" element={<AuctionsListPage />} />
             <Route path="/auctions/:id" element={<AuctionDetailPage />} />
 
+            {/* Защищенные маршруты */}
             <Route
-              path="/auctions/create"
+              path="/create-auction"
               element={
                 <ProtectedRoute roles={['admin']}>
                   <CreateAuctionPage />
                 </ProtectedRoute>
               }
             />
-
-            {/* Новый защищенный маршрут для добавления лота */}
             <Route
               path="/auctions/:auctionId/add-lot"
               element={
-                <ProtectedRoute roles={['admin', 'seller']}> {/* Доступно админам и продавцам */}
+                <ProtectedRoute roles={['admin', 'seller']}>
                   <AddLotPage />
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/my-activity"
+              element={
+                <ProtectedRoute roles={['buyer', 'seller', 'admin']}> {/* Доступно всем авторизованным */}
+                  <MyActivityPage />
+                </ProtectedRoute>
+              }
+            />
+            {/*
+            <Route
+              path="/my-listings"
+              element={
+                <ProtectedRoute roles={['seller', 'admin']}>
+                  <MyListingsPage />
+                </ProtectedRoute>
+              }
+            />
+            */}
 
+            {/* Маршрут для ненайденных страниц */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </MainLayout>

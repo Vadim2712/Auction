@@ -1,0 +1,125 @@
+/* src/pages/MyActivityPage.css */
+.my-activity-page h1 {
+    margin-bottom: 20px;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.activity-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.activity-section h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #0056b3;
+}
+
+.activity-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.activity-item {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.activity-item:hover {
+    border-color: #007bff;
+}
+
+.item-info strong {
+    color: #333;
+}
+
+.item-info a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.item-info a:hover {
+    text-decoration: underline;
+}
+
+.item-details {
+    font-size: 0.95em;
+    color: #555;
+}
+
+.leading-bid-item {
+    border-left: 5px solid #28a745;
+    /* Зеленая полоса для лидирующих ставок */
+}
+
+.won-lot-item {
+    border-left: 5px solid #ffc107;
+    /* Желтая полоса для выигранных лотов */
+}
+
+.status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-left: 10px;
+    color: #fff;
+    text-transform: capitalize;
+}
+
+/* Статусы лотов - убедитесь, что они соответствуют классам, генерируемым в LotCard и других местах */
+.status-lot-ожидает-торгов {
+    background-color: #6c757d;
+}
+
+/* Серый */
+.status-lot-идет-торг {
+    background-color: #28a745;
+}
+
+/* Зеленый */
+.status-lot-продан {
+    background-color: #007bff;
+}
+
+/* Синий */
+.status-lot-не-продан {
+    background-color: #dc3545;
+}
+
+/* Красный */
+
+.auction-rule-reminder {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff3cd;
+    /* Светло-желтый фон, как .alert-warning */
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    color: #856404;
+}
+
+.auction-rule-reminder p {
+    margin: 0;
+}
+
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+}

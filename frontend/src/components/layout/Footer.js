@@ -9,7 +9,7 @@ const Footer = () => {
             <div className="footer-content">
                 <p>&copy; {currentYear} Система "Аукцион". Все права защищены.(или не очень)</p>
                 <p>
-                    Разработано в рамках курсового проекта. <a href="https://github.com/your-repo" target="_blank" rel="noopener noreferrer">GitHub проекта</a>
+                    Разработано в рамках курсового проекта. <a href="https://github.com/Vadim2712/Auction" target="_blank" rel="noopener noreferrer">GitHub проекта</a>
                 </p>
                 {/* Можете добавить другую информацию или ссылки сюда */}
             </div>

@@ -24,38 +24,52 @@ apiClient.interceptors.request.use(
     }
 );
 
-// --- Заглушки для API вызовов (замените на реальные, когда бэкенд будет готов) ---
+// --- Mock Data ---
+// Эти данные будут храниться в памяти на время сессии клиента
 
-// Mock Data (добавьте/обновите seller_id, highest_bidder_id, biddings, и статусы аукционов)
+let mockUsersData = [
+    { id: 100, email: 'admin@example.com', password: 'adminpassword', fullName: 'Администратор Главный', role: 'admin', passportData: '0000000000' },
+    { id: 101, email: 'seller1@example.com', password: 'sellerpassword', fullName: 'Продавцов Иван Петрович', role: 'seller', passportData: '1111111111' },
+    { id: 102, email: 'seller2@example.com', password: 'sellerpassword', fullName: 'Продажная Анна Сидоровна', role: 'seller', passportData: '2222222222' },
+    { id: 103, email: 'buyer1@example.com', password: 'buyerpassword', fullName: 'Покупайко Олег Игоревич', role: 'buyer', passportData: '3333333333' },
+    { id: 104, email: 'buyer2@example.com', password: 'buyerpassword', fullName: 'Купилова Елизавета Артёмовна', role: 'buyer', passportData: '4444444444' },
+    { id: 105, email: 'user@example.com', password: 'userpassword', fullName: 'Обычный Пользователь', role: 'buyer', passportData: '5555555555' }
+];
+let nextUserId = 106; // Для генерации ID новых пользователей
+
 let mockAuctionsData = [
     {
         id: 1,
         name_specificity: 'Весенний аукцион антиквариата',
-        auction_date: '2025-06-15',
+        auction_date: '2025-06-15', // Используем формат YYYY-MM-DD для дат
         auction_time: '14:00',
         location: 'Гранд Отель, Бальный зал',
         description_full: 'Редкие предметы XVIII-XIX веков, включая мебель, картины и ювелирные изделия.',
-        status: 'Идет торг', // <--- Статус аукциона
+        status: 'Идет торг',
         created_by_user_id: 100, // admin
         lots: [
             {
                 id: 1, lot_number: 1, name: 'Старинные часы с боем',
                 description: 'Напольные часы, дуб, Германия, ~1880 г.',
-                start_price: 75000, current_price: 78000, seller_id: 2, // ID продавца
-                status: 'Идет торг', // <--- Статус лота
-                highest_bidder_id: 1, // ID покупателя, сделавшего последнюю ставку
-                biddings: [ // <--- История ставок (опционально, но полезно)
-                    { userId: 1, amount: 76000, timestamp: new Date().toISOString() },
-                    { userId: 3, amount: 78000, timestamp: new Date().toISOString() } // User c ID=3 пока не существует, но для примера
-                ]
+                start_price: 75000, current_price: 78000, seller_id: 101,
+                status: 'Идет торг',
+                highest_bidder_id: 103,
+                biddings: [
+                    { userId: 103, amount: 76000, timestamp: new Date(Date.now() - 100000).toISOString() },
+                    { userId: 104, amount: 78000, timestamp: new Date().toISOString() }
+                ],
+                final_price: null,
+                final_buyer_id: null,
             },
             {
                 id: 2, lot_number: 2, name: 'Фарфоровая статуэтка "Балерина"',
                 description: 'ЛФЗ, 1950-е гг., отличное состояние.',
-                start_price: 12000, current_price: 12000, seller_id: 100, // Продавец - админ
+                start_price: 12000, current_price: 12000, seller_id: 100,
                 status: 'Ожидает торгов',
                 highest_bidder_id: null,
-                biddings: []
+                biddings: [],
+                final_price: null,
+                final_buyer_id: null,
             }
         ]
     },
@@ -70,200 +84,108 @@ let mockAuctionsData = [
         created_by_user_id: 100,
         lots: []
     }
-    // ... другие аукционы
 ];
+let nextAuctionId = 3;
+let nextLotGlobalId = 3; // Глобальный ID для лотов, чтобы избежать коллизий
 
-// Auth API
-export const loginUser = (credentials) => {
-    console.log('apiClient: loginUser (ЗАГЛУШКА)', credentials);
+// --- Auth API ---
+export const loginUser = (email, password) => {
+    console.log('apiClient: loginUser attempt for:', email);
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            let mockUser = null;
-            let token = null;
-
-            if (credentials.email === 'test@example.com' && credentials.password === 'password') {
-                mockUser = { id: 1, fullName: "Тестовый Покупатель", email: credentials.email, role: "buyer" };
-                token = 'fake-jwt-token-buyer';
-            } else if (credentials.email === 'admin@example.com' && credentials.password === 'adminpass') {
-                mockUser = { id: 100, fullName: "Администратор Системы", email: credentials.email, role: "admin" };
-                token = 'fake-jwt-token-admin';
-            } else if (credentials.email === 'seller@example.com' && credentials.password === 'sellerpass') { // <--- Новый пользователь 'seller'
-                mockUser = { id: 2, fullName: "Тестовый Продавец", email: credentials.email, role: "seller" };
-                token = 'fake-jwt-token-seller';
-            }
-
-
-            if (mockUser && token) {
-                resolve({ data: { token, user: mockUser } });
+            const user = mockUsersData.find(u => u.email === email && u.password === password);
+            if (user) {
+                console.log('apiClient: loginUser success for:', email, user);
+                const token = `mockToken-${user.id}-${Date.now()}`;
+                const { password: userPassword, ...userWithoutPassword } = user; // Переименовал переменную, чтобы не было конфликта
+                resolve({ data: { token, user: userWithoutPassword } });
             } else {
-                reject({ response: { data: { message: 'Неверный email или пароль (заглушка apiClient)' } } });
+                console.error('apiClient: loginUser failed for:', email);
+                reject({ response: { status: 401, data: { message: 'Неверный email или пароль (apiClient)' } } });
             }
-        }, 500);
+        }, 300);
     });
 };
 
-export const registerUser = (userData) => {
-    // Для реального API: return apiClient.post('/auth/register', userData);
-    console.log('apiClient: registerUser (ЗАГЛУШКА)', userData);
-    return new Promise((resolve) => {
+export const registerUser = (userData) => { // userData: { fullName, email, passportData, password }
+    console.log('apiClient: registerUser attempt for:', userData.email);
+    return new Promise((resolve, reject) => {
         setTimeout(() => {
-            resolve({ data: { message: 'Регистрация успешна (заглушка apiClient). Пожалуйста, войдите.' } });
-        }, 500);
+            if (mockUsersData.find(u => u.email === userData.email)) {
+                console.warn('apiClient: registerUser failed - email exists:', userData.email);
+                return reject({ response: { status: 400, data: { message: 'Пользователь с таким email уже существует' } } });
+            }
+
+            const newUser = {
+                id: nextUserId++,
+                email: userData.email,
+                password: userData.password,
+                fullName: userData.fullName,
+                role: userData.role || 'buyer', // По умолчанию 'buyer', если не передано
+                passportData: userData.passportData || '',
+            };
+            mockUsersData.push(newUser);
+            console.log('apiClient: registerUser success:', newUser);
+            console.log('apiClient: Current mockUsersData:', mockUsersData); // Посмотреть весь массив
+
+            // После успешной регистрации можно сразу вернуть данные пользователя (без логина)
+            // или потребовать отдельный логин. Для упрощения, вернем сообщение.
+            // Или, как было, автоматически "логиним":
+            const token = `mockToken-${newUser.id}-${Date.now()}`;
+            const { password, ...userWithoutPassword } = newUser;
+            resolve({ data: { token, user: userWithoutPassword, message: 'Регистрация прошла успешно! Теперь вы можете войти.' } });
+
+        }, 300);
     });
 };
 
-// Auctions API
+// --- Auctions API ---
 export const getAllAuctions = () => {
-    // Для реального API: return apiClient.get('/auctions');
     console.log('apiClient: getAllAuctions (ЗАГЛУШКА)');
     return new Promise((resolve) => {
         setTimeout(() => {
-            // Имитируем структуру ответа, которую может ожидать фронтенд, например, { data: auctionsArray }
-            resolve({ data: mockAuctionsData.map(a => ({ ...a, lots: undefined, description_full: undefined })) }); // Возвращаем только основную инфу для списка
-        }, 500);
+            resolve({
+                data: mockAuctionsData.map(a => ({
+                    id: a.id,
+                    name_specificity: a.name_specificity,
+                    auction_date: a.auction_date,
+                    auction_time: a.auction_time,
+                    location: a.location,
+                    status: a.status,
+                    // Не возвращаем description_full и lots для списка
+                }))
+            });
+        }, 300);
     });
 };
 
 export const getAuctionById = (auctionId) => {
-    // Для реального API: return apiClient.get(`/auctions/${auctionId}`);
     console.log(`apiClient: getAuctionById ${auctionId} (ЗАГЛУШКА)`);
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            const auction = mockAuctionsData.find(a => a.id.toString() === auctionId);
+            const auction = mockAuctionsData.find(a => a.id === parseInt(auctionId));
             if (auction) {
-                // Имитируем структуру ответа: { data: { auction_details: {...}, lots: [...] } }
-                // или просто { data: auction_with_lots }
-                resolve({ data: auction });
+                resolve({ data: { ...auction, lots: auction.lots ? [...auction.lots] : [] } }); // Возвращаем копию
             } else {
-                reject({ response: { status: 404, data: { message: 'Аукцион не найден (заглушка apiClient)' } } });
+                reject({ response: { status: 404, data: { message: 'Аукцион не найден (apiClient)' } } });
             }
-        }, 500);
+        }, 300);
     });
 };
 
-export const createAuction = (auctionData) => {
-    // Для реального API: return apiClient.post('/auctions', auctionData);
+export const createAuction = (auctionData) => { // auctionData: { name_specificity, auction_date, auction_time, location, description_full, created_by_user_id }
     console.log('apiClient: createAuction (ЗАГЛУШКА)', auctionData);
     return new Promise((resolve) => {
         setTimeout(() => {
-            const newId = mockAuctionsData.length > 0 ? Math.max(...mockAuctionsData.map(a => a.id)) + 1 : 1;
-            const newAuction = { ...auctionData, id: newId, lots: [], status: 'Запланирован' };
-            mockAuctionsData.push(newAuction);
-            resolve({ data: newAuction });
-        }, 500);
-    });
-};
-
-// Lot API (NEW)
-export const createLot = (auctionId, lotData) => {
-    console.log(`apiClient: createLot for auction ${auctionId} (ЗАГЛУШКА)`, lotData);
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            const auctionIndex = mockAuctionsData.findIndex(a => a.id === parseInt(auctionId));
-            if (auctionIndex === -1) {
-                reject({ response: { data: { message: 'Аукцион не найден' } } });
-                return;
-            }
-
-            const auction = mockAuctionsData[auctionIndex];
-            if (!auction.lots) {
-                auction.lots = [];
-            }
-
-            // Генерируем уникальный ID для лота (в рамках всех лотов или хотя бы в рамках аукциона)
-            // Для простоты, найдем максимальный ID среди всех лотов всех аукционов
-            let maxLotId = 0;
-            mockAuctionsData.forEach(auc => {
-                if (auc.lots) {
-                    auc.lots.forEach(l => {
-                        if (l.id > maxLotId) maxLotId = l.id;
-                    });
-                }
-            });
-
-            const newLotId = maxLotId + 1;
-
-            const newLot = {
-                id: newLotId, // Уникальный ID лота
-                lot_number: auction.lots.length + 1, // Порядковый номер лота в аукционе
-                name: lotData.name,
-                description: lotData.description_short || lotData.description, // Используем description, если description_short нет
-                start_price: parseFloat(lotData.start_price),
-                current_price: parseFloat(lotData.start_price), // Начальная текущая цена равна стартовой
-                seller_id: lotData.seller_id, // ID продавца
-                // seller_name: lotData.seller_name, // Можно добавить, если передаем, или получать по ID
-                status: 'Ожидает торгов', // Начальный статус лота
-                // biddings: [], // Место для истории ставок, если нужно
-                // final_buyer_id: null,
-                // final_price: null,
+            const newAuction = {
+                ...auctionData,
+                id: nextAuctionId++,
+                lots: [],
+                status: 'Запланирован' // По умолчанию
             };
-
-            auction.lots.push(newLot);
-            mockAuctionsData[auctionIndex] = auction; // Обновляем аукцион в массиве
-            resolve({ data: newLot });
-        }, 500);
-    });
-};
-
-export const placeBid = (auctionId, lotId, amount, userId) => {
-    console.log(`apiClient: placeBid on auction ${auctionId}, lot ${lotId} for amount ${amount} by user ${userId} (ЗАГЛУШКА)`);
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            const auction = mockAuctionsData.find(a => a.id === parseInt(auctionId));
-            if (!auction) {
-                return reject({ response: { status: 404, data: { message: 'Аукцион не найден' } } });
-            }
-            if (auction.status !== 'Идет торг') { // Проверка статуса аукциона
-                return reject({ response: { status: 400, data: { message: 'Торги по этому аукциону еще не начались или уже завершены' } } });
-            }
-
-            const lot = auction.lots.find(l => l.id === parseInt(lotId));
-            if (!lot) {
-                return reject({ response: { status: 404, data: { message: 'Лот не найден' } } });
-            }
-            if (lot.status !== 'Идет торг' && lot.status !== 'Ожидает торгов') { // Лот должен быть доступен для торгов
-                return reject({ response: { status: 400, data: { message: 'Ставки на этот лот не принимаются (статус лота не позволяет)' } } });
-            }
-
-
-            if (lot.seller_id === parseInt(userId)) {
-                return reject({ response: { status: 403, data: { message: 'Вы не можете делать ставки на собственный лот' } } });
-            }
-
-            const bidAmount = parseFloat(amount);
-            if (isNaN(bidAmount) || bidAmount <= lot.current_price) {
-                return reject({ response: { status: 400, data: { message: `Ваша ставка должна быть выше текущей цены (${lot.current_price} руб.)` } } });
-            }
-
-            // Ограничение "Покупатель на одном аукционе может купить только один предмет"
-            // Это правило сложно применить на этапе ставки, если только не считать, что пользователь не может быть highest_bidder более чем на одном активном лоте аукциона.
-            // Для простоты пока пропустим это строгое ограничение на этапе ставки, оно важнее при определении победителя.
-            // Или: проверяем, не является ли этот пользователь уже highest_bidder на ДРУГОМ лоте этого аукциона, который ЕЩЕ НЕ ПРОДАН.
-            const alreadyLeadingAnotherLot = auction.lots.some(
-                l => l.id !== parseInt(lotId) && l.highest_bidder_id === parseInt(userId) && l.status !== 'Продан'
-            );
-            if (alreadyLeadingAnotherLot) {
-                // console.warn("Правило одного предмета: Пользователь уже лидирует на другом лоте этого аукциона.");
-                // Для ТЗ, это может быть мягким предупреждением или строгим запретом.
-                // return reject({ response: { status: 403, data: { message: 'Вы уже лидируете в торгах за другой предмет на этом аукционе. По правилам, можно приобрести только один предмет.' } } });
-            }
-
-
-            lot.current_price = bidAmount;
-            lot.highest_bidder_id = parseInt(userId);
-            if (!lot.biddings) {
-                lot.biddings = [];
-            }
-            lot.biddings.push({ userId: parseInt(userId), amount: bidAmount, timestamp: new Date().toISOString() });
-
-            // Если лот был 'Ожидает торгов', он переходит в 'Идет торг' после первой ставки
-            if (lot.status === 'Ожидает торгов') {
-                lot.status = 'Идет торг';
-            }
-
-            console.log('Updated lot after bid:', lot);
-            resolve({ data: lot }); // Возвращаем обновленный лот
-        }, 700);
+            mockAuctionsData.push(newAuction);
+            resolve({ data: { ...newAuction } }); // Возвращаем копию
+        }, 300);
     });
 };
 
@@ -276,55 +198,151 @@ export const updateAuctionStatus = (auctionId, newStatus) => {
                 return reject({ response: { status: 404, data: { message: 'Аукцион не найден' } } });
             }
 
-            const auction = mockAuctionsData[auctionIndex];
-
-            // Проверка на допустимость смены статуса (базовая)
-            if (auction.status === 'Завершен' && newStatus !== 'Завершен') {
-                // Для упрощения пока не даем переоткрывать завершенные аукционы через этот метод
-                // return reject({ response: { status: 400, data: { message: 'Нельзя изменить статус уже завершенного аукциона таким образом' } } });
-            }
-            if (auction.status === 'Идет торг' && newStatus === 'Запланирован') {
-                // Нельзя вернуть в "Запланирован" из "Идет торг"
-                // return reject({ response: { status: 400, data: { message: 'Нельзя вернуть аукцион в статус "Запланирован" из статуса "Идет торг"' } } });
-            }
-
-
+            const auction = { ...mockAuctionsData[auctionIndex] }; // Работаем с копией
             auction.status = newStatus;
 
-            // Если аукцион завершается, обрабатываем лоты
             if (newStatus === 'Завершен') {
                 auction.lots = auction.lots.map(lot => {
-                    // Проверяем, был ли лот в торгах и есть ли лидирующая ставка
-                    if ((lot.status === 'Идет торг' || (lot.status === 'Ожидает торгов' && lot.biddings && lot.biddings.length > 0)) && lot.highest_bidder_id) {
-                        return {
-                            ...lot,
-                            status: 'Продан',
-                            final_price: lot.current_price,
-                            final_buyer_id: lot.highest_bidder_id
-                        };
-                    } else if (lot.status !== 'Продан') { // Если лот не был продан (например, нет ставок или был 'Ожидает торгов' без ставок)
-                        return {
-                            ...lot,
-                            status: 'Не продан'
-                        };
+                    const lotCopy = { ...lot };
+                    if ((lotCopy.status === 'Идет торг' || (lotCopy.status === 'Ожидает торгов' && lotCopy.biddings && lotCopy.biddings.length > 0)) && lotCopy.highest_bidder_id) {
+                        lotCopy.status = 'Продан';
+                        lotCopy.final_price = lotCopy.current_price;
+                        lotCopy.final_buyer_id = lotCopy.highest_bidder_id;
+                    } else if (lotCopy.status !== 'Продан') {
+                        lotCopy.status = 'Не продан';
                     }
-                    return lot; // Возвращаем лот без изменений, если он уже был обработан или не подпадает под условия
+                    return lotCopy;
                 });
             }
-
-            // Если аукцион переходит в "Идет торг" со статуса "Запланирован"
-            // и есть лоты со статусом "Ожидает торгов", которые еще не имеют ставок, 
-            // они остаются "Ожидает торгов" до первой ставки.
-            // Если же на них уже есть ставки (что маловероятно до старта аукциона, но возможно при некорректных данных),
-            // то при первой ставке LotCard их переведет в "Идет торг".
-            // Специально менять статус лотов на "Идет торг" при старте аукциона не будем, это произойдет органически.
-
-            mockAuctionsData[auctionIndex] = auction;
+            mockAuctionsData[auctionIndex] = auction; // Обновляем в основном массиве
             console.log('Updated auction:', auction);
-            resolve({ data: { ...auction } }); // Возвращаем копию обновленного аукциона
-        }, 500);
+            resolve({ data: { ...auction } });
+        }, 300);
     });
 };
-// Добавьте другие функции API по мере необходимости (updateAuction, deleteAuction, placeBid и т.д.)
 
-export default apiClient; // Экспортируем настроенный экземпляр axios для возможных прямых вызовов
+// --- Lots API ---
+export const createLot = (auctionId, lotData) => { // lotData: { name, description, start_price, seller_id }
+    console.log(`apiClient: createLot for auction ${auctionId} (ЗАГЛУШКА)`, lotData);
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const auctionIndex = mockAuctionsData.findIndex(a => a.id === parseInt(auctionId));
+            if (auctionIndex === -1) {
+                return reject({ response: { data: { message: 'Аукцион не найден для добавления лота' } } });
+            }
+
+            const auction = mockAuctionsData[auctionIndex];
+            if (!auction.lots) { // На всякий случай, хотя должно быть []
+                auction.lots = [];
+            }
+
+            const newLot = {
+                id: nextLotGlobalId++,
+                lot_number: auction.lots.length + 1,
+                name: lotData.name,
+                description: lotData.description || '',
+                start_price: parseFloat(lotData.start_price),
+                current_price: parseFloat(lotData.start_price),
+                seller_id: lotData.seller_id,
+                status: 'Ожидает торгов',
+                highest_bidder_id: null,
+                biddings: [],
+                final_price: null,
+                final_buyer_id: null,
+            };
+
+            auction.lots.push(newLot);
+            mockAuctionsData[auctionIndex] = { ...auction, lots: [...auction.lots] }; // Обновляем аукцион с новым лотом
+            resolve({ data: { ...newLot } }); // Возвращаем копию нового лота
+        }, 300);
+    });
+};
+
+export const placeBid = (auctionId, lotId, amount, userId) => {
+    console.log(`apiClient: placeBid on auction ${auctionId}, lot ${lotId} for amount ${amount} by user ${userId}`);
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const auction = mockAuctionsData.find(a => a.id === parseInt(auctionId));
+            if (!auction) return reject({ response: { status: 404, data: { message: 'Аукцион не найден' } } });
+            if (auction.status !== 'Идет торг') return reject({ response: { status: 400, data: { message: 'Торги по этому аукциону неактивны' } } });
+
+            const lotIndex = auction.lots.findIndex(l => l.id === parseInt(lotId));
+            if (lotIndex === -1) return reject({ response: { status: 404, data: { message: 'Лот не найден' } } });
+
+            const lot = { ...auction.lots[lotIndex] }; // Работаем с копией
+
+            if (lot.status !== 'Идет торг' && lot.status !== 'Ожидает торгов') {
+                return reject({ response: { status: 400, data: { message: 'Ставки на этот лот не принимаются (статус лота)' } } });
+            }
+            if (lot.seller_id === parseInt(userId)) {
+                return reject({ response: { status: 403, data: { message: 'Вы не можете делать ставки на собственный лот' } } });
+            }
+            const bidAmount = parseFloat(amount);
+            if (isNaN(bidAmount) || bidAmount <= lot.current_price) {
+                return reject({ response: { status: 400, data: { message: `Ставка должна быть выше текущей цены (${lot.current_price} руб.)` } } });
+            }
+
+            lot.current_price = bidAmount;
+            lot.highest_bidder_id = parseInt(userId);
+            if (!lot.biddings) lot.biddings = [];
+            lot.biddings.push({ userId: parseInt(userId), amount: bidAmount, timestamp: new Date().toISOString() });
+            if (lot.status === 'Ожидает торгов') lot.status = 'Идет торг';
+
+            auction.lots[lotIndex] = lot; // Обновляем лот в массиве аукциона
+            console.log('Updated lot after bid:', lot);
+            resolve({ data: { ...lot } }); // Возвращаем копию обновленного лота
+        }, 300);
+    });
+};
+
+// --- User/Activity API ---
+export const getUserById = (userId) => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const user = mockUsersData.find(u => u.id === parseInt(userId));
+            if (user) {
+                const { password, ...safeUser } = user;
+                resolve({ data: safeUser });
+            } else {
+                reject({ response: { status: 404, data: { message: 'Пользователь не найден (apiClient)' } } });
+            }
+        }, 100);
+    });
+};
+
+export const getMyActivity = (userId) => {
+    console.log(`apiClient: getMyActivity for user ${userId}`);
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const myLeadingBids = [];
+            const myWonLots = [];
+            const currentUserId = parseInt(userId);
+
+            mockAuctionsData.forEach(auction => {
+                if (auction.lots) {
+                    auction.lots.forEach(lot => {
+                        if (auction.status === 'Идет торг' && lot.highest_bidder_id === currentUserId) {
+                            myLeadingBids.push({
+                                ...lot,
+                                auctionId: auction.id,
+                                auctionName: auction.name_specificity,
+                                auctionStatus: auction.status
+                            });
+                        }
+                        if (lot.status === 'Продан' && lot.final_buyer_id === currentUserId) {
+                            myWonLots.push({
+                                ...lot,
+                                auctionId: auction.id,
+                                auctionName: auction.name_specificity,
+                                auctionStatus: auction.status // будет 'Завершен'
+                            });
+                        }
+                    });
+                }
+            });
+            resolve({ data: { leadingBids: myLeadingBids, wonLots: myWonLots } });
+        }, 300);
+    });
+};
+
+export default apiClient;
