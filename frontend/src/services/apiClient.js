@@ -36,13 +36,21 @@ const mockAuctionsData = [
 
 // Auth API
 export const loginUser = (credentials) => {
-    // Для реального API: return apiClient.post('/auth/login', credentials);
     console.log('apiClient: loginUser (ЗАГЛУШКА)', credentials);
     return new Promise((resolve, reject) => {
         setTimeout(() => {
+            let mockUser = null;
+            let token = null;
+
             if (credentials.email === 'test@example.com' && credentials.password === 'password') {
-                const mockUser = { id: 1, fullName: "Тестовый Пользователь", email: credentials.email, role: "buyer" };
-                const token = 'fake-jwt-token-from-api-client';
+                mockUser = { id: 1, fullName: "Тестовый Покупатель", email: credentials.email, role: "buyer" };
+                token = 'fake-jwt-token-buyer';
+            } else if (credentials.email === 'admin@example.com' && credentials.password === 'adminpass') {
+                mockUser = { id: 100, fullName: "Администратор Системы", email: credentials.email, role: "admin" };
+                token = 'fake-jwt-token-admin';
+            }
+
+            if (mockUser && token) {
                 resolve({ data: { token, user: mockUser } });
             } else {
                 reject({ response: { data: { message: 'Неверный email или пароль (заглушка apiClient)' } } });
