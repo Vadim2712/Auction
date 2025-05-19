@@ -1,37 +1,55 @@
 // src/App.js
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import './App.css'; // Общие стили из create-react-app
-import './index.css'; // Наши глобальные стили
-
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
+import Navbar from './components/layout/Navbar'; // Убедитесь, что Navbar импортирован, если вы вынесли его из MainLayout
+import Footer from './components/layout/Footer'; // Аналогично для Footer
+
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegistrationPage from './pages/RegistrationPage';
 import AuctionsListPage from './pages/AuctionsListPage';
-import AuctionDetailPage from './pages/AuctionDetailPage'; // Создадим далее
-// import NotFoundPage from './pages/NotFoundPage'; // Хорошо бы иметь
+import AuctionDetailPage from './pages/AuctionDetailPage';
+import CreateAuctionPage from './pages/CreateAuctionPage'; // <--- Импортируем новую страницу
+import NotFoundPage from './pages/NotFoundPage'; // Если NotFoundPage у вас отдельно
 
 import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute'; // <--- Импортируем ProtectedRoute
 
-// Заглушки для страниц, которые еще не созданы
-const NotFoundPage = () => <h2>404 - Страница не найдена</h2>;
-
+// const NotFoundPage = () => <h2>404 - Страница не найдена</h2>; // Если не импортируете
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <MainLayout>
+        <MainLayout> {/* Если Navbar и Footer внутри MainLayout */}
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegistrationPage />} />
             <Route path="/auctions" element={<AuctionsListPage />} />
-            <Route path="/auctions/:id" element={<AuctionDetailPage />} /> {/* <--- Новый динамический маршрут */}
-            {/* Добавить маршруты для профиля, добавления лота, админки и т.д. */}
-            {/* Пример для добавления лота:
-            <Route path="/auctions/:auctionId/add-lot" element={<AddLotPage />} />
+            <Route path="/auctions/:id" element={<AuctionDetailPage />} />
+
+            {/* Защищенный маршрут для создания аукциона */}
+            <Route
+              path="/auctions/create"
+              element={
+                <ProtectedRoute roles={['admin']}>
+                  <CreateAuctionPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Добавить другие маршруты здесь */}
+            {/* Пример для добавления лота (будет создан позже):
+            <Route
+              path="/auctions/:auctionId/add-lot"
+              element={
+                <ProtectedRoute roles={['admin', 'seller']}>
+                  <AddLotPage />
+                </ProtectedRoute>
+              }
+            />
             */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

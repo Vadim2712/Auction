@@ -1,0 +1,81 @@
+/* src/pages/CreateAuctionPage.css */
+.create-auction-page {
+    padding: 20px 0;
+    max-width: 700px;
+    /* Ограничиваем ширину формы для лучшей читаемости */
+    margin: 20px auto;
+    /* Центрируем на странице */
+}
+
+.create-auction-page h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* Общие стили для формы и групп полей уже могут быть в App.css или index.css.
+   Если нет, можно добавить или расширить их здесь.
+   Например, .form-container, .form-group, input, textarea, button
+   Здесь предполагается, что базовые стили для форм (как в LoginPage) уже есть.
+*/
+
+.form-container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    /* Чтобы padding не увеличивал общую ширину */
+    font-size: 0.95rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+    outline: none;
+}
+
+.form-group textarea {
+    resize: vertical;
+    /* Разрешить изменение размера только по вертикали */
+}
+
+.alert-danger {
+    /* Стили для сообщения об ошибке */
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+/* Кнопка .button .button-primary уже должна быть стилизована глобально,
+   но если нужно специфичное позиционирование для этой страницы: */
+.form-container .button-primary {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+}
