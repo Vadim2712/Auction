@@ -266,6 +266,65 @@ export const placeBid = (auctionId, lotId, amount, userId) => {
         }, 700);
     });
 };
+
+export const updateAuctionStatus = (auctionId, newStatus) => {
+    console.log(`apiClient: updateAuctionStatus for auction ${auctionId} to ${newStatus}`);
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const auctionIndex = mockAuctionsData.findIndex(a => a.id === parseInt(auctionId));
+            if (auctionIndex === -1) {
+                return reject({ response: { status: 404, data: { message: 'Аукцион не найден' } } });
+            }
+
+            const auction = mockAuctionsData[auctionIndex];
+
+            // Проверка на допустимость смены статуса (базовая)
+            if (auction.status === 'Завершен' && newStatus !== 'Завершен') {
+                // Для упрощения пока не даем переоткрывать завершенные аукционы через этот метод
+                // return reject({ response: { status: 400, data: { message: 'Нельзя изменить статус уже завершенного аукциона таким образом' } } });
+            }
+            if (auction.status === 'Идет торг' && newStatus === 'Запланирован') {
+                // Нельзя вернуть в "Запланирован" из "Идет торг"
+                // return reject({ response: { status: 400, data: { message: 'Нельзя вернуть аукцион в статус "Запланирован" из статуса "Идет торг"' } } });
+            }
+
+
+            auction.status = newStatus;
+
+            // Если аукцион завершается, обрабатываем лоты
+            if (newStatus === 'Завершен') {
+                auction.lots = auction.lots.map(lot => {
+                    // Проверяем, был ли лот в торгах и есть ли лидирующая ставка
+                    if ((lot.status === 'Идет торг' || (lot.status === 'Ожидает торгов' && lot.biddings && lot.biddings.length > 0)) && lot.highest_bidder_id) {
+                        return {
+                            ...lot,
+                            status: 'Продан',
+                            final_price: lot.current_price,
+                            final_buyer_id: lot.highest_bidder_id
+                        };
+                    } else if (lot.status !== 'Продан') { // Если лот не был продан (например, нет ставок или был 'Ожидает торгов' без ставок)
+                        return {
+                            ...lot,
+                            status: 'Не продан'
+                        };
+                    }
+                    return lot; // Возвращаем лот без изменений, если он уже был обработан или не подпадает под условия
+                });
+            }
+
+            // Если аукцион переходит в "Идет торг" со статуса "Запланирован"
+            // и есть лоты со статусом "Ожидает торгов", которые еще не имеют ставок, 
+            // они остаются "Ожидает торгов" до первой ставки.
+            // Если же на них уже есть ставки (что маловероятно до старта аукциона, но возможно при некорректных данных),
+            // то при первой ставке LotCard их переведет в "Идет торг".
+            // Специально менять статус лотов на "Идет торг" при старте аукциона не будем, это произойдет органически.
+
+            mockAuctionsData[auctionIndex] = auction;
+            console.log('Updated auction:', auction);
+            resolve({ data: { ...auction } }); // Возвращаем копию обновленного аукциона
+        }, 500);
+    });
+};
 // Добавьте другие функции API по мере необходимости (updateAuction, deleteAuction, placeBid и т.д.)
 
 export default apiClient; // Экспортируем настроенный экземпляр axios для возможных прямых вызовов

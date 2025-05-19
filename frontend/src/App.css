@@ -4,6 +4,33 @@
   /* Уберем, если не нужен центрированный текст везде */
 }
 
+/* src/App.css или аналогичный файл */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Если вы используете MainLayout, ему тоже нужно расти */
+/* Предположим, что у MainLayout есть класс 'main-layout-container' */
+.main-layout-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* Занимает как минимум всю высоту экрана */
+}
+
+.main-content {
+  /* Контейнер для основного контента в MainLayout */
+  flex-grow: 1;
+  /* Позволяет этому блоку занимать все доступное пространство */
+}
+
 /* --- Layout --- */
 .main-layout {
   display: flex;

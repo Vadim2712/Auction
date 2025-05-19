@@ -125,3 +125,70 @@
     background-color: #f8d7da;
     color: #721c24;
 }
+
+.auction-status-controls {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 20px 0;
+    border: 1px solid #dee2e6;
+}
+
+.auction-status-controls h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #495057;
+}
+
+.auction-status-controls .button {
+    /* Общие стили для кнопок в этом блоке */
+    margin-right: 10px;
+    padding: 10px 15px;
+}
+
+.button-start {
+    background-color: #28a745;
+    /* Зеленый */
+    color: white;
+    border: none;
+}
+
+.button-start:hover {
+    background-color: #218838;
+}
+
+.button-start:disabled {
+    background-color: #72b887;
+    cursor: not-allowed;
+}
+
+.button-finish {
+    background-color: #dc3545;
+    /* Красный */
+    color: white;
+    border: none;
+}
+
+.button-finish:hover {
+    background-color: #c82333;
+}
+
+.button-finish:disabled {
+    background-color: #e87c87;
+    cursor: not-allowed;
+}
+
+.auction-completed-message {
+    color: #007bff;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #e7f3ff;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.admin-error {
+    margin-top: 10px;
+    color: #dc3545;
+    /* Цвет ошибки как в bootstrap .text-danger */
+}

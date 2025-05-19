@@ -2,8 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainLayout from './components/layout/MainLayout';
-import Navbar from './components/layout/Navbar'; // Убедитесь, что Navbar импортирован, если вы вынесли его из MainLayout
-import Footer from './components/layout/Footer'; // Аналогично для Footer
+
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -11,6 +10,7 @@ import RegistrationPage from './pages/RegistrationPage';
 import AuctionsListPage from './pages/AuctionsListPage';
 import AuctionDetailPage from './pages/AuctionDetailPage';
 import CreateAuctionPage from './pages/CreateAuctionPage'; // <--- Импортируем новую страницу
+import AddLotPage from './pages/AddLotPage';
 import NotFoundPage from './pages/NotFoundPage'; // Если NotFoundPage у вас отдельно
 
 import { AuthProvider } from './context/AuthContext';

@@ -2,18 +2,21 @@
 import React from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
+// import './MainLayout.css'; // если создадите отдельный файл для MainLayout
 
 const MainLayout = ({ children }) => {
     return (
-        <div className="main-layout">
+        // Если используете App.css для #root flex, то этот div может не нуждаться в flex
+        // Но если хотите изолировать стили MainLayout:
+        // <div className="main-layout-container">
+        <>
             <Navbar />
-            <main className="main-content">
-                <div className="container"> {/* Обертка для контента страницы */}
-                    {children}
-                </div>
+            <main className="main-content container py-4"> {/* py-4 для отступов bootstrap */}
+                {children}
             </main>
             <Footer />
-        </div>
+        </>
+        // </div>
     );
 };
 
