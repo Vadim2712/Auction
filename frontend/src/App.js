@@ -22,15 +22,15 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <MainLayout> {/* Если Navbar и Footer внутри MainLayout */}
+        <MainLayout>
           <Routes>
+            {/* ... (существующие маршруты) ... */}
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegistrationPage />} />
             <Route path="/auctions" element={<AuctionsListPage />} />
             <Route path="/auctions/:id" element={<AuctionDetailPage />} />
 
-            {/* Защищенный маршрут для создания аукциона */}
             <Route
               path="/auctions/create"
               element={
@@ -40,17 +40,16 @@ function App() {
               }
             />
 
-            {/* Добавить другие маршруты здесь */}
-            {/* Пример для добавления лота (будет создан позже):
+            {/* Новый защищенный маршрут для добавления лота */}
             <Route
               path="/auctions/:auctionId/add-lot"
               element={
-                <ProtectedRoute roles={['admin', 'seller']}>
+                <ProtectedRoute roles={['admin', 'seller']}> {/* Доступно админам и продавцам */}
                   <AddLotPage />
                 </ProtectedRoute>
               }
             />
-            */}
+
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </MainLayout>

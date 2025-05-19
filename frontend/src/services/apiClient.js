@@ -48,7 +48,11 @@ export const loginUser = (credentials) => {
             } else if (credentials.email === 'admin@example.com' && credentials.password === 'adminpass') {
                 mockUser = { id: 100, fullName: "Администратор Системы", email: credentials.email, role: "admin" };
                 token = 'fake-jwt-token-admin';
+            } else if (credentials.email === 'seller@example.com' && credentials.password === 'sellerpass') { // <--- Новый пользователь 'seller'
+                mockUser = { id: 2, fullName: "Тестовый Продавец", email: credentials.email, role: "seller" };
+                token = 'fake-jwt-token-seller';
             }
+
 
             if (mockUser && token) {
                 resolve({ data: { token, user: mockUser } });
@@ -111,21 +115,53 @@ export const createAuction = (auctionData) => {
     });
 };
 
-// Lots API
+// Lot API (NEW)
 export const createLot = (auctionId, lotData) => {
-    // Для реального API: return apiClient.post(`/auctions/${auctionId}/lots`, lotData);
     console.log(`apiClient: createLot for auction ${auctionId} (ЗАГЛУШКА)`, lotData);
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            const auction = mockAuctionsData.find(a => a.id.toString() === auctionId);
-            if (auction) {
-                const newLotId = auction.lots.length > 0 ? Math.max(...auction.lots.map(l => l.id)) + 1 : (parseInt(auctionId) * 100) + 1;
-                const newLot = { ...lotData, id: newLotId, auction_id: parseInt(auctionId), status: 'Ожидает аукциона' };
-                auction.lots.push(newLot);
-                resolve({ data: newLot });
-            } else {
-                reject({ response: { status: 404, data: { message: 'Аукцион для добавления лота не найден (заглушка apiClient)' } } });
+            const auctionIndex = mockAuctionsData.findIndex(a => a.id === parseInt(auctionId));
+            if (auctionIndex === -1) {
+                reject({ response: { data: { message: 'Аукцион не найден' } } });
+                return;
             }
+
+            const auction = mockAuctionsData[auctionIndex];
+            if (!auction.lots) {
+                auction.lots = [];
+            }
+
+            // Генерируем уникальный ID для лота (в рамках всех лотов или хотя бы в рамках аукциона)
+            // Для простоты, найдем максимальный ID среди всех лотов всех аукционов
+            let maxLotId = 0;
+            mockAuctionsData.forEach(auc => {
+                if (auc.lots) {
+                    auc.lots.forEach(l => {
+                        if (l.id > maxLotId) maxLotId = l.id;
+                    });
+                }
+            });
+
+            const newLotId = maxLotId + 1;
+
+            const newLot = {
+                id: newLotId, // Уникальный ID лота
+                lot_number: auction.lots.length + 1, // Порядковый номер лота в аукционе
+                name: lotData.name,
+                description: lotData.description_short || lotData.description, // Используем description, если description_short нет
+                start_price: parseFloat(lotData.start_price),
+                current_price: parseFloat(lotData.start_price), // Начальная текущая цена равна стартовой
+                seller_id: lotData.seller_id, // ID продавца
+                // seller_name: lotData.seller_name, // Можно добавить, если передаем, или получать по ID
+                status: 'Ожидает торгов', // Начальный статус лота
+                // biddings: [], // Место для истории ставок, если нужно
+                // final_buyer_id: null,
+                // final_price: null,
+            };
+
+            auction.lots.push(newLot);
+            mockAuctionsData[auctionIndex] = auction; // Обновляем аукцион в массиве
+            resolve({ data: newLot });
         }, 500);
     });
 };

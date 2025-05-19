@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import './Navbar.css'; // Убедитесь, что стили подключены
+import './Navbar.css';
 
 const Navbar = () => {
     const { isAuthenticated, user, logout } = useAuth();
