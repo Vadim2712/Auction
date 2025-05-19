@@ -26,12 +26,51 @@ apiClient.interceptors.request.use(
 
 // --- Заглушки для API вызовов (замените на реальные, когда бэкенд будет готов) ---
 
-// Mock данные (те же, что мы использовали ранее)
-const mockAuctionsData = [
-    { id: 1, name_specificity: 'Антикварная мебель XVIII века', auction_date: '2025-07-15T00:00:00Z', auction_time: '14:00', location: 'Выставочный зал "Эрмитаж"', status: 'Запланирован', description_full: 'Уникальная коллекция антикварной мебели эпохи Людовика XV...', lots: [{ id: 101, auction_id: 1, lot_number: 'A001', name_description: 'Стул "Бержер"', start_price: 1200, status: 'Ожидает аукциона' }, { id: 102, auction_id: 1, lot_number: 'A002', name_description: 'Комод с интарсией', start_price: 3500, status: 'Ожидает аукциона' }] },
-    { id: 2, name_specificity: 'Картины русских художников XIX века (масло)', auction_date: '2025-08-01T00:00:00Z', auction_time: '11:00', location: 'Галерея "Авангард"', status: 'Активен', description_full: 'Работы известных русских живописцев...', lots: [{ id: 201, auction_id: 2, lot_number: 'B001', name_description: 'Этюд "Утро в сосновом лесу"', start_price: 800, status: 'На аукционе' }, { id: 202, auction_id: 2, lot_number: 'B002', name_description: 'Портрет неизвестной дамы', start_price: 1500, status: 'На аукционе' }, { id: 203, auction_id: 2, lot_number: 'B003', name_description: 'Морской пейзаж "Закат над Крымом"', start_price: 2200, status: 'Продан', final_price: 2800, buyer_user_id: 1 }] },
-    { id: 3, name_specificity: 'Редкие монеты и нумизматика', auction_date: '2025-06-20T00:00:00Z', auction_time: '16:30', location: 'Клуб Нумизматов', status: 'Завершен', description_full: 'Коллекционные монеты разных эпох.', lots: [] },
-    { id: 4, name_specificity: 'Ювелирные изделия Фаберже', auction_date: '2025-09-10T00:00:00Z', auction_time: '15:00', location: 'Отель "Националь"', status: 'Запланирован', description_full: 'Эксклюзивные ювелирные изделия.', lots: [] }
+// Mock Data (добавьте/обновите seller_id, highest_bidder_id, biddings, и статусы аукционов)
+let mockAuctionsData = [
+    {
+        id: 1,
+        name_specificity: 'Весенний аукцион антиквариата',
+        auction_date: '2025-06-15',
+        auction_time: '14:00',
+        location: 'Гранд Отель, Бальный зал',
+        description_full: 'Редкие предметы XVIII-XIX веков, включая мебель, картины и ювелирные изделия.',
+        status: 'Идет торг', // <--- Статус аукциона
+        created_by_user_id: 100, // admin
+        lots: [
+            {
+                id: 1, lot_number: 1, name: 'Старинные часы с боем',
+                description: 'Напольные часы, дуб, Германия, ~1880 г.',
+                start_price: 75000, current_price: 78000, seller_id: 2, // ID продавца
+                status: 'Идет торг', // <--- Статус лота
+                highest_bidder_id: 1, // ID покупателя, сделавшего последнюю ставку
+                biddings: [ // <--- История ставок (опционально, но полезно)
+                    { userId: 1, amount: 76000, timestamp: new Date().toISOString() },
+                    { userId: 3, amount: 78000, timestamp: new Date().toISOString() } // User c ID=3 пока не существует, но для примера
+                ]
+            },
+            {
+                id: 2, lot_number: 2, name: 'Фарфоровая статуэтка "Балерина"',
+                description: 'ЛФЗ, 1950-е гг., отличное состояние.',
+                start_price: 12000, current_price: 12000, seller_id: 100, // Продавец - админ
+                status: 'Ожидает торгов',
+                highest_bidder_id: null,
+                biddings: []
+            }
+        ]
+    },
+    {
+        id: 2,
+        name_specificity: 'Нумизматика и редкие монеты',
+        auction_date: '2025-07-01',
+        auction_time: '11:00',
+        location: 'Онлайн-платформа',
+        description_full: 'Коллекция монет от античности до современности.',
+        status: 'Запланирован',
+        created_by_user_id: 100,
+        lots: []
+    }
+    // ... другие аукционы
 ];
 
 // Auth API
@@ -166,6 +205,67 @@ export const createLot = (auctionId, lotData) => {
     });
 };
 
+export const placeBid = (auctionId, lotId, amount, userId) => {
+    console.log(`apiClient: placeBid on auction ${auctionId}, lot ${lotId} for amount ${amount} by user ${userId} (ЗАГЛУШКА)`);
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const auction = mockAuctionsData.find(a => a.id === parseInt(auctionId));
+            if (!auction) {
+                return reject({ response: { status: 404, data: { message: 'Аукцион не найден' } } });
+            }
+            if (auction.status !== 'Идет торг') { // Проверка статуса аукциона
+                return reject({ response: { status: 400, data: { message: 'Торги по этому аукциону еще не начались или уже завершены' } } });
+            }
+
+            const lot = auction.lots.find(l => l.id === parseInt(lotId));
+            if (!lot) {
+                return reject({ response: { status: 404, data: { message: 'Лот не найден' } } });
+            }
+            if (lot.status !== 'Идет торг' && lot.status !== 'Ожидает торгов') { // Лот должен быть доступен для торгов
+                return reject({ response: { status: 400, data: { message: 'Ставки на этот лот не принимаются (статус лота не позволяет)' } } });
+            }
+
+
+            if (lot.seller_id === parseInt(userId)) {
+                return reject({ response: { status: 403, data: { message: 'Вы не можете делать ставки на собственный лот' } } });
+            }
+
+            const bidAmount = parseFloat(amount);
+            if (isNaN(bidAmount) || bidAmount <= lot.current_price) {
+                return reject({ response: { status: 400, data: { message: `Ваша ставка должна быть выше текущей цены (${lot.current_price} руб.)` } } });
+            }
+
+            // Ограничение "Покупатель на одном аукционе может купить только один предмет"
+            // Это правило сложно применить на этапе ставки, если только не считать, что пользователь не может быть highest_bidder более чем на одном активном лоте аукциона.
+            // Для простоты пока пропустим это строгое ограничение на этапе ставки, оно важнее при определении победителя.
+            // Или: проверяем, не является ли этот пользователь уже highest_bidder на ДРУГОМ лоте этого аукциона, который ЕЩЕ НЕ ПРОДАН.
+            const alreadyLeadingAnotherLot = auction.lots.some(
+                l => l.id !== parseInt(lotId) && l.highest_bidder_id === parseInt(userId) && l.status !== 'Продан'
+            );
+            if (alreadyLeadingAnotherLot) {
+                // console.warn("Правило одного предмета: Пользователь уже лидирует на другом лоте этого аукциона.");
+                // Для ТЗ, это может быть мягким предупреждением или строгим запретом.
+                // return reject({ response: { status: 403, data: { message: 'Вы уже лидируете в торгах за другой предмет на этом аукционе. По правилам, можно приобрести только один предмет.' } } });
+            }
+
+
+            lot.current_price = bidAmount;
+            lot.highest_bidder_id = parseInt(userId);
+            if (!lot.biddings) {
+                lot.biddings = [];
+            }
+            lot.biddings.push({ userId: parseInt(userId), amount: bidAmount, timestamp: new Date().toISOString() });
+
+            // Если лот был 'Ожидает торгов', он переходит в 'Идет торг' после первой ставки
+            if (lot.status === 'Ожидает торгов') {
+                lot.status = 'Идет торг';
+            }
+
+            console.log('Updated lot after bid:', lot);
+            resolve({ data: lot }); // Возвращаем обновленный лот
+        }, 700);
+    });
+};
 // Добавьте другие функции API по мере необходимости (updateAuction, deleteAuction, placeBid и т.д.)
 
 export default apiClient; // Экспортируем настроенный экземпляр axios для возможных прямых вызовов

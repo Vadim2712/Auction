@@ -75,3 +75,53 @@
         grid-template-columns: 1fr;
     }
 }
+
+.auction-in-progress-note {
+    background-color: #e6ffed;
+    border-left: 4px solid #28a745;
+    padding: 15px;
+    margin: 20px 0;
+    font-size: 1.1rem;
+    color: #155724;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.lots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* Адаптивные колонки */
+    gap: 20px;
+}
+
+.lot-wrapper {
+    display: flex;
+    flex-direction: column;
+    /* Чтобы сообщение было под карточкой */
+}
+
+.bid-feedback {
+    padding: 8px 12px;
+    margin-top: -10px;
+    /* Чтобы было ближе к карточке, если у LotCard есть margin-bottom */
+    margin-bottom: 10px;
+    border-radius: 0 0 4px 4px;
+    /* Скругляем только нижние углы, если примыкает */
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.bid-feedback.bid-submitting {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.bid-feedback.bid-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.bid-feedback.bid-error {
+    background-color: #f8d7da;
+    color: #721c24;
+}

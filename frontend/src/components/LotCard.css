@@ -1,0 +1,175 @@
+/* src/components/LotCard.css */
+.lot-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease;
+    position: relative;
+    /* Для позиционирования значка статуса, если нужно */
+}
+
+.lot-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.lot-card h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 1.4rem;
+}
+
+.lot-number {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 10px;
+}
+
+.lot-description {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 12px;
+    min-height: 40px;
+    /* Чтобы карточки были примерно одной высоты */
+}
+
+.lot-current-price strong {
+    color: #007bff;
+    /* Или цвет бренда */
+    font-size: 1.2rem;
+}
+
+.lot-highest-bidder {
+    font-size: 0.9rem;
+    color: #28a745;
+    /* Зеленый для лидера */
+    font-style: italic;
+}
+
+.lot-status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 4px;
+    color: #fff;
+    text-transform: capitalize;
+}
+
+.lot-status-badge.status-ожидает-торгов {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.lot-status-badge.status-идет-торг {
+    background-color: #28a745;
+}
+
+.lot-status-badge.status-продан {
+    background-color: #17a2b8;
+}
+
+.lot-status-badge.status-не-продан {
+    background-color: #6c757d;
+}
+
+.lot-status-badge.status-завершен {
+    background-color: #6c757d;
+}
+
+/* Общий для завершенных */
+
+
+.bid-form {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.bid-form .form-group {
+    margin-bottom: 10px;
+}
+
+.bid-form input[type="number"] {
+    width: calc(100% - 24px);
+    /* Учитываем padding input */
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.button-bid {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    /* Стили кнопки уже должны быть определены (.button, .button-primary)
+     но можно добавить специфичный цвет для ставки */
+    background-color: #28a745;
+    /* Зеленый для ставки */
+    border-color: #28a745;
+    color: white;
+}
+
+.button-bid:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+
+.bid-error-message {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.login-prompt,
+.seller-note,
+.bidding-closed-note {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.login-prompt a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.login-prompt a:hover {
+    text-decoration: underline;
+}
+
+/* Граница карточки в зависимости от статуса лота */
+.lot-card.status-идет-торг {
+    border-left: 5px solid #28a745;
+    /* Зеленая полоса для активных торгов */
+}
+
+.lot-card.status-ожидает-торгов {
+    border-left: 5px solid #ffc107;
+    /* Желтая для ожидания */
+}
+
+.lot-card.status-продан {
+    border-left: 5px solid #17a2b8;
+    /* Голубая для проданных */
+    opacity: 0.8;
+}
+
+.lot-card.status-не-продан,
+.lot-card.status-завершен {
+    border-left: 5px solid #6c757d;
+    /* Серая для не проданных/завершенных */
+    opacity: 0.7;
+}

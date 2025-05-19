@@ -122,54 +122,7 @@
 }
 
 /* Адаптивность (пример) */
-@media screen and (max-width: 960px) {
-    .navbar-menu {
-        /* Здесь могут быть стили для отображения меню под "гамбургером" */
-        /* Например, flex-direction: column; width: 100%; position: absolute; top: 80px; left: -100%; opacity: 1; transition: all 0.5s ease; */
-    }
 
-    /* .navbar-menu.active { */
-    /* background: #242222; */
-    /* left: 0; */
-    /* opacity: 1; */
-    /* transition: all 0.5s ease; */
-    /* z-index: 1; */
-    /* } */
-
-    .navbar-item {
-        /* width: 100%; */
-    }
-
-    .navbar-links {
-        /* text-align: center; */
-        /* padding: 2rem; */
-        /* width: 100%; */
-        /* display: table; */
-    }
-
-    .navbar-button {
-        /* display: block; */
-        /* text-align: center; */
-        /* margin: 1rem auto; */
-    }
-
-    /* .menu-icon { */
-    /* display: block; */
-    /* position: absolute; */
-    /* top: 0; */
-    /* right: 0; */
-    /* transform: translate(-100%, 60%); */
-    /* font-size: 1.8rem; */
-    /* cursor: pointer; */
-    /* color: #fff; */
-    /* } */
-
-    .navbar-user-greeting {
-        margin-right: 5px;
-        /* Уменьшаем отступ */
-        font-size: 0.9rem;
-    }
-}
 
 @media screen and (max-width: 768px) {
     .navbar-logo {
@@ -187,8 +140,8 @@
         font-size: 0.9rem;
     }
 
-    .navbar-user-greeting {
-        /* Можно скрыть часть приветствия или сделать его короче */
-        /* display: none; /* или изменить текст */
-    }
+    /* .navbar-user-greeting { */
+    /* Можно скрыть часть приветствия или сделать его короче */
+    /* display: none; /* или изменить текст */
+    /* } */
 }
