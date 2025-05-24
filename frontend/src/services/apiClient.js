@@ -300,6 +300,32 @@ export const placeBid = (auctionId, lotId, amount, userId) => {
     });
 };
 
+export const getMyListings = (sellerId) => {
+    console.log(`[apiClient.js] getMyListings for seller ${sellerId}`);
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            const myListings = [];
+            const currentSellerId = parseInt(sellerId);
+
+            mockAuctionsData.forEach(auction => {
+                if (auction.lots) {
+                    auction.lots.forEach(lot => {
+                        if (lot.seller_id === currentSellerId) {
+                            myListings.push({
+                                ...lot, // все поля лота
+                                auctionId: auction.id,
+                                auctionName: auction.name_specificity,
+                                auctionStatus: auction.status
+                            });
+                        }
+                    });
+                }
+            });
+            resolve({ data: myListings });
+        }, 300);
+    });
+};
+
 // --- User/Activity API ---
 export const getUserById = (userId) => {
     console.log(`[apiClient.js] getUserById for user ${userId}`);

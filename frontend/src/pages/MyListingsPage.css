@@ -1,0 +1,108 @@
+/* src/pages/MyListingsPage.css */
+.my-listings-page h1 {
+    margin-bottom: 25px;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.listing-item.card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.3s ease;
+}
+
+.listing-item.card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.listing-item .card-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.listing-item .card-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.listing-item .card-header h3 a {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.listing-item .card-header h3 a:hover {
+    text-decoration: underline;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: #fff;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+/* Статусы лотов - убедитесь, что они соответствуют классам, генерируемым в LotCard и других местах */
+.status-badge.status-lot-ожидает-торгов {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.status-badge.status-lot-идет-торг {
+    background-color: #28a745;
+}
+
+.status-badge.status-lot-продан {
+    background-color: #17a2b8;
+}
+
+.status-badge.status-lot-не-продан {
+    background-color: #6c757d;
+}
+
+.listing-item .card-body {
+    padding: 20px;
+    flex-grow: 1;
+}
+
+.listing-item .card-body p {
+    margin: 0 0 10px 0;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.listing-item .card-body p strong {
+    color: #333;
+}
+
+.listing-item .card-footer {
+    padding: 15px 20px;
+    background-color: #f9f9f9;
+    border-top: 1px solid #eee;
+    text-align: right;
+}
+
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}

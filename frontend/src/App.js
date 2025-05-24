@@ -12,6 +12,7 @@ import RegistrationPage from './pages/RegistrationPage';
 import AuctionsListPage from './pages/AuctionsListPage';
 import AuctionDetailPage from './pages/AuctionDetailPage';
 import CreateAuctionPage from './pages/CreateAuctionPage';
+import MyListingsPage from './pages/MyListingsPage';
 import AddLotPage from './pages/AddLotPage';
 import MyActivityPage from './pages/MyActivityPage'; // Страница активности пользователя
 // import MyListingsPage from './pages/MyListingsPage'; // Раскомментируйте, когда создадим
@@ -57,16 +58,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/*
-            <Route
+            <Route // <--- НОВЫЙ МАРШРУТ
               path="/my-listings"
               element={
-                <ProtectedRoute roles={['seller', 'admin']}>
+                <ProtectedRoute roles={['seller', 'admin']}> {/* Доступно продавцам и администраторам */}
                   <MyListingsPage />
                 </ProtectedRoute>
               }
             />
-            */}
 
             {/* Маршрут для ненайденных страниц */}
             <Route path="*" element={<NotFoundPage />} />

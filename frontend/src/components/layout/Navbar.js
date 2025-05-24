@@ -10,12 +10,12 @@ const Navbar = () => {
 
     const handleLogout = () => {
         logout();
-        navigate('/login');
+        navigate('/'); // Перенаправляем на главную после выхода
     };
 
     return (
         <nav className="navbar">
-            <div className="navbar-container container">
+            <div className="navbar-container"> {/* Убедитесь, что этот класс есть, если используете container в CSS */}
                 <Link to="/" className="navbar-logo">
                     Аукцион Онлайн
                 </Link>
@@ -32,20 +32,34 @@ const Navbar = () => {
                     </li>
                     {isAuthenticated && user?.role === 'admin' && (
                         <li className="navbar-item">
-                            <Link to="/auctions/create" className="navbar-links">
-                                Создать Аукцион
+                            <Link to="/create-auction" className="navbar-links"> {/* Убедитесь, что маршрут правильный */}
+                                Создать аукцион
                             </Link>
                         </li>
                     )}
-                    {/* Добавьте здесь другие ссылки по мере необходимости, например, Профиль */}
-
+                    {isAuthenticated && (user?.role === 'seller' || user?.role === 'admin') && ( // <--- НОВАЯ ССЫЛКА
+                        <li className="navbar-item">
+                            <Link to="/my-listings" className="navbar-links">
+                                Мои лоты
+                            </Link>
+                        </li>
+                    )}
+                    {isAuthenticated && ( // Ссылку "Моя активность" можно показывать всем авторизованным
+                        <li className="navbar-item">
+                            <Link to="/my-activity" className="navbar-links">
+                                Моя активность
+                            </Link>
+                        </li>
+                    )}
+                </ul>
+                <ul className="navbar-menu navbar-user-actions"> {/* Используйте один navbar-menu или разделите логически */}
                     {isAuthenticated ? (
                         <>
                             <li className="navbar-item navbar-user-greeting">
                                 Привет, {user?.fullName || user?.email}! ({user?.role})
                             </li>
                             <li className="navbar-item">
-                                <button onClick={handleLogout} className="navbar-button button-logout">
+                                <button onClick={handleLogout} className="navbar-button logout-button"> {/* Пример класса для кнопки выхода */}
                                     Выйти
                                 </button>
                             </li>
@@ -58,7 +72,7 @@ const Navbar = () => {
                                 </Link>
                             </li>
                             <li className="navbar-item">
-                                <Link to="/register" className="navbar-button">
+                                <Link to="/register" className="navbar-links"> {/* Используем navbar-links для единообразия или navbar-button */}
                                     Регистрация
                                 </Link>
                             </li>
