@@ -3,6 +3,7 @@ package store
 import (
 	"auction-app/backend/internal/models"
 	"errors"
+	"strconv"
 
 	"gorm.io/gorm"
 )
@@ -154,4 +155,71 @@ func (s *gormLotStore) GetMostExpensiveSoldLot() (*models.Lot, error) {
 		return nil, err // Другая ошибка БД
 	}
 	return &lot, nil
+}
+
+func (s *gormLotStore) GetTopNSoldLotsByPrice(limit int) ([]models.Lot, error) {
+	var lots []models.Lot
+	err := s.db.Where("status = ? AND final_price IS NOT NULL", models.StatusSold).
+		Order("final_price DESC").
+		Limit(limit).
+		Preload("User").       // Продавец
+		Preload("FinalBuyer"). // Покупатель
+		// Preload("Auction") // Если нужно знать, на каком аукционе был продан лот
+		Find(&lots).Error
+	if err != nil {
+		// gorm.ErrRecordNotFound не будет ошибкой, если limit > 0, но найдено 0 записей
+		return nil, err
+	}
+	return lots, nil
+}
+
+func (s *gormLotStore) GetActiveLotsByAuctionID(auctionID uint) ([]models.Lot, error) {
+	var lots []models.Lot
+	// Ищем лоты со статусом "Ожидает торгов" или "Идет торг"
+	err := s.db.Where("auction_id = ? AND status IN (?, ?)", auctionID, models.StatusPending, models.StatusLotActive).
+		Order("lot_number ASC").
+		Preload("User"). // Продавец
+		Find(&lots).Error
+	return lots, err
+}
+
+func (s *gormLotStore) GetAllLots(offset, limit int, filters map[string]string) ([]models.Lot, int64, error) {
+	var lots []models.Lot
+	var total int64
+	queryBuilder := s.db.Model(&models.Lot{})
+
+	if status, ok := filters["status"]; ok && status != "" {
+		queryBuilder = queryBuilder.Where("status = ?", status)
+	}
+	if sellerID, ok := filters["sellerId"]; ok && sellerID != "" {
+		sID, err := strconv.ParseUint(sellerID, 10, 32)
+		if err == nil {
+			queryBuilder = queryBuilder.Where("seller_id = ?", uint(sID))
+		}
+	}
+	if auctionID, ok := filters["auctionId"]; ok && auctionID != "" {
+		aID, err := strconv.ParseUint(auctionID, 10, 32)
+		if err == nil {
+			queryBuilder = queryBuilder.Where("auction_id = ?", uint(aID))
+		}
+	}
+	// Можно добавить фильтр по дате аукциона, к которому принадлежит лот, через JOIN
+	// if dateStr, ok := filters["auctionDate"]; ok && dateStr != "" {
+	//	 targetDate, errDate := time.Parse("2006-01-02", dateStr)
+	//	 if errDate == nil {
+	//		 queryBuilder = queryBuilder.Joins("JOIN auctions ON auctions.id = lots.auction_id").
+	//						 Where("DATE(auctions.auction_date) = ?", targetDate.Format("2006-01-02"))
+	//	 }
+	// }
+
+	if err := queryBuilder.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := queryBuilder.Order("created_at DESC").Offset(offset).Limit(limit).
+		Preload("User"). // Продавец
+		Preload("HighestBidder").
+		// Preload(clause.Associations) // Можно загрузить все ассоциации или только нужные
+		Find(&lots).Error
+	return lots, total, err
 }

@@ -284,3 +284,44 @@ func (h *LotHandler) PlaceBid(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, updatedLot)
 }
+
+func (h *LotHandler) GetAllLots(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	filters := make(map[string]string)
+	if status := c.Query("status"); status != "" {
+		filters["status"] = status // e.g., "Ожидает торгов", "Идет торг"
+	}
+	if sellerId := c.Query("sellerId"); sellerId != "" {
+		filters["sellerId"] = sellerId
+	}
+	if auctionId := c.Query("auctionId"); auctionId != "" {
+		filters["auctionId"] = auctionId
+	}
+	// if auctionDate := c.Query("auctionDate"); auctionDate != "" { // Формат YYYY-MM-DD
+	//	filters["auctionDate"] = auctionDate
+	// }
+
+	lots, total, err := h.lotService.GetAllLots(page, pageSize, filters)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения списка лотов: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": lots,
+		"pagination": gin.H{
+			"currentPage": page,
+			"pageSize":    pageSize,
+			"totalItems":  total,
+			"totalPages":  (total + int64(pageSize) - 1) / int64(pageSize),
+		},
+	})
+}

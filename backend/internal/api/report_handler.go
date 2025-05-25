@@ -209,3 +209,41 @@ func (h *ReportHandler) GetSellersByItemCategory(c *gin.Context) {
 		"pagination": gin.H{"currentPage": page, "pageSize": pageSize, "totalItems": total, "totalPages": (total + int64(pageSize) - 1) / int64(pageSize)},
 	})
 }
+
+func (h *ReportHandler) GetSellersReportBySpecificity(c *gin.Context) {
+	specificity := c.Query("specificity")
+	minSalesStr := c.DefaultQuery("minSales", "0")
+
+	if specificity == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Параметр 'specificity' (специфика аукциона) обязателен"})
+		return
+	}
+	minSales, errMinSales := strconv.ParseFloat(minSalesStr, 64)
+	if errMinSales != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректное значение для 'minSales'"})
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	sellersReport, total, err := h.reportService.GetSellersWithSalesByAuctionSpecificity(specificity, minSales, page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения отчета по продавцам: " + err.Error()})
+		return
+	}
+	if len(sellersReport) == 0 && total == 0 { // Проверяем и total, если он был 0
+		c.JSON(http.StatusNotFound, gin.H{"message": "Продавцы, соответствующие критериям, не найдены"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"data":       sellersReport,
+		"pagination": gin.H{"currentPage": page, "pageSize": pageSize, "totalItems": total, "totalPages": (total + int64(pageSize) - 1) / int64(pageSize)},
+	})
+}

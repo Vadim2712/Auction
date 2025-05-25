@@ -185,3 +185,25 @@ func (s *gormAuctionStore) GetAuctionWithMostSoldLots() (*models.Auction, int64,
 
 	return &auction, result.SoldCount, nil
 }
+
+func (s *gormAuctionStore) GetAuctionsWithoutSoldLots(offset, limit int) ([]models.Auction, int64, error) {
+	var auctions []models.Auction
+	var total int64
+
+	// Находим ID аукционов, у которых есть хотя бы один проданный лот
+	var subQuery = s.db.Model(&models.Lot{}).Select("DISTINCT auction_id").Where("status = ?", models.StatusSold)
+
+	queryBuilder := s.db.Model(&models.Auction{}).
+		Where("id NOT IN (?)", subQuery).           // Выбираем аукционы, которых нет в списке аукционов с проданными лотами
+		Where("status = ?", models.StatusCompleted) // Имеет смысл смотреть только завершенные аукционы
+
+	if err := queryBuilder.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := queryBuilder.Order("auction_date DESC").Offset(offset).Limit(limit).
+		Preload("User"). // Загружаем создателя аукциона
+		Find(&auctions).Error
+
+	return auctions, total, err
+}

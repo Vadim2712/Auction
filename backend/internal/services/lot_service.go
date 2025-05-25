@@ -221,3 +221,16 @@ func (s *LotService) GetLotsByAuctionID(auctionID uint, page, pageSize int) ([]m
 	}
 	return lots, total, nil
 }
+
+func (s *LotService) GetAllLots(page, pageSize int, filters map[string]string) ([]models.Lot, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+
+	// Дополнительная валидация фильтров может быть здесь
+	return s.lotStore.GetAllLots(offset, pageSize, filters)
+}

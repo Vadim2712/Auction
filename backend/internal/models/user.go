@@ -73,3 +73,9 @@ type UpdateUserStatusInput struct {
 type UpdateUserRolesInput struct {
 	AvailableBusinessRoles []string `json:"availableBusinessRoles" binding:"required"` // Массив строк
 }
+
+type SellerSalesReport struct {
+	Seller     User    `json:"seller"`
+	TotalSales float64 `json:"totalSales"`
+	LotsSold   int64   `json:"lotsSold"`
+}

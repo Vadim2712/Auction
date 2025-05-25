@@ -138,7 +138,7 @@ func main() {
 			reportRoutes.GET("/top-expensive-lots", reportHandler.GetTopNMostExpensiveSoldLots)
 			reportRoutes.GET("/items-for-sale", reportHandler.GetItemsForSaleByDateAndAuction)        // ?auctionId=X&date=YYYY-MM-DD
 			reportRoutes.GET("/buyers-by-specificity", reportHandler.GetBuyersOfItemsWithSpecificity) // ?specificity=X
-			reportRoutes.GET("/sellers-by-category", reportHandler.GetSellersByItemCategory)          // ?category=X
+			reportRoutes.GET("/sellers-sales-by-specificity", reportHandler.GetSellersReportBySpecificity)
 		}
 
 		// Маршруты для управления пользователями (только для SYSTEM_ADMIN)
@@ -150,6 +150,8 @@ func main() {
 			adminUserRoutes.PATCH("/:userId/status", adminHandler.UpdateUserStatus) // { "isActive": false }
 			adminUserRoutes.PUT("/:userId/roles", adminHandler.UpdateUserRoles)     // { "availableBusinessRoles": ["buyer", "seller"] }
 		}
+
+		v1.GET("/lots", lotHandler.GetAllLots)
 	}
 
 	// 6. Запуск сервера

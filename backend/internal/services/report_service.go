@@ -5,6 +5,7 @@ import (
 	"auction-app/backend/internal/store"
 	"errors" // Для заглушек
 	"fmt"
+	"time"
 )
 
 type ReportService struct {
@@ -83,32 +84,87 @@ func (s *ReportService) GetMostExpensiveSoldLotInfo() (map[string]interface{}, e
 }
 
 func (s *ReportService) GetAuctionsWithNoSoldLots(page, pageSize int) ([]models.Auction, int64, error) {
-	// TODO: Реализовать логику в s.auctionStore.GetAuctionsWithoutSoldLots(offset, limit)
-	// и вызвать ее здесь.
-	return nil, 0, errors.New("метод GetAuctionsWithNoSoldLots еще не реализован в сервисе")
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+	return s.auctionStore.GetAuctionsWithoutSoldLots(offset, pageSize)
 }
 
 func (s *ReportService) GetTopNMostExpensiveSoldLots(limit int) ([]models.Lot, error) {
-	// TODO: Реализовать логику в s.lotStore.GetTopNSoldLotsByPrice(limit)
-	// и вызвать ее здесь.
-	return nil, errors.New("метод GetTopNMostExpensiveSoldLots еще не реализован в сервисе")
+	if limit <= 0 {
+		limit = 3 // Значение по умолчанию
+	}
+	lots, err := s.lotStore.GetTopNSoldLotsByPrice(limit)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения топ-%d дорогих лотов: %w", limit, err)
+	}
+	return lots, nil
 }
 
 func (s *ReportService) GetItemsForSaleByDateAndAuction(auctionID uint, dateStr string) ([]models.Lot, error) {
-	// TODO: Реализовать логику:
-	// 1. Получить аукцион по ID из s.auctionStore.
-	// 2. Проверить, что дата аукциона совпадает с dateStr.
-	// 3. Если совпадает, получить его лоты (s.lotStore.GetLotsByAuctionID)
-	// 4. Отфильтровать лоты со статусом 'Ожидает торгов' или 'Идет торг'.
-	return nil, errors.New("метод GetItemsForSaleByDateAndAuction еще не реализован в сервисе")
+	targetDate, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		return nil, fmt.Errorf("некорректный формат даты: %w", err)
+	}
+
+	auction, err := s.auctionStore.GetAuctionByID(auctionID)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения аукциона: %w", err)
+	}
+	if auction == nil {
+		return nil, errors.New("аукцион не найден")
+	}
+
+	// Проверяем, что дата аукциона совпадает с запрошенной датой (только день, месяц, год)
+	if auction.AuctionDate.Year() != targetDate.Year() ||
+		auction.AuctionDate.Month() != targetDate.Month() ||
+		auction.AuctionDate.Day() != targetDate.Day() {
+		return nil, fmt.Errorf("указанный аукцион (ID: %d) не проводился в дату %s", auctionID, dateStr)
+	}
+
+	// Если аукцион не активен и не запланирован, то предметы не "выставлены на продажу" в контексте торгов
+	if auction.Status != models.StatusActive && auction.Status != models.StatusScheduled {
+		return []models.Lot{}, nil // Возвращаем пустой список, если аукцион завершен/отменен
+	}
+
+	// Получаем лоты, которые на данный момент выставлены на продажу (не проданы/не сняты)
+	lots, err := s.lotStore.GetActiveLotsByAuctionID(auctionID)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения лотов для аукциона ID %d: %w", auctionID, err)
+	}
+	return lots, nil
 }
 
 func (s *ReportService) GetBuyersOfItemsWithSpecificity(specificity string, page, pageSize int) ([]models.User, int64, error) {
-	// TODO: Реализовать логику в s.userStore (или через s.lotStore/s.auctionStore с JOIN'ами)
-	return nil, 0, errors.New("метод GetBuyersOfItemsWithSpecificity еще не реализован в сервисе")
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+	return s.userStore.GetBuyersByAuctionSpecificity(specificity, offset, pageSize)
 }
 
 func (s *ReportService) GetSellersByItemCategory(category string, page, pageSize int) ([]models.User, int64, error) {
 	// TODO: Реализовать логику в s.userStore (или через s.lotStore/s.auctionStore с JOIN'ами)
 	return nil, 0, errors.New("метод GetSellersByItemCategory еще не реализован в сервисе")
+}
+
+func (s *ReportService) GetSellersWithSalesByAuctionSpecificity(specificity string, minSales float64, page, pageSize int) ([]models.SellerSalesReport, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	if minSales < 0 {
+		minSales = 0
+	}
+	offset := (page - 1) * pageSize
+	return s.userStore.GetSellersWithSalesByAuctionSpecificity(specificity, minSales, offset, pageSize)
 }

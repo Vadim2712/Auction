@@ -9,6 +9,8 @@ type UserStore interface {
 	GetUserByID(id uint) (*models.User, error)
 	GetAllUsers(offset, limit int, filters map[string]string) ([]models.User, int64, error) // <--- НОВЫЙ
 	UpdateUser(user *models.User) error                                                     // <--- НОВЫЙ (для обновления статуса, ролей и т.д.)
+	GetBuyersByAuctionSpecificity(specificity string, offset, limit int) ([]models.User, int64, error)
+	GetSellersWithSalesByAuctionSpecificity(specificity string, minTotalSales float64, offset, limit int) ([]models.SellerSalesReport, int64, error)
 }
 
 // AuctionStore определяет методы для работы с аукционами
@@ -20,7 +22,8 @@ type AuctionStore interface {
 	UpdateAuctionStatus(id uint, status models.AuctionStatus, lotsToUpdate []models.Lot) error
 	DeleteAuction(id uint) error
 	FindAuctionsBySpecificity(specificityQuery string, offset, limit int) ([]models.Auction, int64, error)
-	GetAuctionWithMostSoldLots() (*models.Auction, int64, error) // <--- УБЕДИТЕСЬ, ЧТО ЭТА СТРОКА ЕСТЬ И СОВПАДАЕТ
+	GetAuctionWithMostSoldLots() (*models.Auction, int64, error)                   // <--- УБЕДИТЕСЬ, ЧТО ЭТА СТРОКА ЕСТЬ И СОВПАДАЕТ
+	GetAuctionsWithoutSoldLots(offset, limit int) ([]models.Auction, int64, error) // <--- НОВЫЙ (или убедитесь, что есть)
 }
 
 // LotStore определяет методы для работы с лотами
@@ -33,9 +36,11 @@ type LotStore interface {
 	GetLotsBySellerID(sellerID uint, offset, limit int) ([]models.Lot, int64, error)
 	GetLeadingBidsByUserID(userID uint, offset, limit int) ([]models.Lot, int64, error)
 	GetWonLotsByUserID(userID uint, offset, limit int) ([]models.Lot, int64, error)
-	GetLotWithMaxPriceDifference() (*models.Lot, error) // Мы его так назвали в прошлый раз, совпадает с реализацией
-	GetMostExpensiveSoldLot() (*models.Lot, error)      // <--- УБЕДИТЕСЬ, ЧТО ЭТА СТРОКА ЕСТЬ И СОВПАДАЕТ
-	// GetTopNSoldLotsByPrice(limit int) ([]models.Lot, error) // Для отчета "топ N дорогих"
+	GetLotWithMaxPriceDifference() (*models.Lot, error)     // Мы его так назвали в прошлый раз, совпадает с реализацией
+	GetMostExpensiveSoldLot() (*models.Lot, error)          // <--- УБЕДИТЕСЬ, ЧТО ЭТА СТРОКА ЕСТЬ И СОВПАДАЕТ
+	GetTopNSoldLotsByPrice(limit int) ([]models.Lot, error) // Для отчета "топ N дорогих"
+	GetActiveLotsByAuctionID(auctionID uint) ([]models.Lot, error)
+	GetAllLots(offset, limit int, filters map[string]string) ([]models.Lot, int64, error)
 	// GetLotsForAuctionByDateAndStatus(auctionID uint, targetDate time.Time, statuses []models.LotStatus) ([]models.Lot, error) // Для отчета
 	// GetSoldLotsBySpecificity(specificity string, offset, limit int) ([]models.Lot, int64, error) // Для отчета
 	// GetSoldLotsByCategoryForSellers(category string, offset, limit int) ([]LotSellerInfo, int64, error) // Для отчета (LotSellerInfo - кастомная структура)
