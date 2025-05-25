@@ -1,7 +1,8 @@
+// backend/cmd/main.go
 package main
 
 import (
-	"auction-app/backend/config" // Убедитесь, что путь 'auction-app/backend' соответствует вашему go.mod
+	"auction-app/backend/config"
 	"auction-app/backend/internal/api"
 	"auction-app/backend/internal/middleware"
 	"auction-app/backend/internal/services"
@@ -13,62 +14,44 @@ import (
 )
 
 func main() {
-	// 1. Загрузка конфигурации
+	// ... (инициализация cfg, db, stores, services, handlers как было) ...
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Ошибка загрузки конфигурации: %v", err)
 	}
-
-	// 2. Инициализация базы данных
-	// InitDB возвращает *gorm.DB, который будет использоваться для создания экземпляров хранилищ
 	db, err := store.InitDB(cfg)
 	if err != nil {
 		log.Fatalf("Ошибка инициализации базы данных: %v", err)
 	}
-	// sqlDB, errDb := db.DB() // Это нужно, если вы хотите явно закрыть соединение
-	// if errDb != nil {
-	//  log.Fatalf("Ошибка получения *sql.DB: %v", errDb)
-	// }
-	// defer sqlDB.Close() // Пока сервер работает, соединение должно быть открыто
 
-	// 3. Инициализация зависимостей (Хранилища -> Сервисы -> Обработчики)
-
-	// --- Хранилища (Stores/Repositories) ---
 	userStore := store.NewGormUserStore(db)
 	auctionStore := store.NewGormAuctionStore(db)
 	lotStore := store.NewGormLotStore(db)
 	bidStore := store.NewGormBidStore(db)
 
-	// --- Сервисы ---
 	authService := services.NewAuthService(userStore, cfg)
-	auctionService := services.NewAuctionService(auctionStore, lotStore)   // Передаем auctionStore и lotStore
-	lotService := services.NewLotService(lotStore, auctionStore, bidStore) // Передаем lotStore, auctionStore и bidStore
+	auctionService := services.NewAuctionService(auctionStore, lotStore)
+	lotService := services.NewLotService(lotStore, auctionStore, bidStore)
 	userActivityService := services.NewUserActivityService(lotStore, auctionStore)
 	reportService := services.NewReportService(auctionStore, lotStore, userStore)
-	userService := services.NewUserService(userStore) // Сервис для управления пользователями (админка)
+	userService := services.NewUserService(userStore)
 
-	// --- Обработчики (Handlers) ---
 	authHandler := api.NewAuthHandler(authService)
 	auctionHandler := api.NewAuctionHandler(auctionService)
 	lotHandler := api.NewLotHandler(lotService)
 	userActivityHandler := api.NewUserActivityHandler(userActivityService)
-	reportHandler := api.NewReportHandler(reportService) // Передаем ReportService
-	adminHandler := api.NewAdminHandler(userService)     // Обработчик для админских функций с пользователями
+	reportHandler := api.NewReportHandler(reportService)
+	adminHandler := api.NewAdminHandler(userService)
 
-	// 4. Настройка сервера Gin
-	// gin.SetMode(gin.ReleaseMode) // Для продакшена, если нужно
 	router := gin.Default()
-
-	// Настройка CORS
+	// Настройка CORS ... (как было)
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{"http://localhost:3000"} // URL вашего фронтенда
+	corsConfig.AllowOrigins = []string{"http://localhost:3000"}
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	corsConfig.AllowCredentials = true
 	router.Use(cors.New(corsConfig))
 
-	// 5. Определение маршрутов API
-	// Группа v1 для всех API эндпоинтов
 	v1 := router.Group("/api/v1")
 	{
 		// Маршруты аутентификации
@@ -79,82 +62,82 @@ func main() {
 			authRoutes.GET("/me", middleware.AuthMiddleware(cfg), authHandler.Me)
 		}
 
-		// Маршруты для аукционов
-		auctionRoutes := v1.Group("/auctions")
+		// Общие маршруты для аукционов
+		auctionsBaseRoutes := v1.Group("/auctions")
 		{
-			auctionRoutes.GET("", auctionHandler.GetAllAuctions)                   // Получить все аукционы (публичный)
-			auctionRoutes.GET("/search", auctionHandler.FindAuctionsBySpecificity) // Поиск аукционов (публичный)
-			auctionRoutes.GET("/:id", auctionHandler.GetAuctionByID)               // Получить аукцион по ID (публичный)
-
-			// Защищенные маршруты для аукционов
-			auctionRoutes.POST("", middleware.AuthMiddleware(cfg), auctionHandler.CreateAuction)                   // Создать аукцион
-			auctionRoutes.PUT("/:id", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuction)                // Обновить аукцион
-			auctionRoutes.PATCH("/:id/status", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuctionStatus) // Изменить статус аукциона
-			auctionRoutes.DELETE("/:id", middleware.AuthMiddleware(cfg), auctionHandler.DeleteAuction)             // Удалить аукцион
+			auctionsBaseRoutes.GET("", auctionHandler.GetAllAuctions)                                 // GET /api/v1/auctions (список всех)
+			auctionsBaseRoutes.GET("/search", auctionHandler.FindAuctionsBySpecificity)               // GET /api/v1/auctions/search
+			auctionsBaseRoutes.POST("", middleware.AuthMiddleware(cfg), auctionHandler.CreateAuction) // POST /api/v1/auctions
 		}
 
-		// Маршруты для лотов (вложенные в аукционы)
-		// /api/v1/auctions/:auctionId/lots
-		lotAuctionRoutes := v1.Group("/auctions/:auctionId/lots")
+		// Маршруты для конкретного аукциона /auctions/:auctionId
+		auctionSpecificRoutes := v1.Group("/auctions/:auctionId") // Используем :auctionId как общий параметр
 		{
-			lotAuctionRoutes.GET("", lotHandler.GetLotsByAuctionID)                         // Получить лоты для аукциона (публичный)
-			lotAuctionRoutes.POST("", middleware.AuthMiddleware(cfg), lotHandler.CreateLot) // Добавить лот к аукциону
+			auctionSpecificRoutes.GET("", auctionHandler.GetAuctionByID)                                               // GET /api/v1/auctions/:auctionId (детали аукциона)
+			auctionSpecificRoutes.PUT("", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuction)                // PUT /api/v1/auctions/:auctionId (обновить аукцион)
+			auctionSpecificRoutes.PATCH("/status", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuctionStatus) // PATCH /api/v1/auctions/:auctionId/status
+			auctionSpecificRoutes.DELETE("", middleware.AuthMiddleware(cfg), auctionHandler.DeleteAuction)             // DELETE /api/v1/auctions/:auctionId
 
-			// Маршруты для конкретного лота в рамках аукциона
-			// /api/v1/auctions/:auctionId/lots/:lotId
-			lotAuctionRoutes.PUT("/:lotId", middleware.AuthMiddleware(cfg), lotHandler.UpdateLotDetails) // Обновить лот
-			lotAuctionRoutes.DELETE("/:lotId", middleware.AuthMiddleware(cfg), lotHandler.DeleteLot)     // Удалить лот
+			// Вложенные маршруты для лотов этого аукциона
+			// /api/v1/auctions/:auctionId/lots
+			lotsForAuctionRoutes := auctionSpecificRoutes.Group("/lots")
+			{
+				lotsForAuctionRoutes.GET("", lotHandler.GetLotsByAuctionID)                         // GET /api/v1/auctions/:auctionId/lots
+				lotsForAuctionRoutes.POST("", middleware.AuthMiddleware(cfg), lotHandler.CreateLot) // POST /api/v1/auctions/:auctionId/lots
 
-			// Маршруты для ставок на конкретный лот
-			// /api/v1/auctions/:auctionId/lots/:lotId/bids
-			lotAuctionRoutes.POST("/:lotId/bids", middleware.AuthMiddleware(cfg), lotHandler.PlaceBid) // Сделать ставку
-			// GET /api/v1/auctions/:auctionId/lots/:lotId/bids - можно добавить для получения истории ставок по лоту
+				// Маршруты для конкретного лота в рамках аукциона
+				// /api/v1/auctions/:auctionId/lots/:lotId
+				specificLotRoutes := lotsForAuctionRoutes.Group("/:lotId")
+				{
+					// GET /api/v1/auctions/:auctionId/lots/:lotId - можно использовать lotHandler.GetLotByID, но он ожидает только lotId
+					// Если GetLotByID должен работать и здесь, то он должен игнорировать auctionId или проверять соответствие.
+					// Либо создать отдельный хендлер для этого.
+					// Пока оставим GetLotByID на /lots/:lotId
+					specificLotRoutes.PUT("", middleware.AuthMiddleware(cfg), lotHandler.UpdateLotDetails) // PUT /api/v1/auctions/:auctionId/lots/:lotId
+					specificLotRoutes.DELETE("", middleware.AuthMiddleware(cfg), lotHandler.DeleteLot)     // DELETE /api/v1/auctions/:auctionId/lots/:lotId
+					specificLotRoutes.POST("/bids", middleware.AuthMiddleware(cfg), lotHandler.PlaceBid)   // POST /api/v1/auctions/:auctionId/lots/:lotId/bids
+				}
+			}
 		}
 
-		// Отдельные маршруты для лотов (если нужны)
-		// Эти маршруты могут быть удобны, если ID лота глобально уникален.
+		// Отдельные маршруты для лотов (если ID лота глобально уникален)
 		individualLotRoutes := v1.Group("/lots")
-		// individualLotRoutes.Use(middleware.AuthMiddleware(cfg)) // Защитить, если операции не публичны
 		{
-			individualLotRoutes.GET("/:lotId", lotHandler.GetLotByID) // Получить лот по его ID (публичный)
+			individualLotRoutes.GET("/:lotId", lotHandler.GetLotByID)
 		}
 
 		// Маршруты для личной активности пользователя
 		myRoutes := v1.Group("/my")
-		myRoutes.Use(middleware.AuthMiddleware(cfg)) // Все маршруты здесь требуют аутентификации
+		myRoutes.Use(middleware.AuthMiddleware(cfg))
 		{
-			myRoutes.GET("/activity", userActivityHandler.GetMyActivity) // Ставки и выигрыши пользователя
-			myRoutes.GET("/listings", userActivityHandler.GetMyListings) // Лоты продавца
+			myRoutes.GET("/activity", userActivityHandler.GetMyActivity)
+			myRoutes.GET("/listings", userActivityHandler.GetMyListings)
 		}
 
-		// Маршруты для отчетов (могут требовать прав админа/менеджера)
+		// Маршруты для отчетов
 		reportRoutes := v1.Group("/reports")
-		reportRoutes.Use(middleware.AuthMiddleware(cfg)) // Защищаем все отчеты
+		reportRoutes.Use(middleware.AuthMiddleware(cfg))
 		{
 			reportRoutes.GET("/lot-max-price-diff", reportHandler.GetLotWithMaxPriceDifference)
 			reportRoutes.GET("/auction-most-sold", reportHandler.GetAuctionWithMostSoldLots)
 			reportRoutes.GET("/most-expensive-lot-info", reportHandler.GetBuyerAndSellerOfMostExpensiveLot)
 			reportRoutes.GET("/auctions-no-sales", reportHandler.GetAuctionsWithNoSoldLots)
 			reportRoutes.GET("/top-expensive-lots", reportHandler.GetTopNMostExpensiveSoldLots)
-			reportRoutes.GET("/items-for-sale", reportHandler.GetItemsForSaleByDateAndAuction)        // ?auctionId=X&date=YYYY-MM-DD
-			reportRoutes.GET("/buyers-by-specificity", reportHandler.GetBuyersOfItemsWithSpecificity) // ?specificity=X
+			reportRoutes.GET("/items-for-sale", reportHandler.GetItemsForSaleByDateAndAuction)
+			reportRoutes.GET("/buyers-by-specificity", reportHandler.GetBuyersOfItemsWithSpecificity)
 			reportRoutes.GET("/sellers-sales-by-specificity", reportHandler.GetSellersReportBySpecificity)
 		}
 
-		// Маршруты для управления пользователями (только для SYSTEM_ADMIN)
+		// Маршруты для управления пользователями (Админ)
 		adminUserRoutes := v1.Group("/admin/users")
-		adminUserRoutes.Use(middleware.AuthMiddleware(cfg)) // Общая проверка токена
-		// Внутри каждого хендлера AdminHandler будет дополнительная проверка на роль SYSTEM_ADMIN
+		adminUserRoutes.Use(middleware.AuthMiddleware(cfg))
 		{
-			adminUserRoutes.GET("", adminHandler.GetAllUsers)                       // ?role=seller&page=1&pageSize=10
-			adminUserRoutes.PATCH("/:userId/status", adminHandler.UpdateUserStatus) // { "isActive": false }
-			adminUserRoutes.PUT("/:userId/roles", adminHandler.UpdateUserRoles)     // { "availableBusinessRoles": ["buyer", "seller"] }
+			adminUserRoutes.GET("", adminHandler.GetAllUsers)
+			adminUserRoutes.PATCH("/:userId/status", adminHandler.UpdateUserStatus)
+			adminUserRoutes.PUT("/:userId/roles", adminHandler.UpdateUserRoles)
 		}
-
-		v1.GET("/lots", lotHandler.GetAllLots)
 	}
 
-	// 6. Запуск сервера
 	serverAddr := ":" + cfg.ServerPort
 	log.Printf("Сервер запускается на http://localhost%s", serverAddr)
 	if err := router.Run(serverAddr); err != nil {
