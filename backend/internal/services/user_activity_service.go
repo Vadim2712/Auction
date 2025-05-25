@@ -7,84 +7,99 @@ import (
 )
 
 type UserActivityService struct {
-	auctionStore store.AuctionStore // Для получения информации об аукционах
-	lotStore     store.LotStore     // Для получения информации о лотах
-	// userStore store.UserStore // Если понадобится
+	lotStore     store.LotStore
+	auctionStore store.AuctionStore // Может понадобиться для получения названий аукционов, если не предзагружено
 }
 
-func NewUserActivityService(as store.AuctionStore, ls store.LotStore) *UserActivityService {
-	return &UserActivityService{auctionStore: as, lotStore: ls}
+func NewUserActivityService(ls store.LotStore, as store.AuctionStore) *UserActivityService {
+	return &UserActivityService{lotStore: ls, auctionStore: as}
 }
 
-// GetMyActivity возвращает ставки и выигрыши пользователя
-func (s *UserActivityService) GetMyActivity(userID uint) (map[string]interface{}, error) {
-	// Эта логика потребует более сложных запросов к БД, чтобы найти:
-	// 1. Лоты, где userID является highest_bidder_id и аукцион активен.
-	// 2. Лоты, где userID является final_buyer_id и лот продан.
+type UserActivityOutput struct {
+	LeadingBids []LotWithAuctionInfo `json:"leadingBids"`
+	WonLots     []LotWithAuctionInfo `json:"wonLots"`
+	Pagination  map[string]int64     `json:"pagination,omitempty"` // Для возможной пагинации в будущем
+}
 
-	// Пока что вернем заглушку, так как реализация в GORM потребует
-	// итерации по всем аукционам и лотам или более сложного SQL.
-	// В GORM это можно сделать, но для краткости сейчас:
+type LotWithAuctionInfo struct {
+	models.Lot           // Встраиваем структуру лота
+	AuctionID     uint   `json:"auctionId"` // Дублируем для удобства, если не встроено
+	AuctionName   string `json:"auctionName"`
+	AuctionStatus string `json:"auctionStatus"`
+}
 
-	// Здесь должна быть логика, аналогичная той, что была в apiClient.js для getMyActivity,
-	// но с использованием вызовов к auctionStore и lotStore для получения данных из БД.
-	// Например, получить все аукционы, затем для каждого аукциона его лоты, и отфильтровать.
-	// Или сделать специфические запросы в store.
+func (s *UserActivityService) GetMyActivity(userID uint, page, pageSize int) (*UserActivityOutput, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
 
-	// Примерная (упрощенная) логика, требующая доработки в store для эффективности:
-	allAuctions, _, err := s.auctionStore.GetAllAuctions(0, 9999) // Получаем все аукционы (неэффективно для прода)
+	leadingLotsModels, totalLeading, errLead := s.lotStore.GetLeadingBidsByUserID(userID, offset, pageSize)
+	if errLead != nil {
+		return nil, fmt.Errorf("ошибка получения лотов, где пользователь лидирует: %w", errLead)
+	}
+
+	wonLotsModels, totalWon, errWon := s.lotStore.GetWonLotsByUserID(userID, offset, pageSize)
+	if errWon != nil {
+		return nil, fmt.Errorf("ошибка получения выигранных лотов: %w", errWon)
+	}
+
+	// Преобразуем в LotWithAuctionInfo, если нужно добавить имя аукциона
+	// Это можно сделать либо здесь, либо store методы будут возвращать более богатую структуру
+	// Для простоты, пока LotStore возвращает models.Lot, а имя аукциона можно получить отдельно, если надо
+
+	output := &UserActivityOutput{
+		LeadingBids: []LotWithAuctionInfo{}, // Будет заполнено ниже
+		WonLots:     []LotWithAuctionInfo{}, // Будет заполнено ниже
+		// Можно добавить логику для общей пагинации, если требуется
+	}
+
+	for _, lot := range leadingLotsModels {
+		auction, _ := s.auctionStore.GetAuctionByID(lot.AuctionID) // Неэффективно, лучше JOIN в SQL или предзагрузка
+		output.LeadingBids = append(output.LeadingBids, LotWithAuctionInfo{
+			Lot: lot, AuctionID: lot.AuctionID,
+			AuctionName: auction.NameSpecificity, AuctionStatus: string(auction.Status),
+		})
+	}
+	_ = totalLeading // Используем, если нужна пагинация
+
+	for _, lot := range wonLotsModels {
+		auction, _ := s.auctionStore.GetAuctionByID(lot.AuctionID)
+		output.WonLots = append(output.WonLots, LotWithAuctionInfo{
+			Lot: lot, AuctionID: lot.AuctionID,
+			AuctionName: auction.NameSpecificity, AuctionStatus: string(auction.Status),
+		})
+	}
+	_ = totalWon // Используем, если нужна пагинация
+
+	return output, nil
+}
+
+func (s *UserActivityService) GetMyListings(sellerID uint, page, pageSize int) ([]LotWithAuctionInfo, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+
+	lotsModels, total, err := s.lotStore.GetLotsBySellerID(sellerID, offset, pageSize)
 	if err != nil {
-		return nil, fmt.Errorf("ошибка получения аукционов: %w", err)
+		return nil, 0, fmt.Errorf("ошибка получения лотов продавца: %w", err)
 	}
 
-	myLeadingBids := []models.Lot{}
-	myWonLots := []models.Lot{}
-
-	for _, auction := range allAuctions {
-		// Нужно загрузить лоты для каждого аукциона, если они не были загружены
-		// Если GetAllAuctions не грузит лоты, то нужно сделать auctionWithLots, err := s.auctionStore.GetAuctionByID(auction.ID)
-		// Предположим, лоты уже есть (или мы их загружаем)
-		auctionWithLots, err := s.auctionStore.GetAuctionByID(auction.ID) // Получаем аукцион с лотами
-		if err != nil || auctionWithLots == nil {
-			continue // Пропускаем, если не удалось загрузить
-		}
-
-		for _, lot := range auctionWithLots.Lots {
-			if auctionWithLots.Status == models.StatusActive && lot.HighestBidderID != nil && *lot.HighestBidderID == userID {
-				myLeadingBids = append(myLeadingBids, lot)
-			}
-			if lot.Status == models.StatusSold && lot.FinalBuyerID != nil && *lot.FinalBuyerID == userID {
-				myWonLots = append(myWonLots, lot)
-			}
-		}
+	var resultListings []LotWithAuctionInfo
+	for _, lot := range lotsModels {
+		auction, _ := s.auctionStore.GetAuctionByID(lot.AuctionID)
+		resultListings = append(resultListings, LotWithAuctionInfo{
+			Lot: lot, AuctionID: lot.AuctionID,
+			AuctionName: auction.NameSpecificity, AuctionStatus: string(auction.Status),
+		})
 	}
 
-	return map[string]interface{}{
-		"leadingBids": myLeadingBids,
-		"wonLots":     myWonLots,
-	}, nil
-}
-
-// GetMyListings возвращает лоты, выставленные продавцом
-func (s *UserActivityService) GetMyListings(sellerID uint) ([]models.Lot, error) {
-	// Эта логика также потребует эффективного запроса к БД.
-	// Пока что, как и выше, упрощенная логика.
-	allAuctions, _, err := s.auctionStore.GetAllAuctions(0, 9999)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка получения аукционов: %w", err)
-	}
-
-	myListings := []models.Lot{}
-	for _, auction := range allAuctions {
-		auctionWithLots, err := s.auctionStore.GetAuctionByID(auction.ID)
-		if err != nil || auctionWithLots == nil {
-			continue
-		}
-		for _, lot := range auctionWithLots.Lots {
-			if lot.SellerID == sellerID {
-				myListings = append(myListings, lot)
-			}
-		}
-	}
-	return myListings, nil
+	return resultListings, total, nil
 }

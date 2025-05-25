@@ -24,7 +24,7 @@ type Lot struct {
 	Name            string         `gorm:"size:255;not null" json:"name"`
 	Description     string         `gorm:"type:text" json:"description,omitempty"`
 	SellerID        uint           `gorm:"not null" json:"sellerId"`     // Внешний ключ на User (Продавец)
-	User            User           `gorm:"foreignKey:SellerID" json:"-"` // Связь для GORM (Продавец)
+	User            *User          `gorm:"foreignKey:SellerID" json:"-"` // Связь для GORM (Продавец)
 	StartPrice      float64        `gorm:"not null" json:"startPrice"`
 	CurrentPrice    float64        `gorm:"not null" json:"currentPrice"`
 	FinalPrice      *float64       `json:"finalPrice,omitempty"` // Указатель, так как может быть NULL

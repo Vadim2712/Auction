@@ -1,7 +1,7 @@
 package main
 
 import (
-	"auction-app/backend/config" // Убедитесь, что путь правильный для вашего модуля
+	"auction-app/backend/config" // Убедитесь, что путь 'auction-app/backend' соответствует вашему go.mod
 	"auction-app/backend/internal/api"
 	"auction-app/backend/internal/middleware"
 	"auction-app/backend/internal/services"
@@ -25,7 +25,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Ошибка инициализации базы данных: %v", err)
 	}
-	// sqlDB, _ := db.DB() // Это нужно, если вы хотите явно закрыть соединение при завершении работы сервера
+	// sqlDB, errDb := db.DB() // Это нужно, если вы хотите явно закрыть соединение
+	// if errDb != nil {
+	//  log.Fatalf("Ошибка получения *sql.DB: %v", errDb)
+	// }
 	// defer sqlDB.Close() // Пока сервер работает, соединение должно быть открыто
 
 	// 3. Инициализация зависимостей (Хранилища -> Сервисы -> Обработчики)
@@ -34,35 +37,33 @@ func main() {
 	userStore := store.NewGormUserStore(db)
 	auctionStore := store.NewGormAuctionStore(db)
 	lotStore := store.NewGormLotStore(db)
-	bidStore := store.NewGormBidStore(db) // Убедитесь, что NewGormBidStore реализован
+	bidStore := store.NewGormBidStore(db)
 
 	// --- Сервисы ---
-	authService := services.NewAuthService(userStore, cfg) // Использует UserStore и Config
-	// AuctionService теперь принимает AuctionStore и LotStore
-	auctionService := services.NewAuctionService(auctionStore, lotStore)
-	// LotService теперь принимает LotStore, AuctionStore и BidStore
-	lotService := services.NewLotService(lotStore, auctionStore, bidStore)
-	// UserActivityService принимает AuctionStore и LotStore
-	userActivityService := services.NewUserActivityService(auctionStore, lotStore)
+	authService := services.NewAuthService(userStore, cfg)
+	auctionService := services.NewAuctionService(auctionStore, lotStore)   // Передаем auctionStore и lotStore
+	lotService := services.NewLotService(lotStore, auctionStore, bidStore) // Передаем lotStore, auctionStore и bidStore
+	userActivityService := services.NewUserActivityService(lotStore, auctionStore)
+	reportService := services.NewReportService(auctionStore, lotStore, userStore)
+	userService := services.NewUserService(userStore) // Сервис для управления пользователями (админка)
 
 	// --- Обработчики (Handlers) ---
 	authHandler := api.NewAuthHandler(authService)
 	auctionHandler := api.NewAuctionHandler(auctionService)
 	lotHandler := api.NewLotHandler(lotService)
 	userActivityHandler := api.NewUserActivityHandler(userActivityService)
+	reportHandler := api.NewReportHandler(reportService) // Передаем ReportService
+	adminHandler := api.NewAdminHandler(userService)     // Обработчик для админских функций с пользователями
 
 	// 4. Настройка сервера Gin
-	// gin.SetMode(gin.ReleaseMode) // Для продакшена
+	// gin.SetMode(gin.ReleaseMode) // Для продакшена, если нужно
 	router := gin.Default()
 
 	// Настройка CORS
 	corsConfig := cors.DefaultConfig()
-	// Указываем, что разрешаем запросы с фронтенда
-	corsConfig.AllowOrigins = []string{"http://localhost:3000"} // Замените на URL вашего фронтенда
+	corsConfig.AllowOrigins = []string{"http://localhost:3000"} // URL вашего фронтенда
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
-	// Указываем разрешенные заголовки
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
-	// Разрешаем передачу credentials (например, для кук или авторизации)
 	corsConfig.AllowCredentials = true
 	router.Use(cors.New(corsConfig))
 
@@ -75,17 +76,17 @@ func main() {
 		{
 			authRoutes.POST("/register", authHandler.Register)
 			authRoutes.POST("/login", authHandler.Login)
-			// Защищенный маршрут для получения информации о себе
 			authRoutes.GET("/me", middleware.AuthMiddleware(cfg), authHandler.Me)
 		}
 
 		// Маршруты для аукционов
 		auctionRoutes := v1.Group("/auctions")
 		{
-			auctionRoutes.GET("", auctionHandler.GetAllAuctions)     // Получить все аукционы (публичный)
-			auctionRoutes.GET("/:id", auctionHandler.GetAuctionByID) // Получить аукцион по ID (публичный)
+			auctionRoutes.GET("", auctionHandler.GetAllAuctions)                   // Получить все аукционы (публичный)
+			auctionRoutes.GET("/search", auctionHandler.FindAuctionsBySpecificity) // Поиск аукционов (публичный)
+			auctionRoutes.GET("/:id", auctionHandler.GetAuctionByID)               // Получить аукцион по ID (публичный)
 
-			// Защищенные маршруты для аукционов (требуют AuthMiddleware и проверки ролей внутри хендлеров/сервисов)
+			// Защищенные маршруты для аукционов
 			auctionRoutes.POST("", middleware.AuthMiddleware(cfg), auctionHandler.CreateAuction)                   // Создать аукцион
 			auctionRoutes.PUT("/:id", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuction)                // Обновить аукцион
 			auctionRoutes.PATCH("/:id/status", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuctionStatus) // Изменить статус аукциона
@@ -109,32 +110,46 @@ func main() {
 			lotAuctionRoutes.POST("/:lotId/bids", middleware.AuthMiddleware(cfg), lotHandler.PlaceBid) // Сделать ставку
 			// GET /api/v1/auctions/:auctionId/lots/:lotId/bids - можно добавить для получения истории ставок по лоту
 		}
-		// Можно также рассмотреть отдельные маршруты для лотов, если это удобнее, например /api/v1/lots/:id
-		// Но вложенность /auctions/:auctionId/lots/:lotId часто более RESTful для ресурсов, принадлежащих другим ресурсам.
+
+		// Отдельные маршруты для лотов (если нужны)
+		// Эти маршруты могут быть удобны, если ID лота глобально уникален.
+		individualLotRoutes := v1.Group("/lots")
+		// individualLotRoutes.Use(middleware.AuthMiddleware(cfg)) // Защитить, если операции не публичны
+		{
+			individualLotRoutes.GET("/:lotId", lotHandler.GetLotByID) // Получить лот по его ID (публичный)
+		}
 
 		// Маршруты для личной активности пользователя
 		myRoutes := v1.Group("/my")
 		myRoutes.Use(middleware.AuthMiddleware(cfg)) // Все маршруты здесь требуют аутентификации
 		{
-			myRoutes.GET("/activity", userActivityHandler.GetMyActivity) // Ставки и выигрыши покупателя
+			myRoutes.GET("/activity", userActivityHandler.GetMyActivity) // Ставки и выигрыши пользователя
 			myRoutes.GET("/listings", userActivityHandler.GetMyListings) // Лоты продавца
 		}
 
-		// TODO: Добавить маршруты для специфических отчетов из Задания №33 (для админа)
-		// reportRoutes := v1.Group("/reports")
-		// reportRoutes.Use(middleware.AuthMiddleware(cfg)) // Защитить
-		// {
-		// 	reportRoutes.GET("/expensive-items", reportHandler.GetMostExpensiveItems)
-		//  // ... другие отчеты
-		// }
+		// Маршруты для отчетов (могут требовать прав админа/менеджера)
+		reportRoutes := v1.Group("/reports")
+		reportRoutes.Use(middleware.AuthMiddleware(cfg)) // Защищаем все отчеты
+		{
+			reportRoutes.GET("/lot-max-price-diff", reportHandler.GetLotWithMaxPriceDifference)
+			reportRoutes.GET("/auction-most-sold", reportHandler.GetAuctionWithMostSoldLots)
+			reportRoutes.GET("/most-expensive-lot-info", reportHandler.GetBuyerAndSellerOfMostExpensiveLot)
+			reportRoutes.GET("/auctions-no-sales", reportHandler.GetAuctionsWithNoSoldLots)
+			reportRoutes.GET("/top-expensive-lots", reportHandler.GetTopNMostExpensiveSoldLots)
+			reportRoutes.GET("/items-for-sale", reportHandler.GetItemsForSaleByDateAndAuction)        // ?auctionId=X&date=YYYY-MM-DD
+			reportRoutes.GET("/buyers-by-specificity", reportHandler.GetBuyersOfItemsWithSpecificity) // ?specificity=X
+			reportRoutes.GET("/sellers-by-category", reportHandler.GetSellersByItemCategory)          // ?category=X
+		}
 
-		// TODO: Добавить маршруты для управления пользователями (для системного администратора)
-		// adminUserRoutes := v1.Group("/admin/users")
-		// adminUserRoutes.Use(middleware.AuthMiddleware(cfg)) // Защитить и проверить роль SYSTEM_ADMIN
-		// {
-		//  adminUserRoutes.GET("", adminUserHandler.GetAllUsers)
-		//  adminUserRoutes.PATCH("/:userId/status", adminUserHandler.UpdateUserStatus)
-		// }
+		// Маршруты для управления пользователями (только для SYSTEM_ADMIN)
+		adminUserRoutes := v1.Group("/admin/users")
+		adminUserRoutes.Use(middleware.AuthMiddleware(cfg)) // Общая проверка токена
+		// Внутри каждого хендлера AdminHandler будет дополнительная проверка на роль SYSTEM_ADMIN
+		{
+			adminUserRoutes.GET("", adminHandler.GetAllUsers)                       // ?role=seller&page=1&pageSize=10
+			adminUserRoutes.PATCH("/:userId/status", adminHandler.UpdateUserStatus) // { "isActive": false }
+			adminUserRoutes.PUT("/:userId/roles", adminHandler.UpdateUserRoles)     // { "availableBusinessRoles": ["buyer", "seller"] }
+		}
 	}
 
 	// 6. Запуск сервера

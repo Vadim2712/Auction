@@ -73,9 +73,25 @@ func (h *AuctionHandler) CreateAuction(c *gin.Context) {
 func (h *AuctionHandler) GetAllAuctions(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	pageSizeStr := c.DefaultQuery("pageSize", "10")
+	statusFilter := c.Query("status") // Пример фильтра
+	dateFromFilter := c.Query("dateFrom")
 
 	page, errPage := strconv.Atoi(pageStr)
 	pageSize, errPageSize := strconv.Atoi(pageSizeStr)
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	filters := make(map[string]string)
+	if statusFilter != "" {
+		filters["status"] = statusFilter
+	}
+	if dateFromFilter != "" {
+		filters["dateFrom"] = dateFromFilter
+	}
 
 	// Базовая валидация параметров пагинации
 	if errPage != nil || page < 1 {
@@ -88,7 +104,7 @@ func (h *AuctionHandler) GetAllAuctions(c *gin.Context) {
 		pageSize = 100
 	}
 
-	auctions, total, err := h.auctionService.GetAllAuctions(page, pageSize)
+	auctions, total, err := h.auctionService.GetAllAuctions(page, pageSize, filters)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения списка аукционов: " + err.Error()})
 		return
@@ -270,4 +286,40 @@ func (h *AuctionHandler) DeleteAuction(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Аукцион успешно удален"})
+}
+
+// FindAuctionsBySpecificity обрабатывает запрос на поиск аукционов по специфике
+func (h *AuctionHandler) FindAuctionsBySpecificity(c *gin.Context) {
+	query := c.Query("q") // Получаем параметр запроса ?q=...
+	if query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Параметр запроса 'q' (специфика) обязателен"})
+		return
+	}
+
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("pageSize", "10")
+	page, _ := strconv.Atoi(pageStr)
+	pageSize, _ := strconv.Atoi(pageSizeStr)
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 10
+	}
+
+	auctions, total, err := h.auctionService.FindAuctionsBySpecificity(query, page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка поиска аукционов: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": auctions,
+		"pagination": gin.H{
+			"currentPage": page,
+			"pageSize":    pageSize,
+			"totalItems":  total,
+			"totalPages":  (total + int64(pageSize) - 1) / int64(pageSize),
+		},
+	})
 }

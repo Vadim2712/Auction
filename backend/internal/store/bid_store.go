@@ -18,9 +18,17 @@ func (s *gormBidStore) CreateBid(bid *models.Bid) error {
 	return s.db.Create(bid).Error
 }
 
-func (s *gormBidStore) GetBidsByLotID(lotID uint) ([]models.Bid, error) {
+func (s *gormBidStore) GetBidsByLotID(lotID uint, offset, limit int) ([]models.Bid, int64, error) {
 	var bids []models.Bid
-	// Предзагружаем информацию о том, кто сделал ставку
-	err := s.db.Preload("User").Where("lot_id = ?", lotID).Order("bid_time DESC").Find(&bids).Error
-	return bids, err
+	var total int64
+	queryBuilder := s.db.Model(&models.Bid{}).Where("lot_id = ?", lotID)
+
+	if err := queryBuilder.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := queryBuilder.Order("bid_time DESC").Offset(offset).Limit(limit).
+		Preload("User"). // Пользователь, сделавший ставку
+		Find(&bids).Error
+	return bids, total, err
 }

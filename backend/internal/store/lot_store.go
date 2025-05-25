@@ -23,11 +23,68 @@ func (s *gormLotStore) CreateLot(lot *models.Lot) error {
 	return s.db.Create(lot).Error
 }
 
-func (s *gormLotStore) GetLotsByAuctionID(auctionID uint) ([]models.Lot, error) {
+func (s *gormLotStore) GetLotsByAuctionID(auctionID uint, offset, limit int) ([]models.Lot, int64, error) {
 	var lots []models.Lot
-	// Предзагружаем информацию о продавце и лидере ставки
-	err := s.db.Preload("User").Preload("HighestBidder").Where("auction_id = ?", auctionID).Order("lot_number ASC").Find(&lots).Error
-	return lots, err
+	var total int64
+	queryBuilder := s.db.Model(&models.Lot{}).Where("auction_id = ?", auctionID)
+
+	if err := queryBuilder.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := queryBuilder.Order("lot_number ASC").Offset(offset).Limit(limit).
+		Preload("User").Preload("HighestBidder"). // Продавец и Лидер
+		Find(&lots).Error
+	return lots, total, err
+}
+
+func (s *gormLotStore) GetLotsBySellerID(sellerID uint, offset, limit int) ([]models.Lot, int64, error) {
+	var lots []models.Lot
+	var total int64
+	queryBuilder := s.db.Model(&models.Lot{}).Where("seller_id = ?", sellerID)
+
+	if err := queryBuilder.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	// Предзагружаем аукцион, чтобы знать его название, и покупателя, если лот продан
+	err := queryBuilder.Order("created_at DESC").Offset(offset).Limit(limit).
+		Preload("FinalBuyer"). // Кто купил
+		Find(&lots).Error      // Аукцион можно будет получить по auctionId из лота, если нужно его название
+	return lots, total, err
+}
+
+func (s *gormLotStore) GetLeadingBidsByUserID(userID uint, offset, limit int) ([]models.Lot, int64, error) {
+	var lots []models.Lot
+	var total int64
+	// Ищем лоты, где пользователь - текущий лидер, и аукцион активен
+	queryBuilder := s.db.Model(&models.Lot{}).
+		Joins("JOIN auctions ON auctions.id = lots.auction_id AND auctions.status = ?", models.StatusActive).
+		Where("lots.highest_bidder_id = ? AND lots.status = ?", userID, models.StatusLotActive) // Лот тоже должен быть активен
+
+	if err := queryBuilder.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := queryBuilder.Order("lots.created_at DESC").Offset(offset).Limit(limit).
+		Preload("User"). // Продавец лота
+		Find(&lots).Error
+	return lots, total, err
+}
+
+func (s *gormLotStore) GetWonLotsByUserID(userID uint, offset, limit int) ([]models.Lot, int64, error) {
+	var lots []models.Lot
+	var total int64
+	queryBuilder := s.db.Model(&models.Lot{}).
+		Where("final_buyer_id = ? AND status = ?", userID, models.StatusSold)
+
+	if err := queryBuilder.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := queryBuilder.Order("updated_at DESC").Offset(offset).Limit(limit). // Сортируем по времени обновления (когда он стал продан)
+											Preload("User"). // Продавец лота
+											Find(&lots).Error
+	return lots, total, err
 }
 
 func (s *gormLotStore) GetLotByID(id uint) (*models.Lot, error) {
@@ -57,4 +114,44 @@ func (s *gormLotStore) DeleteLot(id uint) error {
 		return err
 	}
 	return nil
+}
+
+func (s *gormLotStore) GetLotWithMaxPriceDifference() (*models.Lot, error) {
+	var lot models.Lot
+	// Нам нужны только проданные лоты, у которых есть final_price
+	// Разница = final_price - start_price
+	// В PostgreSQL можно использовать: final_price - start_price AS price_diff
+	// GORM: Order("final_price - start_price DESC")
+	err := s.db.Where("status = ? AND final_price IS NOT NULL", models.StatusSold).
+		Order("(final_price - start_price) DESC").
+		Preload("User").       // Продавец
+		Preload("FinalBuyer"). // Покупатель
+		First(&lot).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Нет проданных лотов или ошибка
+		}
+		return nil, err
+	}
+	return &lot, nil
+}
+
+// GetMostExpensiveSoldLot находит самый дорогой проданный лот
+func (s *gormLotStore) GetMostExpensiveSoldLot() (*models.Lot, error) {
+	var lot models.Lot
+	// Ищем лот со статусом "Продан" и непустой final_price, сортируем по final_price по убыванию и берем первый
+	err := s.db.Where("status = ? AND final_price IS NOT NULL", models.StatusSold).
+		Order("final_price DESC").
+		Preload("User").       // Предзагружаем Продавца (связь User по SellerID)
+		Preload("FinalBuyer"). // Предзагружаем Покупателя (связь User по FinalBuyerID)
+		First(&lot).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Нет проданных лотов
+		}
+		return nil, err // Другая ошибка БД
+	}
+	return &lot, nil
 }

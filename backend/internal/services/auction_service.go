@@ -40,15 +40,15 @@ func (s *AuctionService) CreateAuction(input models.CreateAuctionInput, createdB
 	return &auction, nil
 }
 
-func (s *AuctionService) GetAllAuctions(page, pageSize int) ([]models.Auction, int64, error) {
+func (s *AuctionService) GetAllAuctions(page, pageSize int, filters map[string]string) ([]models.Auction, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if pageSize < 1 {
-		pageSize = 10 // Значение по умолчанию
+		pageSize = 10
 	}
 	offset := (page - 1) * pageSize
-	return s.auctionStore.GetAllAuctions(offset, pageSize)
+	return s.auctionStore.GetAllAuctions(offset, pageSize, filters)
 }
 
 func (s *AuctionService) GetAuctionByID(id uint) (*models.Auction, error) {
@@ -161,6 +161,20 @@ func (s *AuctionService) UpdateAuction(auctionID uint, input UpdateAuctionInput,
 		return nil, fmt.Errorf("ошибка обновления аукциона в БД: %w", err)
 	}
 	return auction, nil
+}
+
+func (s *AuctionService) FindAuctionsBySpecificity(query string, page, pageSize int) ([]models.Auction, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	offset := (page - 1) * pageSize
+
+	// Дополнительная логика может быть здесь, если нужно фильтровать по лотам или их описаниям.
+	// Пока что просто передаем запрос в store.
+	return s.auctionStore.FindAuctionsBySpecificity(query, offset, pageSize)
 }
 
 func (s *AuctionService) DeleteAuction(auctionID uint, userID uint, userRole models.UserRole) error {

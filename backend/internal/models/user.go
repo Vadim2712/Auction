@@ -22,14 +22,15 @@ type User struct {
 	ID                     uint           `gorm:"primaryKey;autoIncrement" json:"id"`
 	FullName               string         `gorm:"size:255;not null" json:"fullName"`
 	Email                  string         `gorm:"size:255;not null;uniqueIndex" json:"email"`
-	PasswordHash           string         `gorm:"size:255;not null" json:"-"`                   // Не отправляем хеш на клиент
-	Role                   UserRole       `gorm:"type:varchar(50);default:'buyer'" json:"role"` // Основная или дефолтная роль
+	PasswordHash           string         `gorm:"size:255;not null" json:"-"`
+	Role                   UserRole       `gorm:"type:varchar(50);default:'buyer'" json:"role"` // Основная/дефолтная роль, может быть не нужна, если есть AvailableBusinessRoles
 	AvailableBusinessRoles string         `gorm:"type:text" json:"availableBusinessRoles"`      // JSON массив строк ['buyer', 'seller', 'auction_manager']
 	PassportData           string         `gorm:"size:255" json:"passportData,omitempty"`
+	IsActive               bool           `gorm:"not null;default:true" json:"isActive"` // <--- НОВОЕ ПОЛЕ для блокировки
 	RegistrationDate       time.Time      `gorm:"autoCreateTime" json:"registrationDate"`
 	CreatedAt              time.Time      `gorm:"autoCreateTime" json:"-"`
 	UpdatedAt              time.Time      `gorm:"autoUpdateTime" json:"-"`
-	DeletedAt              gorm.DeletedAt `gorm:"index" json:"-"` // Для мягкого удаления
+	DeletedAt              gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 // SetPassword хеширует пароль и устанавливает его для пользователя
@@ -61,4 +62,14 @@ type RegisterUserInput struct {
 type LoginInput struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+
+// UpdateUserStatusInput структура для обновления статуса пользователя (активен/заблокирован)
+type UpdateUserStatusInput struct {
+	IsActive bool `json:"isActive"` // Не используем указатель, т.к. false - это валидное значение
+}
+
+// UpdateUserRolesInput структура для обновления доступных бизнес-ролей пользователя
+type UpdateUserRolesInput struct {
+	AvailableBusinessRoles []string `json:"availableBusinessRoles" binding:"required"` // Массив строк
 }
