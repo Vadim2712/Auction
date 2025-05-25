@@ -46,3 +46,15 @@ func (s *gormLotStore) GetLotByID(id uint) (*models.Lot, error) {
 func (s *gormLotStore) UpdateLot(lot *models.Lot) error {
 	return s.db.Save(lot).Error
 }
+
+func (s *gormLotStore) DeleteLot(id uint) error {
+	// Мягкое удаление, если в модели Lot есть DeletedAt gorm.DeletedAt
+	// Прежде чем удалять, можно добавить проверки:
+	// - есть ли активные ставки на лот?
+	// - не начался ли аукцион, к которому принадлежит лот?
+	// Пока что простое удаление. В сервисе будет больше логики.
+	if err := s.db.Delete(&models.Lot{}, id).Error; err != nil {
+		return err
+	}
+	return nil
+}

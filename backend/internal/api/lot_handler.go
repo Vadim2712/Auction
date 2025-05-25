@@ -121,4 +121,97 @@ func (h *LotHandler) PlaceBid(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedLot)
 }
 
-// TODO: Добавить другие обработчики для лотов, если необходимо (GetLotByID, UpdateLot, DeleteLot)
+func (h *LotHandler) GetLotsByAuctionID(c *gin.Context) {
+	auctionIDStr := c.Param("auctionId")
+	auctionID, err := strconv.ParseUint(auctionIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID аукциона в URL"})
+		return
+	}
+
+	// Здесь можно было бы вызывать lotService.GetLotsByAuctionID(uint(auctionID))
+	// Но т.к. GetAuctionByID уже предзагружает лоты, этот эндпоинт может быть избыточен
+	// или иметь другую логику (например, с пагинацией лотов).
+	// Для примера, если бы мы хотели отдельный эндпоинт:
+	lots, err := h.lotService.GetLotsByAuctionID(uint(auctionID)) // Предполагаем, что такой метод есть в сервисе
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения лотов для аукциона: " + err.Error()})
+		return
+	}
+	if lots == nil { // Или если сервис возвращает nil при отсутствии аукциона
+		lots = []models.Lot{} // Возвращаем пустой массив, а не null
+	}
+	c.JSON(http.StatusOK, lots)
+}
+
+// UpdateLotDetails обрабатывает запрос на обновление деталей лота
+func (h *LotHandler) UpdateLotDetails(c *gin.Context) {
+	auctionIDStr := c.Param("auctionId")
+	lotIDStr := c.Param("lotId")
+
+	auctionID, errAuction := strconv.ParseUint(auctionIDStr, 10, 32)
+	lotID, errLot := strconv.ParseUint(lotIDStr, 10, 32)
+
+	if errAuction != nil || errLot != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID аукциона или лота в URL"})
+		return
+	}
+
+	var input services.UpdateLotInput // Используем DTO из сервиса
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные входные данные для обновления лота: " + err.Error()})
+		return
+	}
+
+	userIDVal, _ := c.Get("userID")
+	userRoleVal, _ := c.Get("userRole")
+	currentUserID, _ := userIDVal.(uint)
+	currentUserRoleStr, _ := userRoleVal.(string)
+	currentUserRole := models.UserRole(currentUserRoleStr)
+
+	updatedLot, err := h.lotService.UpdateLotDetails(uint(lotID), uint(auctionID), input, currentUserID, currentUserRole)
+	if err != nil {
+		if strings.Contains(err.Error(), "не найден") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		} else if strings.Contains(err.Error(), "недостаточно прав") || strings.Contains(err.Error(), "только до начала торгов") || strings.Contains(err.Error(), "стартовая цена") || strings.Contains(err.Error(), "уже есть ставки") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления лота: " + err.Error()})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, updatedLot)
+}
+
+// DeleteLot обрабатывает запрос на удаление лота
+func (h *LotHandler) DeleteLot(c *gin.Context) {
+	auctionIDStr := c.Param("auctionId")
+	lotIDStr := c.Param("lotId")
+
+	auctionID, errAuction := strconv.ParseUint(auctionIDStr, 10, 32)
+	lotID, errLot := strconv.ParseUint(lotIDStr, 10, 32)
+
+	if errAuction != nil || errLot != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID аукциона или лота в URL"})
+		return
+	}
+
+	userIDVal, _ := c.Get("userID")
+	userRoleVal, _ := c.Get("userRole")
+	currentUserID, _ := userIDVal.(uint)
+	currentUserRoleStr, _ := userRoleVal.(string)
+	currentUserRole := models.UserRole(currentUserRoleStr)
+
+	err := h.lotService.DeleteLot(uint(lotID), uint(auctionID), currentUserID, currentUserRole)
+	if err != nil {
+		if strings.Contains(err.Error(), "не найден") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		} else if strings.Contains(err.Error(), "недостаточно прав") || strings.Contains(err.Error(), "удалить лот можно только") || strings.Contains(err.Error(), "участвовал в завершенных торгах") {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления лота: " + err.Error()})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Лот успешно удален"})
+}

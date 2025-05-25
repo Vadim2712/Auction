@@ -116,3 +116,118 @@ func (s *LotService) PlaceBid(auctionID uint, lotID uint, input models.PlaceBidI
 	}
 	return lot, nil
 }
+
+func (s *LotService) GetLotsByAuctionID(auctionID uint) ([]models.Lot, error) {
+	// Дополнительная проверка, существует ли сам аукцион
+	_, err := s.auctionStore.GetAuctionByID(auctionID)
+	if err != nil {
+		return nil, fmt.Errorf("аукцион с ID %d не найден или ошибка: %w", auctionID, err)
+	}
+
+	lots, err := s.lotStore.GetLotsByAuctionID(auctionID)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения лотов для аукциона ID %d: %w", auctionID, err)
+	}
+	return lots, nil
+}
+
+// UpdateLotInput структура для обновления данных лота
+type UpdateLotInput struct {
+	Name        *string  `json:"name"`
+	Description *string  `json:"description"`
+	StartPrice  *float64 `json:"startPrice"`
+	// Статус и другие поля обычно меняются через специфические операции (ставки, завершение аукциона)
+}
+
+func (s *LotService) UpdateLotDetails(lotID uint, auctionID uint, input UpdateLotInput, currentUserID uint, currentUserRole models.UserRole) (*models.Lot, error) {
+	lot, err := s.lotStore.GetLotByID(lotID)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения лота: %w", err)
+	}
+	if lot == nil {
+		return nil, errors.New("лот не найден")
+	}
+	if lot.AuctionID != auctionID { // Убедимся, что лот принадлежит указанному аукциону
+		return nil, errors.New("лот не принадлежит данному аукциону")
+	}
+
+	// Проверка прав: только продавец этого лота или админ/менеджер могут редактировать
+	isSeller := lot.SellerID == currentUserID
+	isAdminOrManager := currentUserRole == models.RoleSystemAdmin || currentUserRole == models.RoleAuctionManager
+
+	if !isSeller && !isAdminOrManager {
+		return nil, errors.New("недостаточно прав для редактирования этого лота")
+	}
+
+	// Проверка статуса аукциона и лота: редактировать можно только если торги не начались
+	auction, err := s.auctionStore.GetAuctionByID(lot.AuctionID)
+	if err != nil || auction == nil {
+		return nil, errors.New("не удалось получить информацию об аукционе для лота")
+	}
+	if auction.Status != models.StatusScheduled || (lot.Status != models.StatusPending && lot.Status != "") { // "" - для случая если статус не был явно установлен при создании
+		return nil, errors.New("редактировать лот можно только до начала торгов по аукциону и если по лоту не было активности")
+	}
+
+	// Обновляем поля, если они переданы
+	if input.Name != nil {
+		lot.Name = *input.Name
+	}
+	if input.Description != nil {
+		lot.Description = *input.Description
+	}
+	if input.StartPrice != nil {
+		if *input.StartPrice <= 0 {
+			return nil, errors.New("стартовая цена должна быть положительной")
+		}
+		lot.StartPrice = *input.StartPrice
+		// Если меняется стартовая цена до начала торгов, текущая цена тоже должна обновиться
+		if lot.Status == models.StatusPending || lot.Status == "" { // И если не было ставок
+			if len(lot.Biddings) == 0 { // Проверка на отсутствие ставок
+				lot.CurrentPrice = *input.StartPrice
+			} else {
+				return nil, errors.New("нельзя изменить стартовую цену, если уже есть ставки")
+			}
+		}
+	}
+
+	if err := s.lotStore.UpdateLot(lot); err != nil {
+		return nil, fmt.Errorf("ошибка обновления лота в БД: %w", err)
+	}
+	return lot, nil
+}
+
+func (s *LotService) DeleteLot(lotID uint, auctionID uint, currentUserID uint, currentUserRole models.UserRole) error {
+	lot, err := s.lotStore.GetLotByID(lotID)
+	if err != nil {
+		return fmt.Errorf("ошибка получения лота: %w", err)
+	}
+	if lot == nil {
+		return errors.New("лот не найден")
+	}
+	if lot.AuctionID != auctionID {
+		return errors.New("лот не принадлежит данному аукциону")
+	}
+
+	isSeller := lot.SellerID == currentUserID
+	isAdminOrManager := currentUserRole == models.RoleSystemAdmin || currentUserRole == models.RoleAuctionManager
+
+	if !isSeller && !isAdminOrManager {
+		return errors.New("недостаточно прав для удаления этого лота")
+	}
+
+	auction, err := s.auctionStore.GetAuctionByID(lot.AuctionID)
+	if err != nil || auction == nil {
+		return errors.New("не удалось получить информацию об аукционе для лота")
+	}
+	if auction.Status != models.StatusScheduled || (lot.Status != models.StatusPending && lot.Status != "") {
+		if len(lot.Biddings) > 0 || lot.Status == models.StatusLotActive {
+			return errors.New("удалить лот можно только до начала торгов по аукциону и если по лоту не было ставок/активности")
+		}
+	}
+	// Дополнительная проверка, если лот уже продан или не продан после завершения аукциона
+	if lot.Status == models.StatusSold || lot.Status == models.StatusUnsold {
+		return errors.New("нельзя удалить лот, который участвовал в завершенных торгах")
+	}
+
+	return s.lotStore.DeleteLot(lotID)
+}

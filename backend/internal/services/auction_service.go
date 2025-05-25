@@ -108,3 +108,77 @@ func (s *AuctionService) UpdateAuctionStatus(auctionID uint, newStatus models.Au
 	}
 	return updatedAuction, nil
 }
+
+type UpdateAuctionInput struct {
+	NameSpecificity *string `json:"nameSpecificity"` // Указатели, чтобы различать непереданное поле и пустое значение
+	DescriptionFull *string `json:"descriptionFull"`
+	AuctionDateStr  *string `json:"auctionDate"` // Дата как строка "YYYY-MM-DD"
+	AuctionTime     *string `json:"auctionTime"` // Время "HH:MM"
+	Location        *string `json:"location"`
+}
+
+func (s *AuctionService) UpdateAuction(auctionID uint, input UpdateAuctionInput, userID uint, userRole models.UserRole) (*models.Auction, error) {
+	auction, err := s.auctionStore.GetAuctionByID(auctionID)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка получения аукциона: %w", err)
+	}
+	if auction == nil {
+		return nil, errors.New("аукцион не найден")
+	}
+
+	// Проверка прав: только создатель аукциона (админ/менеджер) или системный админ могут редактировать
+	// и только если аукцион еще не начался (статус "Запланирован")
+	if auction.CreatedByUserID != userID && userRole != models.RoleSystemAdmin {
+		return nil, errors.New("недостаточно прав для редактирования этого аукциона")
+	}
+	if auction.Status != models.StatusScheduled {
+		return nil, errors.New("редактировать можно только запланированные аукционы")
+	}
+
+	// Обновляем поля, если они переданы в input
+	if input.NameSpecificity != nil {
+		auction.NameSpecificity = *input.NameSpecificity
+	}
+	if input.DescriptionFull != nil {
+		auction.DescriptionFull = *input.DescriptionFull
+	}
+	if input.AuctionDateStr != nil {
+		parsedDate, err := time.Parse("2006-01-02", *input.AuctionDateStr)
+		if err != nil {
+			return nil, fmt.Errorf("некорректный формат даты: %w", err)
+		}
+		auction.AuctionDate = parsedDate
+	}
+	if input.AuctionTime != nil {
+		// Здесь можно добавить валидацию формата времени
+		auction.AuctionTime = *input.AuctionTime
+	}
+	if input.Location != nil {
+		auction.Location = *input.Location
+	}
+
+	if err := s.auctionStore.UpdateAuction(auction); err != nil {
+		return nil, fmt.Errorf("ошибка обновления аукциона в БД: %w", err)
+	}
+	return auction, nil
+}
+
+func (s *AuctionService) DeleteAuction(auctionID uint, userID uint, userRole models.UserRole) error {
+	auction, err := s.auctionStore.GetAuctionByID(auctionID)
+	if err != nil {
+		return fmt.Errorf("ошибка получения аукциона: %w", err)
+	}
+	if auction == nil {
+		return errors.New("аукцион не найден")
+	}
+
+	// Проверка прав: только создатель аукциона или системный админ могут удалять
+	if auction.CreatedByUserID != userID && userRole != models.RoleSystemAdmin {
+		return errors.New("недостаточно прав для удаления этого аукциона")
+	}
+
+	// Дополнительные проверки перед удалением (например, статус, наличие активных лотов)
+	// уже частично реализованы в store.DeleteAuction, но можно дублировать/усилить здесь
+
+	return s.auctionStore.DeleteAuction(auctionID)
+}

@@ -69,3 +69,37 @@ func (s *gormAuctionStore) UpdateAuctionStatus(id uint, status models.AuctionSta
 		return nil // Коммит транзакции
 	})
 }
+
+func (s *gormAuctionStore) DeleteAuction(id uint) error {
+	// Мягкое удаление, если в модели Auction есть DeletedAt gorm.DeletedAt
+	// Если нужно жесткое: tx.Unscoped().Delete(&models.Auction{}, id).Error
+	// Также нужно продумать, что происходит с лотами этого аукциона.
+	// Возможно, их тоже нужно пометить как-то или удалить, или запретить удаление аукциона с активными лотами.
+	// Пока простое удаление самого аукциона.
+	// Сначала проверим, есть ли у аукциона активные или непроданные лоты, чтобы предотвратить удаление.
+	var count int64
+	s.db.Model(&models.Lot{}).Where("auction_id = ? AND status IN (?, ?)", id, models.StatusLotActive, models.StatusPending).Count(&count)
+	if count > 0 {
+		return errors.New("нельзя удалить аукцион, на котором есть активные или ожидающие торгов лоты")
+	}
+	// Или если аукцион не завершен
+	var auction models.Auction
+	if err := s.db.First(&auction, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("аукцион не найден")
+		}
+		return err
+	}
+	if auction.Status != models.StatusCompleted && auction.Status != models.StatusScheduled { // Удалять можно только запланированные или завершенные (без активных лотов)
+		return errors.New("нельзя удалить аукцион, который идет или не был корректно завершен (и имеет активные лоты)")
+	}
+
+	if err := s.db.Delete(&models.Auction{}, id).Error; err != nil {
+		return err
+	}
+	// Возможно, здесь же нужно каскадно удалить связанные лоты или изменить их статус,
+	// если бизнес-логика это предполагает. GORM может быть настроен на каскадное удаление
+	// через внешние ключи с ON DELETE CASCADE, но это нужно делать на уровне БД.
+	// Пока предполагаем, что удаление аукциона возможно только если он пуст или все лоты обработаны.
+	return nil
+}

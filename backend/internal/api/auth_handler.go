@@ -40,13 +40,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	// В соответствии с новой логикой apiClient.registerUser, которая не логинит сразу,
 	// мы просто возвращаем сообщение об успехе.
 	// Если бы мы хотели вернуть данные пользователя (без пароля), это выглядело бы так:
-	// userResponse := gin.H{
-	// 	"id":                   user.ID,
-	// 	"fullName":             user.FullName,
-	// 	"email":                user.Email,
-	//  "message":              "Пользователь успешно зарегистрирован. Пожалуйста, войдите.",
-	// }
-	// c.JSON(http.StatusCreated, userResponse)
+	userResponse := gin.H{
+		"id":       user.ID,
+		"fullName": user.FullName,
+		"email":    user.Email,
+		"message":  "Пользователь успешно зарегистрирован. Пожалуйста, войдите.",
+	}
+	c.JSON(http.StatusCreated, userResponse)
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Пользователь успешно зарегистрирован. Пожалуйста, войдите."})
 }
