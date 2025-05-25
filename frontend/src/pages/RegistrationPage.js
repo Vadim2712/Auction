@@ -1,7 +1,8 @@
 // src/pages/RegistrationPage.js
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Импортируем хук
+import { useAuth } from '../context/AuthContext'; // Импортируем useAuth для processRegistration
+// import './RegistrationPage.css'; // Убедитесь, что стили есть
 
 const RegistrationPage = () => {
     const [fullName, setFullName] = useState('');
@@ -10,18 +11,22 @@ const RegistrationPage = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
-    const { register, loading } = useAuth(); // Получаем функцию register
+    const [successMessage, setSuccessMessage] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+
+    const { processRegistration } = useAuth(); // Используем processRegistration
     const navigate = useNavigate();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError('');
+        setSuccessMessage('');
 
         if (!fullName || !email || !passportData || !password || !confirmPassword) {
             setError('Пожалуйста, заполните все поля.');
             return;
         }
-        if (password.length < 6) { // Пример простой валидации
+        if (password.length < 6) {
             setError('Пароль должен быть не менее 6 символов.');
             return;
         }
@@ -30,52 +35,60 @@ const RegistrationPage = () => {
             return;
         }
 
+        setSubmitting(true);
         try {
-            await register({
-                full_name: fullName, // Убедитесь, что ключи совпадают с ожидаемыми на бэкенде
+            const response = await processRegistration({ // Передаем объект с данными
+                fullName,
                 email,
-                passport_data: passportData,
+                passportData,
                 password,
-                // role: 'buyer' // Роль может назначаться на бэкенде по умолчанию
+                // role можно не передавать, т.к. apiClient присвоит availableBusinessRoles
             });
-            alert('Регистрация прошла успешно! Теперь вы можете войти.'); // Или другое сообщение
-            navigate('/login');
+            setSuccessMessage(response.message || 'Регистрация прошла успешно! Теперь вы можете войти.');
+            // Не перенаправляем сразу, даем пользователю прочитать сообщение
+            // navigate('/login');
         } catch (err) {
             console.error('Ошибка регистрации на странице:', err);
             setError(err.message || 'Ошибка регистрации. Пожалуйста, попробуйте снова.');
+        } finally {
+            setSubmitting(false);
         }
     };
 
     return (
-        <div>
+        <div className="registration-page container"> {/* Добавьте класс для стилизации */}
             <h2>Регистрация</h2>
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label htmlFor="fullName">ФИО:</label>
-                    <input type="text" id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} required disabled={loading} />
+            <form onSubmit={handleSubmit} className="form-container">
+                {error && <p className="alert alert-danger">{error}</p>}
+                {successMessage && <p className="alert alert-success">{successMessage}</p>}
+
+                {/* Поля формы как были, но добавим disabled={submitting} */}
+                <div className="form-group">
+                    <label htmlFor="fullName">ФИО*</label>
+                    <input type="text" id="fullName" name="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} required disabled={submitting} />
                 </div>
-                <div>
-                    <label htmlFor="email">Email:</label>
-                    <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
+                <div className="form-group">
+                    <label htmlFor="email">Email*</label>
+                    <input type="email" id="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={submitting} />
                 </div>
-                <div>
-                    <label htmlFor="passportData">Паспортные данные:</label>
-                    <input type="text" id="passportData" value={passportData} onChange={(e) => setPassportData(e.target.value)} required disabled={loading} />
+                <div className="form-group">
+                    <label htmlFor="passportData">Паспортные данные*</label>
+                    <input type="text" id="passportData" name="passportData" value={passportData} onChange={(e) => setPassportData(e.target.value)} required disabled={submitting} />
                 </div>
-                <div>
-                    <label htmlFor="password">Пароль (минимум 6 символов):</label>
-                    <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
+                <div className="form-group">
+                    <label htmlFor="password">Пароль (минимум 6 символов)*</label>
+                    <input type="password" id="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={submitting} />
                 </div>
-                <div>
-                    <label htmlFor="confirmPassword">Подтвердите пароль:</label>
-                    <input type="password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={loading} />
+                <div className="form-group">
+                    <label htmlFor="confirmPassword">Подтвердите пароль*</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={submitting} />
                 </div>
-                {error && <p className="text-danger">{error}</p>}
-                <button type="submit" disabled={loading}>
-                    {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+
+                <button type="submit" className="button button-primary" disabled={submitting}>
+                    {submitting ? 'Регистрация...' : 'Зарегистрироваться'}
                 </button>
             </form>
-            <p style={{ textAlign: 'center', marginTop: '15px' }}>
+            <p style={{ textAlign: 'center', marginTop: '20px' }}>
                 Уже есть аккаунт? <Link to="/login">Войти</Link>
             </p>
         </div>

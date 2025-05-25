@@ -1,36 +1,81 @@
 package main
 
 import (
+	"auction-app/backend/config"
+	"auction-app/backend/internal/api"
+	"auction-app/backend/internal/middleware"
+	"auction-app/backend/internal/services"
+	"auction-app/backend/internal/store"
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	// Импортируйте здесь ваши пакеты для API, когда они будут созданы
-	// "auction-app/backend/internal/api"
-	// "auction-app/backend/internal/store"
 )
 
 func main() {
-	// Инициализация подключения к БД (детали будут зависеть от вашей реализации в store)
-	// db, err := store.NewDB("your_postgres_connection_string")
-	// if err != nil {
-	// 	log.Fatalf("Failed to connect to database: %v", err)
-	// }
-	// defer db.Close()
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		log.Fatalf("Ошибка загрузки конфигурации: %v", err)
+	}
+
+	db, err := store.InitDB(cfg)
+	if err != nil {
+		log.Fatalf("Ошибка инициализации базы данных: %v", err)
+	}
+
+	// Инициализация хранилищ
+	userStore := store.NewGormUserStore(db)
+	auctionStore := store.NewGormAuctionStore(db)
+	lotStore := store.NewGormLotStore(db)
+	bidStore := store.NewGormBidStore(db) // <--- ИНИЦИАЛИЗИРУЕМ BidStore
+
+	// Инициализация сервисов
+	authService := services.NewAuthService(userStore, cfg)
+	auctionService := services.NewAuctionService(auctionStore, lotStore)
+	// Передаем bidStore в LotService
+	lotService := services.NewLotService(lotStore, auctionStore, bidStore) // <--- ОБНОВЛЕНО
+
+	// Инициализация обработчиков
+	authHandler := api.NewAuthHandler(authService)
+	auctionHandler := api.NewAuctionHandler(auctionService)
+	lotHandler := api.NewLotHandler(lotService)
 
 	router := gin.Default()
+	// ... (CORS как был) ...
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = []string{"http://localhost:3000"}
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	corsConfig.AllowCredentials = true
+	router.Use(cors.New(corsConfig))
 
-	// Простой тестовый маршрут
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
+	v1 := router.Group("/api/v1")
+	{
+		authRoutes := v1.Group("/auth")
+		{
+			authRoutes.POST("/register", authHandler.Register)
+			authRoutes.POST("/login", authHandler.Login)
+			authRoutes.GET("/me", middleware.AuthMiddleware(cfg), authHandler.Me)
+		}
 
-	// Здесь будут регистрироваться маршруты вашего API
-	// api.RegisterRoutes(router, db) // Пример
+		auctionRoutes := v1.Group("/auctions")
+		{
+			auctionRoutes.GET("", auctionHandler.GetAllAuctions)
+			auctionRoutes.GET("/:id", auctionHandler.GetAuctionByID)
+			auctionRoutes.POST("", middleware.AuthMiddleware(cfg), auctionHandler.CreateAuction)
+			auctionRoutes.PATCH("/:id/status", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuctionStatus)
+		}
 
-	log.Println("Server started on :8080")
-	if err := router.Run(":8080"); err != nil {
-		log.Fatalf("Failed to run server: %v", err)
+		lotRoutes := v1.Group("/auctions/:auctionId/lots")
+		{
+			lotRoutes.POST("", middleware.AuthMiddleware(cfg), lotHandler.CreateLot)
+			lotRoutes.POST("/:lotId/bids", middleware.AuthMiddleware(cfg), lotHandler.PlaceBid)
+		}
+	}
+
+	serverAddr := ":" + cfg.ServerPort
+	log.Printf("Сервер запускается на %s", serverAddr)
+	if err := router.Run(serverAddr); err != nil {
+		log.Fatalf("Ошибка запуска сервера: %v", err)
 	}
 }
