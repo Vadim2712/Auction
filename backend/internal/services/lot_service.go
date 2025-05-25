@@ -78,6 +78,20 @@ func (s *LotService) PlaceBid(auctionID uint, lotID uint, input models.PlaceBidI
 		return nil, fmt.Errorf("ваша ставка должна быть выше текущей цены (%.2f)", lot.CurrentPrice)
 	}
 
+	allLotsInAuction, _, errLots := s.lotStore.GetLotsByAuctionID(auctionID, 0, 99999) // Получаем все лоты аукциона без пагинации
+	if errLots == nil {                                                                // Если нет ошибки при получении лотов
+		for _, otherLot := range allLotsInAuction {
+			if otherLot.ID != lotID && // Это другой лот
+				otherLot.HighestBidderID != nil && *otherLot.HighestBidderID == bidderID && // Пользователь лидирует
+				otherLot.Status != models.StatusSold && otherLot.Status != models.StatusUnsold { // Лот еще в игре
+				return nil, errors.New("вы уже лидируете в торгах за другой предмет на этом аукционе, по правилам можно приобрести только один предмет")
+			}
+		}
+	} else {
+		// Не удалось проверить правило, возможно, стоит вернуть ошибку или продолжить с осторожностью
+		// log.Printf("Warning: Could not verify one-item-rule for user %d on auction %d due to: %v", bidderID, auctionID, errLots)
+	}
+
 	bid := models.Bid{
 		LotID:     lotID,
 		UserID:    bidderID,

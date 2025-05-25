@@ -3,8 +3,9 @@ package store
 import (
 	"auction-app/backend/internal/models"
 	"errors"
-	"strconv"
+	"strconv" // Добавлен, если не был
 
+	// Добавлен, если не был
 	"gorm.io/gorm"
 )
 
@@ -186,40 +187,64 @@ func (s *gormLotStore) GetActiveLotsByAuctionID(auctionID uint) ([]models.Lot, e
 func (s *gormLotStore) GetAllLots(offset, limit int, filters map[string]string) ([]models.Lot, int64, error) {
 	var lots []models.Lot
 	var total int64
+
 	queryBuilder := s.db.Model(&models.Lot{})
 
+	// Присоединяем таблицу аукционов для фильтрации и предзагрузки
+	// Указываем alias для lots, чтобы избежать неоднозначности имен столбцов, если auctions тоже имеет 'status' или 'created_at'
+	queryBuilder = queryBuilder.Joins("JOIN auctions as auction ON auction.id = lots.auction_id") // Используем "lots.auction_id"
+
 	if status, ok := filters["status"]; ok && status != "" {
-		queryBuilder = queryBuilder.Where("status = ?", status)
+		queryBuilder = queryBuilder.Where("lots.status = ?", status)
+	} else {
+		// По умолчанию показываем только те, что актуальны для продажи
+		queryBuilder = queryBuilder.Where("lots.status IN (?, ?)", models.StatusPending, models.StatusLotActive)
 	}
+
 	if sellerID, ok := filters["sellerId"]; ok && sellerID != "" {
 		sID, err := strconv.ParseUint(sellerID, 10, 32)
 		if err == nil {
-			queryBuilder = queryBuilder.Where("seller_id = ?", uint(sID))
+			queryBuilder = queryBuilder.Where("lots.seller_id = ?", uint(sID))
 		}
 	}
 	if auctionID, ok := filters["auctionId"]; ok && auctionID != "" {
 		aID, err := strconv.ParseUint(auctionID, 10, 32)
 		if err == nil {
-			queryBuilder = queryBuilder.Where("auction_id = ?", uint(aID))
+			queryBuilder = queryBuilder.Where("lots.auction_id = ?", uint(aID))
 		}
 	}
-	// Можно добавить фильтр по дате аукциона, к которому принадлежит лот, через JOIN
-	// if dateStr, ok := filters["auctionDate"]; ok && dateStr != "" {
-	//	 targetDate, errDate := time.Parse("2006-01-02", dateStr)
-	//	 if errDate == nil {
-	//		 queryBuilder = queryBuilder.Joins("JOIN auctions ON auctions.id = lots.auction_id").
-	//						 Where("DATE(auctions.auction_date) = ?", targetDate.Format("2006-01-02"))
-	//	 }
-	// }
 
-	if err := queryBuilder.Count(&total).Error; err != nil {
+	if monthFilter, ok := filters["auctionMonth"]; ok && monthFilter != "" { // Формат "YYYY-MM"
+		queryBuilder = queryBuilder.Where("to_char(auction.auction_date, 'YYYY-MM') = ?", monthFilter)
+	}
+
+	// Считаем общее количество лотов, соответствующих фильтрам
+	// Важно использовать тот же queryBuilder (с JOIN'ами и WHERE) для Count
+	if err := queryBuilder.Select("lots.id").Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	err := queryBuilder.Order("created_at DESC").Offset(offset).Limit(limit).
-		Preload("User"). // Продавец
-		Preload("HighestBidder").
-		// Preload(clause.Associations) // Можно загрузить все ассоциации или только нужные
+	if total == 0 {
+		return []models.Lot{}, 0, nil
+	}
+
+	// Получаем сами лоты с пагинацией и предзагрузкой
+	// Выбираем все поля из lots явно, чтобы избежать конфликтов имен с auctions
+	err := queryBuilder.Select("lots.*").
+		Order("lots.created_at DESC").
+		Offset(offset).
+		Limit(limit).
+		Preload("User").          // Продавец (связан с lots.SellerID)
+		Preload("HighestBidder"). // Лидер ставки (связан с lots.HighestBidderID)
+		Preload("FinalBuyer").    // Финальный покупатель
+		// Для информации об аукционе, GORM не сможет автоматически сделать Preload("Auction")
+		// на основе JOIN'а, если в модели Lot нет явного поля Auction типа models.Auction.
+		// Вместо этого, мы можем либо добавить поле Auction в Lot и настроить связь,
+		// либо получать информацию об аукционе отдельно в сервисе, если она нужна для каждого лота.
+		// Либо, если JOIN уже есть, выбрать нужные поля из auctions в Select.
+		// Простой вариант: фронтенд будет иметь auctionId и сможет запросить детали аукциона отдельно при необходимости.
+		// Если очень нужно имя аукциона для каждого лота в списке, нужно усложнять запрос или структуру ответа.
 		Find(&lots).Error
+
 	return lots, total, err
 }

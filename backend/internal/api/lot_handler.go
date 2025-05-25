@@ -297,13 +297,16 @@ func (h *LotHandler) GetAllLots(c *gin.Context) {
 
 	filters := make(map[string]string)
 	if status := c.Query("status"); status != "" {
-		filters["status"] = status // e.g., "Ожидает торгов", "Идет торг"
+		filters["status"] = status
 	}
 	if sellerId := c.Query("sellerId"); sellerId != "" {
 		filters["sellerId"] = sellerId
 	}
 	if auctionId := c.Query("auctionId"); auctionId != "" {
 		filters["auctionId"] = auctionId
+	}
+	if auctionMonth := c.Query("auctionMonth"); auctionMonth != "" { // Новый фильтр YYYY-MM
+		filters["auctionMonth"] = auctionMonth
 	}
 	// if auctionDate := c.Query("auctionDate"); auctionDate != "" { // Формат YYYY-MM-DD
 	//	filters["auctionDate"] = auctionDate
