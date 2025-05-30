@@ -121,11 +121,6 @@ func (s *AuthService) LoginUser(input models.LoginInput, chosenRole models.UserR
 				break
 			}
 		}
-		// Дополнительная проверка, что не пытаются выбрать "auction_manager", если он остался в availableRoles у старых пользователей
-		if chosenRole == models.RoleAuctionManager {
-			log.Printf("[AuthService] Chosen role 'auction_manager' is deprecated for user %s.", input.Email)
-			return "", nil, "", errors.New("роль 'Менеджер аукциона' больше не используется; выберите 'Продавец' для аналогичного функционала")
-		}
 
 		if !isRoleAllowed {
 			log.Printf("[AuthService] Chosen role '%s' is not available for user %s. Available: %v", chosenRole, input.Email, availableRoles)

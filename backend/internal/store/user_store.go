@@ -62,7 +62,7 @@ func (s *gormUserStore) GetAllUsers(offset, limit int, filters map[string]string
 		// Проверяем, что это одна из допустимых бизнес-ролей для фильтрации
 		isValidBusinessRole := false
 		switch models.UserRole(roleFilter) {
-		case models.RoleBuyer, models.RoleSeller, models.RoleAuctionManager:
+		case models.RoleBuyer, models.RoleSeller:
 			isValidBusinessRole = true
 		}
 		if isValidBusinessRole {

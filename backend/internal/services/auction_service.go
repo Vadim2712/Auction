@@ -254,7 +254,7 @@ func (s *AuctionService) DeleteAuction(auctionID uint, currentUserID uint, curre
 	// Здесь можно добавить более высокоуровневые проверки, если store.DeleteAuction их не делает.
 	// Например, если store.DeleteAuction не проверяет статус, то проверить здесь:
 	if auction.Status == models.StatusActive {
-		return errors.New("нельзя удалить активный аукцион. Сначала завершите его.")
+		return errors.New("нельзя удалить активный аукцион. Сначала завершите его")
 	}
 	// store.DeleteAuction также содержит проверки на активные/ожидающие лоты
 	// и на статус самого аукциона.

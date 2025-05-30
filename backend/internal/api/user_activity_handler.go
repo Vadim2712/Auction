@@ -85,7 +85,6 @@ func (h *UserActivityHandler) GetMyListings(c *gin.Context) {
 	// и системные администраторы (для просмотра лотов любого пользователя, если они запросят свои).
 	// В данном случае, мы проверяем, что у пользователя есть одна из этих активных ролей для доступа к "своим" листингам.
 	if currentUserRole != models.RoleSeller &&
-		currentUserRole != models.RoleAuctionManager &&
 		currentUserRole != models.RoleSystemAdmin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Доступ к просмотру своих лотов запрещен для вашей текущей активной роли"})
 		return

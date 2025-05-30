@@ -94,9 +94,6 @@ func (s *UserService) UpdateUserAvailableRoles(userID uint, roles []string, admi
 	for _, r := range roles {
 		roleCandidate := models.UserRole(r)
 		if _, isValid := validBusinessRoles[roleCandidate]; !isValid {
-			if roleCandidate == models.RoleAuctionManager { // Явно проверяем на старую роль
-				return nil, fmt.Errorf("роль '%s' больше не используется. Функции менеджера выполняет роль '%s'", models.RoleAuctionManager, models.RoleSeller)
-			}
 			return nil, fmt.Errorf("недопустимая бизнес-роль: %s", r)
 		}
 	}

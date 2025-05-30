@@ -88,7 +88,7 @@ func (s *LotService) PlaceBid(auctionID uint, lotID uint, input models.PlaceBidI
 			if otherLot.ID != lotID &&
 				otherLot.HighestBidderID != nil && *otherLot.HighestBidderID == bidderID &&
 				(otherLot.Status == models.StatusLotActive || otherLot.Status == models.StatusPending) {
-				return nil, errors.New("вы уже лидируете в торгах за другой предмет на этом аукционе. По правилам, можно приобрести только один предмет. Сначала ваша предыдущая лидирующая ставка должна быть перебита.")
+				return nil, errors.New("вы уже лидируете в торгах за другой предмет на этом аукционе. По правилам, можно приобрести только один предмет. Сначала ваша предыдущая лидирующая ставка должна быть перебита")
 			}
 		}
 	} else {

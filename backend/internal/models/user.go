@@ -11,10 +11,9 @@ import (
 type UserRole string
 
 const (
-	RoleBuyer          UserRole = "buyer"
-	RoleSeller         UserRole = "seller"
-	RoleAuctionManager UserRole = "auction_manager"
-	RoleSystemAdmin    UserRole = "SYSTEM_ADMIN"
+	RoleBuyer       UserRole = "buyer"
+	RoleSeller      UserRole = "seller"
+	RoleSystemAdmin UserRole = "SYSTEM_ADMIN"
 )
 
 // User представляет модель пользователя в системе
