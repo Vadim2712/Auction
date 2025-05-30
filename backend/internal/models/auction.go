@@ -1,3 +1,4 @@
+// backend/internal/models/auction.go
 package models
 
 import (
@@ -40,10 +41,19 @@ type CreateAuctionInput struct {
 	AuctionDateStr  string `json:"auctionDate" binding:"required"`       // Дата как строка "YYYY-MM-DD"
 	AuctionTime     string `json:"auctionTime" binding:"required,len=5"` // Время "HH:MM"
 	Location        string `json:"location" binding:"required,min=3"`
-	// CreatedByUserID будет браться из токена аутентифицированного пользователя (админа/менеджера)
 }
 
 // UpdateAuctionStatusInput структура для обновления статуса аукциона
 type UpdateAuctionStatusInput struct {
 	Status AuctionStatus `json:"status" binding:"required"`
+}
+
+// UpdateAuctionInput определяет поля, которые можно обновить для аукциона.
+// Используем указатели, чтобы разрешить частичные обновления (только непустые поля учитываются при обновлении).
+type UpdateAuctionInput struct {
+	NameSpecificity *string `json:"nameSpecificity,omitempty"`
+	DescriptionFull *string `json:"descriptionFull,omitempty"`
+	AuctionDateStr  *string `json:"auctionDate,omitempty"` // "YYYY-MM-DD"
+	AuctionTime     *string `json:"auctionTime,omitempty"` // "HH:MM"
+	Location        *string `json:"location,omitempty"`
 }

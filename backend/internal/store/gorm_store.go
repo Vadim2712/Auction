@@ -3,6 +3,7 @@ package store
 import (
 	"auction-app/backend/config"          // Путь к вашему пакету config
 	"auction-app/backend/internal/models" // Путь к вашим моделям
+	"errors"
 	"fmt"
 	"log"
 
@@ -55,4 +56,37 @@ func GetDB() *gorm.DB {
 		log.Fatal("Database instance is not initialized. Call InitDB first.")
 	}
 	return DB
+}
+
+func SeedSystemAdmin(db *gorm.DB) {
+	var existingAdmin models.User
+	err := db.Where("email = ?", "sysadmin@auction.app").First(&existingAdmin).Error
+
+	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
+		// Пользователь не найден, создаем его
+		adminUser := models.User{
+			FullName:               "Системный Администратор",
+			Email:                  "sysadmin@auction.app",
+			Role:                   models.RoleSystemAdmin,
+			AvailableBusinessRoles: "[]", // Пустой, т.к. не выбирает бизнес-роль
+			PassportData:           "0000000000",
+			IsActive:               true,
+		}
+		if err := adminUser.SetPassword("sysadminpassword"); err != nil {
+			log.Fatalf("Ошибка хеширования пароля для сисадмина: %v", err)
+			return
+		}
+
+		if err := db.Create(&adminUser).Error; err != nil {
+			log.Fatalf("Ошибка создания системного администратора: %v", err)
+		} else {
+			log.Println("Системный администратор успешно создан.")
+		}
+	} else if err != nil {
+		// Другая ошибка при поиске
+		log.Printf("Ошибка проверки существования системного администратора: %v", err)
+	} else {
+		// Пользователь уже существует
+		log.Println("Системный администратор уже существует.")
+	}
 }

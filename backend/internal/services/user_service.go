@@ -1,16 +1,16 @@
+// backend/internal/services/user_service.go
 package services
 
 import (
 	"auction-app/backend/internal/models"
 	"auction-app/backend/internal/store"
-	"encoding/json" // Для работы с JSON строкой AvailableBusinessRoles
+	"encoding/json"
 	"errors"
-	"fmt" // Для strings.Join
+	"fmt"
 )
 
 type UserService struct {
 	userStore store.UserStore
-	// cfg *config.Config // Если нужен для чего-то
 }
 
 func NewUserService(us store.UserStore) *UserService {
@@ -28,9 +28,6 @@ func (s *UserService) GetAllUsers(page, pageSize int, roleFilter string) ([]mode
 
 	filters := make(map[string]string)
 	if roleFilter != "" {
-		// Если мы фильтруем по бизнес-ролям, а не по основной роли User.Role
-		// То логику фильтрации нужно реализовать здесь или в store
-		// Пока что передадим как есть, store.GetAllUsers будет фильтровать по User.Role
 		filters["role"] = roleFilter
 	}
 
@@ -38,6 +35,7 @@ func (s *UserService) GetAllUsers(page, pageSize int, roleFilter string) ([]mode
 	if err != nil {
 		return nil, 0, fmt.Errorf("ошибка получения списка пользователей: %w", err)
 	}
+	// Пароли уже очищены в userStore.GetAllUsers
 	return users, total, nil
 }
 
@@ -56,7 +54,7 @@ func (s *UserService) UpdateUserStatus(userID uint, newStatus bool, adminUserID 
 	if user == nil {
 		return nil, errors.New("пользователь не найден")
 	}
-	if user.Role == models.RoleSystemAdmin { // Нельзя заблокировать другого системного администратора
+	if user.Role == models.RoleSystemAdmin {
 		return nil, errors.New("нельзя изменить статус другого системного администратора")
 	}
 
@@ -64,7 +62,7 @@ func (s *UserService) UpdateUserStatus(userID uint, newStatus bool, adminUserID 
 	if err := s.userStore.UpdateUser(user); err != nil {
 		return nil, fmt.Errorf("ошибка обновления статуса пользователя: %w", err)
 	}
-	user.PasswordHash = "" // Убираем хеш перед возвратом
+	user.PasswordHash = ""
 	return user, nil
 }
 
@@ -87,14 +85,18 @@ func (s *UserService) UpdateUserAvailableRoles(userID uint, roles []string, admi
 		return nil, errors.New("нельзя изменить доступные бизнес-роли системному администратору")
 	}
 
-	// Валидация ролей (убедиться, что это допустимые бизнес-роли)
+	// Валидация ролей: "auction_manager" больше не является допустимой назначаемой ролью.
 	validBusinessRoles := map[models.UserRole]bool{
-		models.RoleBuyer:          true,
-		models.RoleSeller:         true,
-		models.RoleAuctionManager: true,
+		models.RoleBuyer:  true,
+		models.RoleSeller: true,
+		// models.RoleAuctionManager: true, // Убрано
 	}
 	for _, r := range roles {
-		if !validBusinessRoles[models.UserRole(r)] {
+		roleCandidate := models.UserRole(r)
+		if _, isValid := validBusinessRoles[roleCandidate]; !isValid {
+			if roleCandidate == models.RoleAuctionManager { // Явно проверяем на старую роль
+				return nil, fmt.Errorf("роль '%s' больше не используется. Функции менеджера выполняет роль '%s'", models.RoleAuctionManager, models.RoleSeller)
+			}
 			return nil, fmt.Errorf("недопустимая бизнес-роль: %s", r)
 		}
 	}

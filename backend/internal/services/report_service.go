@@ -1,17 +1,19 @@
 package services
 
 import (
-	"auction-app/backend/internal/models" // Убедитесь, что путь правильный
+	"auction-app/backend/internal/models"
 	"auction-app/backend/internal/store"
-	"errors" // Для заглушек
 	"fmt"
 	"time"
+	// "encoding/json" // Может понадобиться для работы с AvailableBusinessRoles, если нужно будет парсить
+	// "log" // Для отладки
 )
 
+// ReportService предоставляет методы для генерации отчетов и выполнения специфических запросов
 type ReportService struct {
 	auctionStore store.AuctionStore
 	lotStore     store.LotStore
-	userStore    store.UserStore // Для получения данных о продавце/покупателе
+	userStore    store.UserStore
 }
 
 // NewReportService создает новый экземпляр ReportService
@@ -19,27 +21,26 @@ func NewReportService(as store.AuctionStore, ls store.LotStore, us store.UserSto
 	return &ReportService{auctionStore: as, lotStore: ls, userStore: us}
 }
 
-// GetLotWithMaxPriceDifference возвращает лот с максимальной разницей между начальной и конечной ценой
+// GetLotWithMaxPriceDifference возвращает лот с максимальной разницей между начальной и конечной ценой, а также саму разницу
 func (s *ReportService) GetLotWithMaxPriceDifference() (*models.Lot, float64, error) {
 	lot, err := s.lotStore.GetLotWithMaxPriceDifference() // Этот метод должен быть в LotStore
 	if err != nil {
-		return nil, 0, fmt.Errorf("ошибка получения лота с макс. разницей цен: %w", err)
+		return nil, 0, fmt.Errorf("ошибка получения лота с макс. разницей цен из хранилища: %w", err)
 	}
 	if lot == nil || lot.FinalPrice == nil { // Нет проданных лотов или нет финальной цены
-		// Возвращаем nil, nil, nil чтобы указать, что данных нет, но ошибки не было
-		return nil, 0, nil
+		return nil, 0, nil // Данных нет, но не ошибка
 	}
 	difference := *lot.FinalPrice - lot.StartPrice
 	return lot, difference, nil
 }
 
-// GetAuctionWithMostSoldLots ...
+// GetAuctionWithMostSoldLots возвращает аукцион с наибольшим количеством проданных лотов и это количество
 func (s *ReportService) GetAuctionWithMostSoldLots() (map[string]interface{}, error) {
-	auction, count, err := s.auctionStore.GetAuctionWithMostSoldLots()
+	auction, count, err := s.auctionStore.GetAuctionWithMostSoldLots() // Этот метод должен быть в AuctionStore
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения аукциона с макс. числом продаж: %w", err)
 	}
-	if auction == nil { // Если store возвращает nil, nil при отсутствии данных
+	if auction == nil { // Если store возвращает nil при отсутствии данных
 		return map[string]interface{}{"message": "Нет аукционов с проданными лотами"}, nil
 	}
 	return map[string]interface{}{
@@ -50,7 +51,7 @@ func (s *ReportService) GetAuctionWithMostSoldLots() (map[string]interface{}, er
 
 // GetMostExpensiveSoldLotInfo возвращает информацию о самом дорогом проданном лоте, его продавце и покупателе
 func (s *ReportService) GetMostExpensiveSoldLotInfo() (map[string]interface{}, error) {
-	lot, err := s.lotStore.GetMostExpensiveSoldLot()
+	lot, err := s.lotStore.GetMostExpensiveSoldLot() // Этот метод должен быть в LotStore
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения самого дорогого лота: %w", err)
 	}
@@ -58,31 +59,29 @@ func (s *ReportService) GetMostExpensiveSoldLotInfo() (map[string]interface{}, e
 		return map[string]interface{}{"message": "Проданные лоты не найдены"}, nil
 	}
 
-	var seller *models.User // Expects a pointer
-	if lot.SellerID != 0 {
-		seller = lot.User // ERROR: lot.User is models.User, not *models.User
+	// GORM Preload в GetMostExpensiveSoldLot должен был загрузить User (Продавца) и FinalBuyer (Покупателя)
+	// Если seller или buyer не были предзагружены в lot, их нужно будет получить отдельно через userStore
+	// но правильнее настроить Preload в LotStore.
+	var sellerInfo *models.User
+	if lot.User != nil { // lot.User - это поле для продавца
+		sellerInfo = lot.User
+		sellerInfo.PasswordHash = "" // Очищаем хеш
 	}
 
-	var buyer *models.User
-	if lot.FinalBuyerID != nil { // GORM предзагрузка FinalBuyer в LotStore.GetMostExpensiveSoldLot
-		buyer = lot.FinalBuyer // Предполагаем, что GORM заполнил это поле
-	}
-
-	// Убираем пароли из ответа, если они там есть (лучше делать это при запросе из UserStore)
-	if seller != nil {
-		seller.PasswordHash = ""
-	}
-	if buyer != nil {
-		buyer.PasswordHash = ""
+	var buyerInfo *models.User
+	if lot.FinalBuyer != nil { // lot.FinalBuyer - это поле для покупателя
+		buyerInfo = lot.FinalBuyer
+		buyerInfo.PasswordHash = "" // Очищаем хеш
 	}
 
 	return map[string]interface{}{
 		"lot":    lot,
-		"seller": seller,
-		"buyer":  buyer,
+		"seller": sellerInfo,
+		"buyer":  buyerInfo,
 	}, nil
 }
 
+// GetAuctionsWithNoSoldLots возвращает аукционы, на которых не был продан ни один предмет
 func (s *ReportService) GetAuctionsWithNoSoldLots(page, pageSize int) ([]models.Auction, int64, error) {
 	if page < 1 {
 		page = 1
@@ -91,54 +90,63 @@ func (s *ReportService) GetAuctionsWithNoSoldLots(page, pageSize int) ([]models.
 		pageSize = 10
 	}
 	offset := (page - 1) * pageSize
-	return s.auctionStore.GetAuctionsWithoutSoldLots(offset, pageSize)
+	auctions, total, err := s.auctionStore.GetAuctionsWithoutSoldLots(offset, pageSize) // Этот метод должен быть в AuctionStore
+	if err != nil {
+		return nil, 0, fmt.Errorf("ошибка получения аукционов без продаж: %w", err)
+	}
+	return auctions, total, nil
 }
 
+// GetTopNMostExpensiveSoldLots возвращает топ N самых дорогих проданных лотов
 func (s *ReportService) GetTopNMostExpensiveSoldLots(limit int) ([]models.Lot, error) {
 	if limit <= 0 {
 		limit = 3 // Значение по умолчанию
 	}
-	lots, err := s.lotStore.GetTopNSoldLotsByPrice(limit)
+	lots, err := s.lotStore.GetTopNSoldLotsByPrice(limit) // Этот метод должен быть в LotStore
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения топ-%d дорогих лотов: %w", limit, err)
 	}
 	return lots, nil
 }
 
+// GetItemsForSaleByDateAndAuction возвращает предметы, выставленные на продажу на заданную дату и аукцион
 func (s *ReportService) GetItemsForSaleByDateAndAuction(auctionID uint, dateStr string) ([]models.Lot, error) {
 	targetDate, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
-		return nil, fmt.Errorf("некорректный формат даты: %w", err)
+		return nil, fmt.Errorf("некорректный формат даты (ожидается ГГГГ-ММ-ДД): %w", err)
 	}
 
-	auction, err := s.auctionStore.GetAuctionByID(auctionID)
+	auction, err := s.auctionStore.GetAuctionByID(auctionID) // GetAuctionByID должен предзагружать лоты
 	if err != nil {
-		return nil, fmt.Errorf("ошибка получения аукциона: %w", err)
+		return nil, fmt.Errorf("ошибка получения аукциона ID %d: %w", auctionID, err)
 	}
 	if auction == nil {
-		return nil, errors.New("аукцион не найден")
+		return nil, fmt.Errorf("аукцион с ID %d не найден", auctionID)
 	}
 
-	// Проверяем, что дата аукциона совпадает с запрошенной датой (только день, месяц, год)
-	if auction.AuctionDate.Year() != targetDate.Year() ||
-		auction.AuctionDate.Month() != targetDate.Month() ||
-		auction.AuctionDate.Day() != targetDate.Day() {
-		return nil, fmt.Errorf("указанный аукцион (ID: %d) не проводился в дату %s", auctionID, dateStr)
+	auctionYear, auctionMonth, auctionDay := auction.AuctionDate.Date()
+	targetYear, targetMonth, targetDay := targetDate.Date()
+
+	if auctionYear != targetYear || auctionMonth != targetMonth || auctionDay != targetDay {
+		return []models.Lot{}, fmt.Errorf("указанный аукцион (ID: %d) не проводился в дату %s. Фактическая дата аукциона: %s",
+			auctionID, dateStr, auction.AuctionDate.Format("2006-01-02"))
 	}
 
-	// Если аукцион не активен и не запланирован, то предметы не "выставлены на продажу" в контексте торгов
-	if auction.Status != models.StatusActive && auction.Status != models.StatusScheduled {
-		return []models.Lot{}, nil // Возвращаем пустой список, если аукцион завершен/отменен
+	var itemsForSale []models.Lot
+	if auction.Status == models.StatusCompleted || auction.Status == "Отменен" /* если есть такой статус */ {
+		// Если аукцион завершен или отменен, то на нем нет "выставленных на продажу" предметов в текущий момент
+		return itemsForSale, nil
 	}
 
-	// Получаем лоты, которые на данный момент выставлены на продажу (не проданы/не сняты)
-	lots, err := s.lotStore.GetActiveLotsByAuctionID(auctionID)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка получения лотов для аукциона ID %d: %w", auctionID, err)
+	for _, lot := range auction.Lots { // Предполагаем, что auction.Lots уже загружены
+		if lot.Status == models.StatusPending || lot.Status == models.StatusLotActive {
+			itemsForSale = append(itemsForSale, lot)
+		}
 	}
-	return lots, nil
+	return itemsForSale, nil
 }
 
+// GetBuyersOfItemsWithSpecificity возвращает покупателей, купивших предметы заданной специфики аукциона
 func (s *ReportService) GetBuyersOfItemsWithSpecificity(specificity string, page, pageSize int) ([]models.User, int64, error) {
 	if page < 1 {
 		page = 1
@@ -147,14 +155,16 @@ func (s *ReportService) GetBuyersOfItemsWithSpecificity(specificity string, page
 		pageSize = 10
 	}
 	offset := (page - 1) * pageSize
-	return s.userStore.GetBuyersByAuctionSpecificity(specificity, offset, pageSize)
+
+	users, total, err := s.userStore.GetBuyersByAuctionSpecificity(specificity, offset, pageSize) // Этот метод должен быть в UserStore
+	if err != nil {
+		return nil, 0, fmt.Errorf("ошибка получения покупателей по специфике из хранилища: %w", err)
+	}
+	return users, total, nil
 }
 
-func (s *ReportService) GetSellersByItemCategory(category string, page, pageSize int) ([]models.User, int64, error) {
-	// TODO: Реализовать логику в s.userStore (или через s.lotStore/s.auctionStore с JOIN'ами)
-	return nil, 0, errors.New("метод GetSellersByItemCategory еще не реализован в сервисе")
-}
-
+// GetSellersWithSalesByAuctionSpecificity возвращает продавцов, продавших предметы на аукционах заданной специфики,
+// с общей суммой продаж не менее minSales, отсортированных по сумме.
 func (s *ReportService) GetSellersWithSalesByAuctionSpecificity(specificity string, minSales float64, page, pageSize int) ([]models.SellerSalesReport, int64, error) {
 	if page < 1 {
 		page = 1
@@ -166,5 +176,10 @@ func (s *ReportService) GetSellersWithSalesByAuctionSpecificity(specificity stri
 		minSales = 0
 	}
 	offset := (page - 1) * pageSize
-	return s.userStore.GetSellersWithSalesByAuctionSpecificity(specificity, minSales, offset, pageSize)
+
+	report, total, err := s.userStore.GetSellersWithSalesByAuctionSpecificity(specificity, minSales, offset, pageSize) // Этот метод должен быть в UserStore
+	if err != nil {
+		return nil, 0, fmt.Errorf("ошибка получения отчета по продажам продавцов: %w", err)
+	}
+	return report, total, nil
 }

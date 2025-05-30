@@ -59,7 +59,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, user, err := h.authService.LoginUser(models.LoginInput{Email: input.Email, Password: input.Password}, input.Role)
+	token, userFromService, activeRoleFromService, err := h.authService.LoginUser(models.LoginInput{Email: input.Email, Password: input.Password}, input.Role)
 	if err != nil {
 		if strings.Contains(err.Error(), "не найден") || strings.Contains(err.Error(), "неверный пароль") || strings.Contains(err.Error(), "роль не была выбрана") {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -71,8 +71,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	// user.PasswordHash уже должен быть "" из сервиса
 	c.JSON(http.StatusOK, gin.H{
 		"token":      token,
-		"user":       user,
-		"activeRole": input.Role,
+		"user":       userFromService,       // userFromService уже без хеша пароля
+		"activeRole": activeRoleFromService, // Используем роль, определенную сервисом
 	})
 }
 

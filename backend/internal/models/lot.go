@@ -1,3 +1,4 @@
+// backend/internal/models/lot.go
 package models
 
 import (
@@ -44,6 +45,12 @@ type CreateLotInput struct {
 	Name        string  `json:"name" binding:"required,min=3"`
 	Description string  `json:"description"`
 	StartPrice  float64 `json:"startPrice" binding:"required,gt=0"`
-	// SellerID будет браться из токена аутентифицированного пользователя (продавца/админа)
-	// AuctionID будет браться из параметра URL
+}
+
+// UpdateLotInput определяет поля, которые можно обновить для лота.
+// Используем указатели, чтобы разрешить частичные обновления.
+type UpdateLotInput struct {
+	Name        *string  `json:"name,omitempty"`
+	Description *string  `json:"description,omitempty"`
+	StartPrice  *float64 `json:"startPrice,omitempty"`
 }

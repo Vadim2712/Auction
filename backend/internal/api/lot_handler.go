@@ -1,7 +1,8 @@
+// backend/internal/api/lot_handler.go
 package api
 
 import (
-	"auction-app/backend/internal/models" // Убедитесь, что путь правильный для вашего модуля
+	"auction-app/backend/internal/models" // Убедимся, что models импортированы
 	"auction-app/backend/internal/services"
 	"net/http"
 	"strconv"
@@ -13,7 +14,6 @@ import (
 // LotHandler содержит методы-обработчики для лотов
 type LotHandler struct {
 	lotService *services.LotService
-	// auctionService *services.AuctionService // Может понадобиться для дополнительных проверок, если LotService их не делает
 }
 
 // NewLotHandler создает новый экземпляр LotHandler
@@ -23,7 +23,7 @@ func NewLotHandler(ls *services.LotService) *LotHandler {
 
 // CreateLot обрабатывает запрос на добавление лота к аукциону
 func (h *LotHandler) CreateLot(c *gin.Context) {
-	auctionIDStr := c.Param("auctionId") // Получаем ID аукциона из URL
+	auctionIDStr := c.Param("auctionId")
 	auctionID, err := strconv.ParseUint(auctionIDStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID аукциона в URL"})
@@ -51,22 +51,18 @@ func (h *LotHandler) CreateLot(c *gin.Context) {
 	}
 	currentUserRole := models.UserRole(currentUserRoleStr)
 
-	// Проверка прав: только продавец, системный администратор или менеджер аукциона могут добавлять лоты
-	if currentUserRole != models.RoleSeller &&
-		currentUserRole != models.RoleSystemAdmin &&
-		currentUserRole != models.RoleAuctionManager {
+	if currentUserRole != models.RoleSeller && currentUserRole != models.RoleSystemAdmin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Недостаточно прав для добавления лота"})
 		return
 	}
-	// ID продавца для лота будет ID текущего пользователя
 	sellerIDForLot := currentUserID
 
 	lot, err := h.lotService.CreateLot(uint(auctionID), input, sellerIDForLot)
 	if err != nil {
-		if strings.Contains(err.Error(), "не найден") { // Например, аукцион не найден
+		if strings.Contains(err.Error(), "не найден") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else if strings.Contains(err.Error(), "лоты можно добавлять только") || strings.Contains(err.Error(), "стартовая цена") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()}) // Ошибка бизнес-логики или валидации
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка добавления лота: " + err.Error()})
 		}
@@ -89,22 +85,23 @@ func (h *LotHandler) GetLotsByAuctionID(c *gin.Context) {
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 100 { // Ограничение на максимальный размер страницы
+	if pageSize < 1 || pageSize > 100 {
 		pageSize = 10
 	}
 
 	lots, total, err := h.lotService.GetLotsByAuctionID(uint(auctionID), page, pageSize)
 	if err != nil {
-		if strings.Contains(err.Error(), "не найден") { // Если сам аукцион не найден
+		if strings.Contains(err.Error(), "не найден") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения лотов для аукциона: " + err.Error()})
 		}
 		return
 	}
-	if lots == nil { // На случай, если сервис вернет nil вместо пустого слайса
+	if lots == nil {
 		lots = []models.Lot{}
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"data": lots,
 		"pagination": gin.H{
@@ -118,7 +115,7 @@ func (h *LotHandler) GetLotsByAuctionID(c *gin.Context) {
 
 // GetLotByID обрабатывает запрос на получение деталей одного лота
 func (h *LotHandler) GetLotByID(c *gin.Context) {
-	lotIDStr := c.Param("lotId") // Предполагаем, что маршрут /api/v1/lots/:lotId
+	lotIDStr := c.Param("lotId")
 	lotID, err := strconv.ParseUint(lotIDStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректный ID лота в URL"})
@@ -139,7 +136,7 @@ func (h *LotHandler) GetLotByID(c *gin.Context) {
 
 // UpdateLotDetails обрабатывает запрос на обновление деталей лота
 func (h *LotHandler) UpdateLotDetails(c *gin.Context) {
-	auctionIDStr := c.Param("auctionId") // Лот обновляется в контексте аукциона
+	auctionIDStr := c.Param("auctionId")
 	lotIDStr := c.Param("lotId")
 
 	auctionID, errAuction := strconv.ParseUint(auctionIDStr, 10, 32)
@@ -150,7 +147,7 @@ func (h *LotHandler) UpdateLotDetails(c *gin.Context) {
 		return
 	}
 
-	var input services.UpdateLotInput // Используем DTO из пакета services
+	var input models.UpdateLotInput // Используем models.UpdateLotInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные входные данные для обновления лота: " + err.Error()})
 		return
@@ -171,11 +168,14 @@ func (h *LotHandler) UpdateLotDetails(c *gin.Context) {
 		if strings.Contains(err.Error(), "не найден") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else if strings.Contains(err.Error(), "недостаточно прав") ||
-			strings.Contains(err.Error(), "только до начала торгов") ||
-			strings.Contains(err.Error(), "стартовая цена") ||
-			strings.Contains(err.Error(), "уже есть ставки") ||
 			strings.Contains(err.Error(), "лот не принадлежит данному аукциону") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		} else if strings.Contains(err.Error(), "только до начала торгов") ||
+			strings.Contains(err.Error(), "стартовая цена") ||
+			strings.Contains(err.Error(), "уже есть ставки") ||
+			strings.Contains(err.Error(), "можно только в запланированном аукционе") ||
+			strings.Contains(err.Error(), "ожидает торгов и по нему нет ставок") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка обновления лота: " + err.Error()})
 		}
@@ -186,7 +186,7 @@ func (h *LotHandler) UpdateLotDetails(c *gin.Context) {
 
 // DeleteLot обрабатывает запрос на удаление лота
 func (h *LotHandler) DeleteLot(c *gin.Context) {
-	auctionIDStr := c.Param("auctionId") // Лот удаляется в контексте аукциона
+	auctionIDStr := c.Param("auctionId")
 	lotIDStr := c.Param("lotId")
 
 	auctionID, errAuction := strconv.ParseUint(auctionIDStr, 10, 32)
@@ -212,10 +212,13 @@ func (h *LotHandler) DeleteLot(c *gin.Context) {
 		if strings.Contains(err.Error(), "не найден") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else if strings.Contains(err.Error(), "недостаточно прав") ||
-			strings.Contains(err.Error(), "удалить лот можно только") ||
-			strings.Contains(err.Error(), "участвовал в завершенных торгах") ||
 			strings.Contains(err.Error(), "лот не принадлежит данному аукциону") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		} else if strings.Contains(err.Error(), "удалить лот можно только") ||
+			strings.Contains(err.Error(), "участвовал в завершенных торгах") ||
+			strings.Contains(err.Error(), "только из запланированного аукциона") ||
+			strings.Contains(err.Error(), "ожидает торгов и по нему нет ставок") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления лота: " + err.Error()})
 		}
@@ -250,15 +253,11 @@ func (h *LotHandler) PlaceBid(c *gin.Context) {
 		return
 	}
 	bidderID, _ := userIDVal.(uint)
-	bidderRoleStr, _ := userRoleVal.(string)
-	bidderRole := models.UserRole(bidderRoleStr)
+	bidderRole := models.UserRole(userRoleVal.(string))
 
-	// Проверка, что ставку делает пользователь с подходящей активной ролью (например, 'buyer')
-	// Вы можете разрешить и другим ролям делать ставки, если это соответствует вашей логике
-	// (например, seller может покупать на чужих аукционах)
 	canBid := false
 	switch bidderRole {
-	case models.RoleBuyer, models.RoleSeller, models.RoleAuctionManager, models.RoleSystemAdmin: // Разрешаем всем авторизованным, кроме, возможно, специфических ограничений
+	case models.RoleBuyer, models.RoleSeller, models.RoleSystemAdmin:
 		canBid = true
 	}
 	if !canBid {
@@ -273,9 +272,11 @@ func (h *LotHandler) PlaceBid(c *gin.Context) {
 		} else if strings.Contains(err.Error(), "неактивны") ||
 			strings.Contains(err.Error(), "не принимаются (статус лота)") ||
 			strings.Contains(err.Error(), "собственный лот") ||
-			strings.Contains(err.Error(), "выше текущей цены") {
+			strings.Contains(err.Error(), "выше текущей цены") ||
+			strings.Contains(err.Error(), "уже лидируете") ||
+			strings.Contains(err.Error(), "не удалось проверить правило") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else if strings.Contains(err.Error(), "недостаточно прав") { // Хотя эта проверка обычно в сервисе
+		} else if strings.Contains(err.Error(), "недостаточно прав") {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка размещения ставки: " + err.Error()})
@@ -285,6 +286,7 @@ func (h *LotHandler) PlaceBid(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedLot)
 }
 
+// GetAllLots обрабатывает запрос на получение всех лотов с фильтрами
 func (h *LotHandler) GetAllLots(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
@@ -305,12 +307,9 @@ func (h *LotHandler) GetAllLots(c *gin.Context) {
 	if auctionId := c.Query("auctionId"); auctionId != "" {
 		filters["auctionId"] = auctionId
 	}
-	if auctionMonth := c.Query("auctionMonth"); auctionMonth != "" { // Новый фильтр YYYY-MM
+	if auctionMonth := c.Query("auctionMonth"); auctionMonth != "" {
 		filters["auctionMonth"] = auctionMonth
 	}
-	// if auctionDate := c.Query("auctionDate"); auctionDate != "" { // Формат YYYY-MM-DD
-	//	filters["auctionDate"] = auctionDate
-	// }
 
 	lots, total, err := h.lotService.GetAllLots(page, pageSize, filters)
 	if err != nil {

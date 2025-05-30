@@ -28,6 +28,7 @@ func main() {
 	auctionStore := store.NewGormAuctionStore(db)
 	lotStore := store.NewGormLotStore(db)
 	bidStore := store.NewGormBidStore(db)
+	store.SeedSystemAdmin(db)
 
 	authService := services.NewAuthService(userStore, cfg)
 	auctionService := services.NewAuctionService(auctionStore, lotStore)
