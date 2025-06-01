@@ -104,6 +104,7 @@ func main() {
 		// Отдельные маршруты для лотов (если ID лота глобально уникален)
 		individualLotRoutes := v1.Group("/lots")
 		{
+			individualLotRoutes.GET("", lotHandler.GetAllLots)
 			individualLotRoutes.GET("/:lotId", lotHandler.GetLotByID)
 		}
 
