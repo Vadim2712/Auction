@@ -1,0 +1,77 @@
+/* src/pages/ManageUsersPage.css */
+.manage-users-page h1 {
+    margin-bottom: 20px;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.status-active {
+    color: #28a745;
+    /* Зеленый */
+    font-weight: bold;
+}
+
+.status-inactive {
+    color: #dc3545;
+    /* Красный */
+    font-weight: bold;
+}
+
+.actions-cell .button-sm {
+    /* Добавим класс для меньших кнопок в таблице */
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+.actions-cell .button-sm:last-child {
+    margin-right: 0;
+}
+
+
+/* Стили для пагинации */
+.pagination-controls {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination-controls .button {
+    margin: 0 5px;
+}
+
+.pagination-controls span {
+    margin: 0 10px;
+    vertical-align: middle;
+}
+
+/* Стили для чекбоксов в модальном окне */
+.form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.form-check-input {
+    margin-right: 0.5rem;
+    /* Уменьшим размер чекбокса, если нужно */
+    /* width: 1em; 
+    height: 1em; */
+}
+
+.form-check-label {
+    font-weight: normal;
+    /* Убираем жирность с метки чекбокса */
+    color: #333;
+}
+
+.error-message {
+    /* Уже может быть в App.css или Alert.css */
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+}

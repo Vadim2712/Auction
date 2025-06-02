@@ -14,11 +14,14 @@ import AuctionDetailPage from './pages/AuctionDetailPage';
 import CreateAuctionPage from './pages/CreateAuctionPage';
 import MyListingsPage from './pages/MyListingsPage';
 import AddLotPage from './pages/AddLotPage';
-import MyActivityPage from './pages/MyActivityPage'; // Страница активности пользователя
-// import MyListingsPage from './pages/MyListingsPage'; // Раскомментируйте, когда создадим
+import MyActivityPage from './pages/MyActivityPage';
 import NotFoundPage from './pages/NotFoundPage';
+import ProfilePage from './pages/ProfilePage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import ManageUsersPage from './pages/ManageUsersPage'; // Добавили импорт
+import ReportPage from './pages/ReportPage'; // Добавили импорт
 
-import './App.css'; // Основные стили приложения
+import './App.css';
 
 function App() {
   return (
@@ -35,9 +38,17 @@ function App() {
 
             {/* Защищенные маршруты */}
             <Route
+              path="/profile"
+              element={
+                <ProtectedRoute roles={['buyer', 'seller', 'admin']}>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/create-auction"
               element={
-                <ProtectedRoute roles={['admin']}>
+                <ProtectedRoute roles={['admin', 'seller']}>
                   <CreateAuctionPage />
                 </ProtectedRoute>
               }
@@ -53,16 +64,41 @@ function App() {
             <Route
               path="/my-activity"
               element={
-                <ProtectedRoute roles={['buyer', 'seller', 'admin']}> {/* Доступно всем авторизованным */}
+                <ProtectedRoute roles={['buyer', 'seller', 'admin']}>
                   <MyActivityPage />
                 </ProtectedRoute>
               }
             />
-            <Route // <--- НОВЫЙ МАРШРУТ
+            <Route
               path="/my-listings"
               element={
-                <ProtectedRoute roles={['seller', 'admin']}> {/* Доступно продавцам и администраторам */}
+                <ProtectedRoute roles={['seller', 'admin']}>
                   <MyListingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <ProtectedRoute roles={['admin']}>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route // Новый маршрут для управления пользователями
+              path="/admin/users"
+              element={
+                <ProtectedRoute roles={['admin']}> {/* Только для 'admin' */}
+                  <ManageUsersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route // Новый маршрут для отчетов
+              path="/reports"
+              element={
+                // Роли здесь могут быть 'admin' или также 'seller' (менеджер), если им нужен доступ
+                <ProtectedRoute roles={['admin', 'seller']}>
+                  <ReportPage />
                 </ProtectedRoute>
               }
             />
