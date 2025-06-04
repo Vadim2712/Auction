@@ -2,16 +2,19 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import './LotCard.css'; // Создадим этот файл для стилей
+import Button from './common/Button'; // Используем наш компонент Button
+import Input from './common/Input';   // Используем наш компонент Input
+import './LotCard.css';
 
 const LotCard = ({ auctionId, auctionStatus, lot, onBid }) => {
     const { isAuthenticated, user } = useAuth();
     const [bidAmount, setBidAmount] = useState('');
     const [bidError, setBidError] = useState('');
 
-    const isSeller = isAuthenticated && user && user.id === lot.seller_id;
+    // Используем lot.sellerId (camelCase)
+    const isSeller = isAuthenticated && user && user.id === lot.sellerId;
 
-    // Лот доступен для ставок, если аукцион "Идет торг" И лот "Идет торг" или "Ожидает торгов"
+    // Статусы аукциона и лота приходят с бэкенда как строки, например, "Идет торг", "Ожидает торгов"
     const canBidOnLot = auctionStatus === 'Идет торг' && (lot.status === 'Идет торг' || lot.status === 'Ожидает торгов');
 
     const handleBidSubmit = (e) => {
@@ -22,59 +25,62 @@ const LotCard = ({ auctionId, auctionStatus, lot, onBid }) => {
             setBidError('Введите корректную сумму ставки.');
             return;
         }
-        if (amount <= lot.current_price) {
-            setBidError(`Ставка должна быть выше ${lot.current_price} руб.`);
+        // Используем lot.currentPrice (camelCase)
+        if (amount <= lot.currentPrice) {
+            setBidError(`Ставка должна быть выше ${lot.currentPrice} руб.`);
             return;
         }
         onBid(lot.id, amount); // Вызываем onBid из AuctionDetailPage
         setBidAmount(''); // Очищаем поле после попытки ставки
     };
 
-    // Определение имени продавца (заглушка, если у нас нет прямого доступа к списку пользователей)
-    // В идеале, lot.seller_name должно приходить с бэкенда или lot.seller_id можно использовать для запроса данных продавца
-    let sellerDisplayName = `Продавец ID: ${lot.seller_id}`;
-    if (user && lot.seller_id === user.id) {
+    let sellerDisplayName = `Продавец ID: ${lot.sellerId}`;
+    // Предполагаем, что lot.User (продавец) может быть предзагружен и содержать fullName
+    if (lot.User && lot.User.fullName) {
+        sellerDisplayName = lot.User.fullName;
+    }
+    if (isSeller) { // Если текущий пользователь - продавец этого лота
         sellerDisplayName = "Вы (продавец)";
-    } else if (lot.seller_name) { // Если бы у нас было поле seller_name
-        sellerDisplayName = lot.seller_name;
     }
 
 
     return (
-        <div className={`lot-card status-${lot.status?.toLowerCase().replace(/ /g, '-')}`}>
+        <div className={`lot-card status-lot-${lot.status?.toLowerCase().replace(/ /g, '-')}`}>
             <h4>{lot.name}</h4>
-            <p className="lot-number">Лот №: {lot.lot_number}</p>
+            <p className="lot-number">Лот №: {lot.lotNumber}</p>
             <p className="lot-description">{lot.description}</p>
             <p>Продавец: {sellerDisplayName}</p>
-            <p>Начальная цена: {lot.start_price} руб.</p>
+            <p>Начальная цена: {lot.startPrice} руб.</p>
             <p className="lot-current-price">
-                Текущая цена: <strong>{lot.current_price} руб.</strong>
+                Текущая цена: <strong>{lot.currentPrice} руб.</strong>
             </p>
-            {lot.highest_bidder_id && (
+            {/* Используем lot.highestBidderId и lot.HighestBidder (предзагруженная информация) */}
+            {lot.highestBidderId && (
                 <p className="lot-highest-bidder">
-                    Лидирует: {lot.highest_bidder_id === user?.id ? "Вы" : `Участник ID ${lot.highest_bidder_id}`}
+                    Лидирует: {lot.highestBidderId === user?.id ? "Вы" : (lot.HighestBidder?.fullName || `Участник ID ${lot.highestBidderId}`)}
                 </p>
             )}
-            <p>Статус лота: <span className={`lot-status-badge status-${lot.status?.toLowerCase().replace(/ /g, '-')}`}>{lot.status}</span></p>
+            <p>Статус лота: <span className={`status-badge status-lot-${lot.status?.toLowerCase().replace(/ /g, '-')}`}>{lot.status}</span></p>
 
             {isAuthenticated && !isSeller && canBidOnLot && (
                 <form onSubmit={handleBidSubmit} className="bid-form">
-                    <div className="form-group">
-                        <input
-                            type="number"
-                            value={bidAmount}
-                            onChange={(e) => {
-                                setBidAmount(e.target.value);
-                                setBidError(''); // Сбрасываем ошибку при изменении
-                            }}
-                            placeholder={`Больше ${lot.current_price}`}
-                            min={lot.current_price + 0.01} // Минимальная ставка
-                            step="0.01" // Шаг ставки
-                            required
-                        />
-                    </div>
-                    {bidError && <p className="bid-error-message">{bidError}</p>}
-                    <button type="submit" className="button button-bid">Сделать ставку</button>
+                    <Input
+                        label="Ваша ставка (руб.):"
+                        type="number"
+                        value={bidAmount}
+                        onChange={(e) => {
+                            setBidAmount(e.target.value);
+                            setBidError('');
+                        }}
+                        placeholder={`Больше ${lot.currentPrice}`}
+                        min={(lot.currentPrice + 0.01).toFixed(2)}
+                        step="0.01"
+                        required
+                        error={bidError}
+                        name={`bidAmount-${lot.id}`} // Уникальное имя для автозаполнения браузера
+                        id={`bidAmountInput-${lot.id}`}  // Уникальный ID
+                    />
+                    <Button type="submit" variant="success" className="button-bid" fullWidth>Сделать ставку</Button>
                 </form>
             )}
             {!isAuthenticated && canBidOnLot && (
@@ -85,8 +91,12 @@ const LotCard = ({ auctionId, auctionStatus, lot, onBid }) => {
             {isSeller && (<p className="seller-note">Вы продавец этого лота.</p>)}
             {!canBidOnLot && lot.status !== 'Продан' && lot.status !== 'Не продан' && (<p className="bidding-closed-note">Торги по этому лоту сейчас неактивны.</p>)}
 
-            {/* Ссылка на детали лота, если это карточка в общем списке, а не на странице самого лота */}
-            {/* <Link to={`/auctions/${auctionId}/lots/${lot.id}`}>Детали лота</Link> */}
+            {/* Если нужно будет отдельная страница для деталей лота с его карточки */}
+            {/* <div className="lot-card-footer">
+                <Link to={`/auctions/${auctionId}/lots/${lot.id}`}>
+                    <Button variant="info" size="sm">Детали лота</Button>
+                </Link>
+            </div> */}
         </div>
     );
 };

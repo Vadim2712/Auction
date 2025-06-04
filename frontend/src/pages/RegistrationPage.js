@@ -1,7 +1,11 @@
 // src/pages/RegistrationPage.js
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; // useNavigate здесь не используется, можно убрать если не планируется редирект
 import { useAuth } from '../context/AuthContext';
+import Input from '../components/common/Input';
+import Button from '../components/common/Button';
+import Alert from '../components/common/Alert';
+// import './RegistrationPage.css'; // Если есть специфичные стили
 
 const RegistrationPage = () => {
     const [fullName, setFullName] = useState('');
@@ -11,46 +15,54 @@ const RegistrationPage = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false); // Локальное состояние загрузки
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { processRegistration } = useAuth();
-    const navigate = useNavigate();
+    // const navigate = useNavigate(); // Если редирект не нужен, можно убрать
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError('');
         setSuccessMessage('');
+        setIsSubmitting(true);
 
         if (!fullName || !email || !passportData || !password || !confirmPassword) {
             setError('Пожалуйста, заполните все поля.');
+            setIsSubmitting(false);
             return;
         }
         if (password.length < 6) {
             setError('Пароль должен быть не менее 6 символов.');
+            setIsSubmitting(false);
             return;
         }
         if (password !== confirmPassword) {
             setError('Пароли не совпадают.');
+            setIsSubmitting(false);
             return;
         }
 
-        setIsSubmitting(true);
         try {
-            // На бэкенде `registerUser` ожидает объект с полями fullName, email, password, passportData
+            // Используем camelCase для payload, так как AuthContext.processRegistration
+            // передает это в apiClient.registerUser, который ожидает объект,
+            // соответствующий RegisterUserInput на бэкенде (с camelCase JSON тегами).
             const response = await processRegistration({
-                fullName, // Имена полей совпадают
+                fullName,
                 email,
                 passportData,
                 password,
-                // Роль не передаем, бэкенд сам назначит AvailableBusinessRoles и дефолтную
             });
             setSuccessMessage(response.message || 'Регистрация прошла успешно! Теперь вы можете войти.');
-            // Очищаем форму или нет - по желанию
-            // setFullName(''); setEmail(''); setPassportData(''); setPassword(''); setConfirmPassword('');
-            // navigate('/login'); // Можно перенаправить или оставить на странице с сообщением
+            // Очистка формы после успешной регистрации
+            setFullName('');
+            setEmail('');
+            setPassportData('');
+            setPassword('');
+            setConfirmPassword('');
+            // navigate('/login'); // Опциональный редирект на страницу входа
         } catch (err) {
             console.error('Ошибка регистрации на странице RegistrationPage:', err);
-            setError(err.message || 'Ошибка регистрации. Пожалуйста, попробуйте снова.');
+            setError(err.message || err.error || 'Ошибка регистрации. Пожалуйста, попробуйте снова.');
         } finally {
             setIsSubmitting(false);
         }
@@ -60,33 +72,61 @@ const RegistrationPage = () => {
         <div className="registration-page container">
             <h2>Регистрация</h2>
             <form onSubmit={handleSubmit} className="form-container">
-                {error && <p className="alert alert-danger">{error}</p>}
-                {successMessage && <p className="alert alert-success">{successMessage}</p>}
+                {error && <Alert message={error} type="danger" onClose={() => setError('')} />}
+                {successMessage && <Alert message={successMessage} type="success" onClose={() => setSuccessMessage('')} />}
 
-                <div className="form-group">
-                    <label htmlFor="fullName">ФИО*</label>
-                    <input type="text" id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} required disabled={isSubmitting} />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="email">Email*</label>
-                    <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isSubmitting} />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="passportData">Паспортные данные*</label>
-                    <input type="text" id="passportData" value={passportData} onChange={(e) => setPassportData(e.target.value)} required disabled={isSubmitting} />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="password">Пароль (минимум 6 символов)*</label>
-                    <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isSubmitting} />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="confirmPassword">Подтвердите пароль*</label>
-                    <input type="password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={isSubmitting} />
-                </div>
+                <Input
+                    label="ФИО*"
+                    id="fullName"
+                    name="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                />
+                <Input
+                    label="Email*"
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                />
+                <Input
+                    label="Паспортные данные*"
+                    id="passportData"
+                    name="passportData"
+                    value={passportData}
+                    onChange={(e) => setPassportData(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                />
+                <Input
+                    label="Пароль (минимум 6 символов)*"
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                />
+                <Input
+                    label="Подтвердите пароль*"
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                />
 
-                <button type="submit" className="button button-primary" disabled={isSubmitting}>
+                <Button type="submit" variant="primary" fullWidth disabled={isSubmitting}>
                     {isSubmitting ? 'Регистрация...' : 'Зарегистрироваться'}
-                </button>
+                </Button>
             </form>
             <p style={{ textAlign: 'center', marginTop: '20px' }}>
                 Уже есть аккаунт? <Link to="/login">Войти</Link>

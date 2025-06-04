@@ -1,22 +1,26 @@
 // src/pages/CreateAuctionPage.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createAuction } from '../services/apiClient'; // Убедитесь, что функция импортирована
+import { createAuction } from '../services/apiClient';
 import { useAuth } from '../context/AuthContext';
-import './CreateAuctionPage.css'; // Создадим этот файл для стилей
+import Button from '../components/common/Button';
+import Input from '../components/common/Input';
+import Alert from '../components/common/Alert';
+// import './CreateAuctionPage.css'; // Если есть специфичные стили
 
 const CreateAuctionPage = () => {
     const navigate = useNavigate();
-    const { user } = useAuth(); // Для возможного использования user.id при создании
+    const { user } = useAuth();
 
     const [auctionData, setAuctionData] = useState({
-        name_specificity: '',
-        auction_date: '',
-        auction_time: '',
+        nameSpecificity: '',
+        auctionDate: '',
+        auctionTime: '',
         location: '',
-        description_full: '',
+        descriptionFull: '',
     });
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
     const handleChange = (e) => {
@@ -27,26 +31,44 @@ const CreateAuctionPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccessMessage('');
         setSubmitting(true);
 
-        // Простая валидация
-        if (!auctionData.name_specificity || !auctionData.auction_date || !auctionData.auction_time || !auctionData.location) {
+        if (!auctionData.nameSpecificity || !auctionData.auctionDate || !auctionData.auctionTime || !auctionData.location) {
             setError('Пожалуйста, заполните все обязательные поля: Название, Дата, Время, Место.');
+            setSubmitting(false);
+            return;
+        }
+        if (!/^\d{2}:\d{2}$/.test(auctionData.auctionTime)) {
+            setError('Время должно быть в формате ЧЧ:ММ.');
+            setSubmitting(false);
+            return;
+        }
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const inputDate = new Date(auctionData.auctionDate);
+        if (inputDate < today) {
+            setError('Дата аукциона не может быть в прошлом.');
             setSubmitting(false);
             return;
         }
 
         try {
-            // Добавляем ID пользователя, создавшего аукцион (если это требуется по API бэкенда)
-            // В нашей заглушке createAuction это не обрабатывается, но для реального API это может быть нужно
-            const payload = { ...auctionData, created_by_user_id: user?.id };
+            const payload = {
+                nameSpecificity: auctionData.nameSpecificity,
+                descriptionFull: auctionData.descriptionFull,
+                auctionDate: auctionData.auctionDate,
+                auctionTime: auctionData.auctionTime,
+                location: auctionData.location,
+            };
             const response = await createAuction(payload);
-            alert('Аукцион успешно создан!');
-            // Перенаправляем на страницу нового аукциона или на список аукционов
-            navigate(`/auctions/${response.data.id}`); // Предполагаем, что API возвращает созданный аукцион с ID
+            setSuccessMessage('Аукцион успешно создан! Вы будете перенаправлены на его страницу.');
+            setTimeout(() => {
+                navigate(`/auctions/${response.data.id}`);
+            }, 2000);
         } catch (err) {
             console.error("Ошибка создания аукциона:", err);
-            setError(err.response?.data?.message || 'Не удалось создать аукцион. Пожалуйста, попробуйте позже.');
+            setError(err.response?.data?.message || err.response?.data?.error || 'Не удалось создать аукцион.');
         } finally {
             setSubmitting(false);
         }
@@ -56,70 +78,61 @@ const CreateAuctionPage = () => {
         <div className="create-auction-page container">
             <h1>Создание нового аукциона</h1>
             <form onSubmit={handleSubmit} className="form-container">
-                {error && <div className="alert alert-danger">{error}</div>}
+                {error && <Alert message={error} type="danger" onClose={() => setError('')} />}
+                {successMessage && <Alert message={successMessage} type="success" />}
 
-                <div className="form-group">
-                    <label htmlFor="name_specificity">Название и специфика аукциона*</label>
-                    <input
-                        type="text"
-                        id="name_specificity"
-                        name="name_specificity"
-                        value={auctionData.name_specificity}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="auction_date">Дата проведения*</label>
-                    <input
-                        type="date"
-                        id="auction_date"
-                        name="auction_date"
-                        value={auctionData.auction_date}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="auction_time">Время проведения*</label>
-                    <input
-                        type="time"
-                        id="auction_time"
-                        name="auction_time"
-                        value={auctionData.auction_time}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="location">Место проведения*</label>
-                    <input
-                        type="text"
-                        id="location"
-                        name="location"
-                        value={auctionData.location}
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
-
-                <div className="form-group">
-                    <label htmlFor="description_full">Полное описание аукциона (опционально)</label>
-                    <textarea
-                        id="description_full"
-                        name="description_full"
-                        value={auctionData.description_full}
-                        onChange={handleChange}
-                        rows="4"
-                    ></textarea>
-                </div>
-
-                <button type="submit" className="button button-primary" disabled={submitting}>
+                <Input
+                    label="Название и специфика аукциона*"
+                    id="nameSpecificity"
+                    name="nameSpecificity"
+                    value={auctionData.nameSpecificity}
+                    onChange={handleChange}
+                    required
+                    disabled={submitting}
+                />
+                <Input
+                    label="Дата проведения*"
+                    type="date"
+                    id="auctionDate"
+                    name="auctionDate"
+                    value={auctionData.auctionDate}
+                    onChange={handleChange}
+                    required
+                    disabled={submitting}
+                />
+                <Input
+                    label="Время проведения (ЧЧ:ММ)*"
+                    type="time"
+                    id="auctionTime"
+                    name="auctionTime"
+                    value={auctionData.auctionTime}
+                    onChange={handleChange}
+                    required
+                    disabled={submitting}
+                />
+                <Input
+                    label="Место проведения*"
+                    id="location"
+                    name="location"
+                    value={auctionData.location}
+                    onChange={handleChange}
+                    required
+                    disabled={submitting}
+                />
+                <Input
+                    label="Полное описание аукциона (опционально)"
+                    type="textarea"
+                    id="descriptionFull"
+                    name="descriptionFull"
+                    value={auctionData.descriptionFull}
+                    onChange={handleChange}
+                    rows="4"
+                    disabled={submitting}
+                />
+                <p className="form-hint">Создатель: {user?.fullName || user?.email} (ID: {user?.id})</p>
+                <Button type="submit" variant="primary" disabled={submitting || successMessage !== ''} fullWidth>
                     {submitting ? 'Создание...' : 'Создать аукцион'}
-                </button>
+                </Button>
             </form>
         </div>
     );

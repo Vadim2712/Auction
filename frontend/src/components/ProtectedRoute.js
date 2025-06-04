@@ -2,22 +2,25 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Loader from './common/Loader'; // Импортируем Loader
 
-const ProtectedRoute = ({ children, roles }) => { // roles - это массив требуемых АКТИВНЫХ ролей
-    const { isAuthenticated, activeRole, loading } = useAuth(); // Используем activeRole
+const ProtectedRoute = ({ children, roles }) => {
+    const { isAuthenticated, activeRole, loading: authLoading } = useAuth();
     const location = useLocation();
 
-    if (loading) {
-        return <div className="container"><p>Проверка аутентификации...</p></div>;
+    if (authLoading) {
+        // Используем компонент Loader вместо простого текста
+        return <div className="container" style={{ paddingTop: '50px', textAlign: 'center' }}><Loader text="Проверка аутентификации..." /></div>;
     }
 
     if (!isAuthenticated) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // Если маршрут требует определенных ролей, проверяем activeRole
     if (roles && roles.length > 0 && (!activeRole || !roles.includes(activeRole))) {
         console.warn(`Доступ запрещен: Пользователь с ролью "${activeRole}" пытался получить доступ к маршруту для ролей "${roles.join(', ')}"`);
+        // Здесь можно использовать компонент Alert или перенаправить на специальную страницу "Доступ запрещен"
+        // Для простоты пока оставим alert и редирект на главную.
         alert('У вас нет прав для доступа к этой странице с текущей активной ролью.');
         return <Navigate to="/" replace />;
     }

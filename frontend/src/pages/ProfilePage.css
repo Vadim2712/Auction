@@ -1,0 +1,54 @@
+/* src/pages/ProfilePage.css */
+.profile-page h1 {
+    margin-bottom: 25px;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.profile-page .card {
+    margin-bottom: 25px;
+}
+
+.profile-page .card-title {
+    font-size: 1.5rem;
+    color: #0056b3;
+}
+
+.profile-page .card-body p {
+    margin-bottom: 0.85rem;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.profile-page .card-body p strong {
+    color: #343a40;
+    min-width: 220px;
+    /* Для выравнивания значений */
+    display: inline-block;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+    /* Перенос кнопок, если не влезают */
+}
+
+.profile-form {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.profile-form .form-group-common {
+    /* Используем класс из Input.css */
+    margin-bottom: 1rem;
+}
+
+.profile-form .form-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 10px;
+}

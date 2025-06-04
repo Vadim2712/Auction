@@ -1,10 +1,4 @@
 /* src/App.css */
-.App {
-  text-align: center;
-  /* Уберем, если не нужен центрированный текст везде */
-}
-
-/* src/App.css или аналогичный файл */
 html,
 body,
 #root {
@@ -14,25 +8,17 @@ body,
 #root {
   display: flex;
   flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f7f6;
+  color: #333;
 }
 
-/* Если вы используете MainLayout, ему тоже нужно расти */
-/* Предположим, что у MainLayout есть класс 'main-layout-container' */
 .main-layout-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  /* Занимает как минимум всю высоту экрана */
-}
-
-.main-content {
-  /* Контейнер для основного контента в MainLayout */
-  flex-grow: 1;
-  /* Позволяет этому блоку занимать все доступное пространство */
-}
-
-/* --- Layout --- */
-.main-layout {
+  /* Если используется в MainLayout.js */
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -41,48 +27,24 @@ body,
 .main-content {
   flex-grow: 1;
   padding-top: 20px;
-  /* Отступ от навбара */
   padding-bottom: 20px;
-  /* Отступ до футера */
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 15px;
+  padding-left: 15px;
 }
 
 /* --- Navbar --- */
 .navbar {
   background-color: #ffffff;
-  /* Белый навбар */
   padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  /* Легкая тень */
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.navbar-brand {
-  color: #333;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.navbar-nav {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  align-items: center;
-}
-
-.nav-item {
-  margin-left: 1.5rem;
-}
-
-.nav-link {
-  color: #333;
-  font-weight: 500;
-}
-
-.nav-link:hover,
-.navbar-brand:hover {
-  color: #0056b3;
-  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #e9ecef;
 }
 
 .navbar-container {
@@ -91,120 +53,220 @@ body,
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
 }
 
+.navbar-logo {
+  color: #007bff;
+  font-size: 1.75rem;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.navbar-logo:hover {
+  color: #0056b3;
+}
+
+.navbar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-menu.navbar-user-actions {
+  margin-left: auto;
+}
+
+
+.navbar-item {
+  margin-left: 1.25rem;
+}
+
+.navbar-links {
+  color: #495057;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  transition: color 0.15s ease-in-out;
+}
+
+.navbar-links:hover {
+  color: #007bff;
+}
+
+.navbar-user-greeting {
+  color: #495057;
+  margin-right: 1rem;
+}
 
 /* --- Footer --- */
 .footer {
   background-color: #343a40;
-  /* Темный футер */
-  color: #f8f9fa;
+  color: rgba(255, 255, 255, 0.85);
   text-align: center;
-  padding: 1rem 0;
-  border-top: 1px solid #495057;
+  padding: 1.5rem 0;
+  border-top: 3px solid #007bff;
+  margin-top: auto;
+  font-size: 0.9em;
+}
+
+.footer p {
+  margin-bottom: 0.3rem;
+}
+
+.footer a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.footer-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 15px;
 }
 
 /* --- Forms --- */
-form {
+.form-container {
   background: #fff;
-  padding: 25px;
+  padding: 25px 30px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  margin: 20px auto;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+  max-width: 550px;
+  margin: 30px auto;
 }
 
-form div {
+.form-hint {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 10px;
   margin-bottom: 15px;
-}
-
-form label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #555;
-}
-
-form input[type="text"],
-form input[type="email"],
-form input[type="password"],
-form input[type="number"],
-form textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-form textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-/* --- Buttons --- */
-button,
-.button {
-  /* Добавил класс .button для единообразия ссылок-кнопок */
-  background-color: #007bff;
-  color: white;
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
-  text-align: center;
-}
-
-button:hover,
-.button:hover {
-  background-color: #0056b3;
-}
-
-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.button-secondary {
-  background-color: #6c757d;
-}
-
-.button-secondary:hover {
-  background-color: #545b62;
 }
 
 /* --- Cards --- */
 .card {
   background: #fff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e9ecef;
   border-radius: 8px;
   margin-bottom: 20px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease-in-out;
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
-.card-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #333;
+/* --- Общие стили для статусных значков (status badges) --- */
+.status-badge,
+.status {
+  /* .status используется в AuctionDetailPage */
+  display: inline-block;
+  padding: 0.3em 0.65em;
+  /* Немного адаптировал padding */
+  font-size: 0.78rem;
+  /* Немного адаптировал размер шрифта */
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+  color: #fff;
+  text-transform: capitalize;
+  /* Оставляем, если названия статусов на английском */
+  /* Если статусы всегда на русском, можно убрать */
 }
 
-.card-text {
-  font-size: 0.9rem;
-  color: #555;
-  margin-bottom: 8px;
+/* Статусы Аукционов - используются с классом .status-${auction.status.toLowerCase().replace(/ /g, '-')} */
+.status-запланирован {
+  background-color: #ffc107;
+  color: #212529;
 }
+
+.status-идет-торг {
+  background-color: #28a745;
+  color: #fff;
+}
+
+/* Явно указал цвет текста */
+.status-завершен {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+/* .status-отменен { background-color: #dc3545; color: #fff; } // Если будет такой статус */
+
+/* Статусы Лотов - используются с классом .status-lot-${lot.status.toLowerCase().replace(/ /g, '-')} */
+.status-lot-ожидает-торгов {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.status-lot-идет-торг {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.status-lot-продан {
+  background-color: #17a2b8;
+  color: #fff;
+}
+
+.status-lot-не-продан {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* Сделаем более явным */
+
 
 /* Utility Classes */
 .text-danger {
-  color: #dc3545;
+  color: #dc3545 !important;
   font-size: 0.875em;
+}
+
+.error-message {
+  /* Может использоваться компонентом Alert или напрямую */
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: .75rem 1.25rem;
+  margin-bottom: 1rem;
+  border-radius: .25rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem !important;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+.mt-1 {
+  margin-top: 0.25rem !important;
+}
+
+.mt-2 {
+  margin-top: 0.5rem !important;
+}
+
+.mt-3 {
+  margin-top: 1rem !important;
 }

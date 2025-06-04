@@ -1,9 +1,12 @@
 // src/pages/AuctionDetailPage.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getAuctionById, placeBid, updateAuctionStatus } from '../services/apiClient'; // <--- Импортируем updateAuctionStatus
+import { getAuctionById, placeBid, updateAuctionStatus } from '../services/apiClient';
 import LotCard from '../components/LotCard';
 import { useAuth } from '../context/AuthContext';
+import Button from '../components/common/Button';
+import Loader from '../components/common/Loader';
+import Alert from '../components/common/Alert';
 import './AuctionDetailPage.css';
 
 const AuctionDetailPage = () => {
@@ -12,20 +15,23 @@ const AuctionDetailPage = () => {
     const { isAuthenticated, user, loading: authLoading } = useAuth();
     const [auction, setAuction] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [pageError, setPageError] = useState(''); // Ошибка загрузки страницы
     const [bidSubmissionStatus, setBidSubmissionStatus] = useState({});
-    const [statusUpdateInProgress, setStatusUpdateInProgress] = useState(false); // Для обратной связи при смене статуса
-    const [statusUpdateError, setStatusUpdateError] = useState('');
+    const [actionInProgress, setActionInProgress] = useState(false); // Общее для ставки и статуса
+    const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' }); // Для сообщений об успехе/ошибке действий
+
+    const clearActionFeedback = () => setActionFeedback({ type: '', message: '' });
 
     const fetchAuction = useCallback(async () => {
         try {
             setLoading(true);
-            setError('');
+            setPageError('');
+            clearActionFeedback();
             const response = await getAuctionById(auctionId);
             setAuction(response.data);
         } catch (err) {
             console.error("Ошибка загрузки аукциона:", err);
-            setError('Не удалось загрузить данные аукциона. ' + (err.response?.data?.message || err.message));
+            setPageError('Не удалось загрузить данные аукциона. ' + (err.response?.data?.message || err.response?.data?.error || err.message));
         } finally {
             setLoading(false);
         }
@@ -39,130 +45,146 @@ const AuctionDetailPage = () => {
 
     const handleBid = async (lotId, bidAmount) => {
         if (!isAuthenticated || !user) {
-            alert('Пожалуйста, войдите, чтобы сделать ставку.');
-            navigate('/login', { state: { from: `/auctions/${auctionId}` } });
+            setActionFeedback({ type: 'warning', message: 'Пожалуйста, войдите, чтобы сделать ставку.' });
+            // navigate('/login', { state: { from: `/auctions/${auctionId}` } }); // Навигация может быть избыточна, если есть сообщение
             return;
         }
-        setBidSubmissionStatus({ ...bidSubmissionStatus, [lotId]: { status: 'submitting', message: '' } });
+        setActionInProgress(true);
+        setBidSubmissionStatus(prev => ({ ...prev, [lotId]: { status: 'submitting', message: 'Отправка ставки...' } }));
+        clearActionFeedback();
         try {
-            const response = await placeBid(auctionId, lotId, bidAmount, user.id);
-            const updatedLot = response.data;
+            const response = await placeBid(auctionId, lotId, parseFloat(bidAmount));
+            const updatedLotFromAPI = response.data;
+
             setAuction(prevAuction => ({
                 ...prevAuction,
-                lots: prevAuction.lots.map(l => (l.id === lotId ? { ...l, ...updatedLot } : l))
+                lots: prevAuction.lots.map(l => (l.id === lotId ? { ...l, ...updatedLotFromAPI } : l))
             }));
-            setBidSubmissionStatus({ ...bidSubmissionStatus, [lotId]: { status: 'success', message: 'Ваша ставка принята!' } });
+            setBidSubmissionStatus(prev => ({ ...prev, [lotId]: { status: 'success', message: 'Ваша ставка принята!' } }));
             setTimeout(() => setBidSubmissionStatus(prev => ({ ...prev, [lotId]: undefined })), 3000);
         } catch (err) {
             console.error("Ошибка ставки:", err);
-            const errorMessage = err.response?.data?.message || 'Ошибка при размещении ставки.';
-            setBidSubmissionStatus({ ...bidSubmissionStatus, [lotId]: { status: 'error', message: errorMessage } });
+            const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Ошибка при размещении ставки.';
+            setBidSubmissionStatus(prev => ({ ...prev, [lotId]: { status: 'error', message: errorMessage } }));
+        } finally {
+            setActionInProgress(false);
         }
     };
 
     const handleAuctionStatusChange = async (newStatus) => {
-        if (!user || user.role !== 'admin') {
-            alert('Это действие доступно только администратору.');
+        if (!user || (user.role !== 'SYSTEM_ADMIN' && user.role !== 'seller' && user.role !== 'admin')) {
+            setActionFeedback({ type: 'danger', message: 'Это действие доступно только администратору или продавцу (менеджеру).' });
             return;
         }
-        setStatusUpdateInProgress(true);
-        setStatusUpdateError('');
+        setActionInProgress(true);
+        clearActionFeedback();
         try {
             const response = await updateAuctionStatus(auctionId, newStatus);
-            setAuction(response.data); // Обновляем данные аукциона с новым статусом и обработанными лотами
-            alert(`Статус аукциона успешно изменен на "${newStatus}"`);
+            setAuction(response.data);
+            setActionFeedback({ type: 'success', message: `Статус аукциона успешно изменен на "${newStatus}"` });
         } catch (err) {
             console.error("Ошибка изменения статуса аукциона:", err);
-            const errorMessage = err.response?.data?.message || 'Не удалось изменить статус аукциона.';
-            setStatusUpdateError(errorMessage);
-            alert(`Ошибка: ${errorMessage}`);
+            const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Не удалось изменить статус аукциона.';
+            setActionFeedback({ type: 'danger', message: errorMessage });
         } finally {
-            setStatusUpdateInProgress(false);
+            setActionInProgress(false);
         }
     };
 
+    if (authLoading || (loading && !auction)) return <Loader text="Загрузка деталей аукциона..." />;
 
-    if (authLoading || loading) return <div className="container"><p>Загрузка деталей аукциона...</p></div>;
-    if (error) return <div className="container"><p className="error-message">{error}</p></div>;
-    if (!auction) return <div className="container"><p>Аукцион не найден.</p></div>;
-
-    const isAdmin = isAuthenticated && user && user.role === 'admin';
-    const canAddLot = isAuthenticated && user && (user.role === 'admin' || user.role === 'seller') && auction.status === 'Запланирован';
+    const isPrivilegedUser = isAuthenticated && user && (user.role === 'SYSTEM_ADMIN' || user.role === 'seller' || user.role === 'admin');
+    const canAddLot = isPrivilegedUser && auction?.status === 'Запланирован';
 
     return (
         <div className="auction-detail-page container">
-            <header className="auction-header">
-                <h1>{auction.name_specificity}</h1>
-                <p><strong>Дата и время:</strong> {new Date(auction.auction_date).toLocaleDateString()} {auction.auction_time}</p>
-                <p><strong>Место:</strong> {auction.location}</p>
-                <p><strong>Статус:</strong> <span className={`status status-${auction.status?.toLowerCase().replace(/ /g, '-')}`}>{auction.status || 'Неизвестен'}</span></p>
-                {auction.description_full && <p className="auction-description"><strong>Описание:</strong> {auction.description_full}</p>}
-            </header>
+            {pageError && <Alert message={pageError} type="danger" onClose={() => setPageError('')} />}
+            {actionFeedback.message && <Alert message={actionFeedback.message} type={actionFeedback.type} onClose={clearActionFeedback} />}
 
-            {/* Блок управления статусом аукциона для администратора */}
-            {isAdmin && (
-                <div className="admin-actions auction-status-controls">
-                    <h4>Управление аукционом (Админ)</h4>
-                    {auction.status === 'Запланирован' && (
-                        <button
-                            onClick={() => handleAuctionStatusChange('Идет торг')}
-                            disabled={statusUpdateInProgress}
-                            className="button button-start"
-                        >
-                            {statusUpdateInProgress ? 'Запуск...' : 'Начать торги'}
-                        </button>
-                    )}
-                    {auction.status === 'Идет торг' && (
-                        <button
-                            onClick={() => handleAuctionStatusChange('Завершен')}
-                            disabled={statusUpdateInProgress}
-                            className="button button-finish"
-                        >
-                            {statusUpdateInProgress ? 'Завершение...' : 'Завершить аукцион'}
-                        </button>
-                    )}
-                    {auction.status === 'Завершен' && (
-                        <p className="auction-completed-message">Аукцион завершен.</p>
-                    )}
-                    {statusUpdateError && <p className="error-message admin-error">{statusUpdateError}</p>}
-                </div>
+            {!auction && !loading && !pageError && (
+                <Alert message="Аукцион не найден." type="warning" />
             )}
 
-            {canAddLot && (
-                <div className="add-lot-action">
-                    <Link to={`/auctions/${auction.id}/add-lot`} className="button button-primary">
-                        Добавить лот на этот аукцион
-                    </Link>
-                </div>
-            )}
-            {auction.status === 'Идет торг' && !isAdmin && ( // Сообщение для не-админов
-                <p className="auction-in-progress-note">Аукцион активен! Делайте ваши ставки.</p>
-            )}
+            {auction && (
+                <>
+                    <header className="auction-header">
+                        <h1>{auction.nameSpecificity}</h1>
+                        <p><strong>Дата и время:</strong> {new Date(auction.auctionDate).toLocaleDateString('ru-RU')} {auction.auctionTime}</p>
+                        <p><strong>Место:</strong> {auction.location}</p>
+                        <p><strong>Статус:</strong> <span className={`status status-${auction.status?.toLowerCase().replace(/ /g, '-')}`}>{auction.status || 'Неизвестен'}</span></p>
+                        {auction.descriptionFull && <p className="auction-description"><strong>Описание:</strong> {auction.descriptionFull}</p>}
+                    </header>
 
-            <section className="lots-section">
-                <h2>Лоты на аукционе</h2>
-                {auction.lots && auction.lots.length > 0 ? (
-                    <div className="lots-grid">
-                        {auction.lots.map(lot => (
-                            <div key={lot.id} className="lot-wrapper">
-                                <LotCard
-                                    auctionId={auction.id}
-                                    auctionStatus={auction.status}
-                                    lot={lot}
-                                    onBid={handleBid}
-                                />
-                                {bidSubmissionStatus[lot.id] && (
-                                    <div className={`bid-feedback bid-${bidSubmissionStatus[lot.id].status}`}>
-                                        {bidSubmissionStatus[lot.id].message}
+                    {isPrivilegedUser && (
+                        <div className="admin-actions auction-status-controls">
+                            <h4>Управление аукционом</h4>
+                            {auction.status === 'Запланирован' && (
+                                <Button
+                                    onClick={() => handleAuctionStatusChange('Идет торг')}
+                                    disabled={actionInProgress}
+                                    variant="success"
+                                    className="button-start"
+                                >
+                                    {actionInProgress ? 'Запуск...' : 'Начать торги'}
+                                </Button>
+                            )}
+                            {auction.status === 'Идет торг' && (
+                                <Button
+                                    onClick={() => handleAuctionStatusChange('Завершен')}
+                                    disabled={actionInProgress}
+                                    variant="danger"
+                                    className="button-finish"
+                                >
+                                    {actionInProgress ? 'Завершение...' : 'Завершить аукцион'}
+                                </Button>
+                            )}
+                            {auction.status === 'Завершен' && (
+                                <p className="auction-completed-message">Аукцион завершен.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {canAddLot && (
+                        <div className="add-lot-action">
+                            <Link to={`/auctions/${auction.id}/add-lot`}>
+                                <Button variant="primary">
+                                    Добавить лот на этот аукцион
+                                </Button>
+                            </Link>
+                        </div>
+                    )}
+                    {auction.status === 'Идет торг' && !isPrivilegedUser && (
+                        <p className="auction-in-progress-note">Аукцион активен! Делайте ваши ставки.</p>
+                    )}
+
+                    <section className="lots-section">
+                        <h2>Лоты на аукционе</h2>
+                        {auction.lots && auction.lots.length > 0 ? (
+                            <div className="lots-grid">
+                                {auction.lots.map(lot => (
+                                    <div key={lot.id} className="lot-wrapper">
+                                        <LotCard
+                                            auctionId={auction.id}
+                                            auctionStatus={auction.status}
+                                            lot={lot}
+                                            onBid={handleBid}
+                                        />
+                                        {bidSubmissionStatus[lot.id] && (
+                                            <Alert
+                                                message={bidSubmissionStatus[lot.id].message}
+                                                type={bidSubmissionStatus[lot.id].status === 'submitting' ? 'info' : bidSubmissionStatus[lot.id].status}
+                                                onClose={() => setBidSubmissionStatus(prev => ({ ...prev, [lot.id]: undefined }))}
+                                            />
+                                        )}
                                     </div>
-                                )}
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p>На этом аукционе пока нет выставленных лотов.</p>
-                )}
-            </section>
+                        ) : (
+                            <p>На этом аукционе пока нет выставленных лотов.</p>
+                        )}
+                    </section>
+                </>
+            )}
         </div>
     );
 };

@@ -1,0 +1,21 @@
+/* src/components/common/Pagination.css */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+}
+
+.pagination-controls .btn {
+    /* Используем классы Button.js и его вариантов */
+    margin: 0 8px;
+}
+
+.pagination-info {
+    margin: 0 12px;
+    vertical-align: middle;
+    font-size: 0.95rem;
+    color: #495057;
+}

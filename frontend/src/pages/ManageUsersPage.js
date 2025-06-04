@@ -6,42 +6,49 @@ import Button from '../components/common/Button';
 import Alert from '../components/common/Alert';
 import Loader from '../components/common/Loader';
 import Modal from '../components/common/Modal';
+import Pagination from '../components/common/Pagination'; // Добавим импорт Pagination
 import './ManageUsersPage.css';
 
 const ManageUsersPage = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [listError, setListError] = useState(''); // Ошибка загрузки списка
     const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, pageSize: 10, totalItems: 0 });
 
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState(null); // Пользователь, чьи роли редактируются
+    const [editingUser, setEditingUser] = useState(null);
     const [selectedRolesInModal, setSelectedRolesInModal] = useState([]);
-    const [actionError, setActionError] = useState(''); // Ошибки для действий (смена статуса, ролей)
-    const [submittingAction, setSubmittingAction] = useState(false);
+    const [actionInProgress, setActionInProgress] = useState(false);
+    const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' }); // Для ошибок и успеха действий
 
     const availableBusinessRolesForAssignment = [
         { value: 'buyer', label: 'Покупатель' },
         { value: 'seller', label: 'Продавец' },
-        // 'auction_manager' больше не назначается отдельно
     ];
+
+    const clearActionFeedback = () => setActionFeedback({ type: '', message: '' });
 
     const fetchUsers = useCallback(async (page = 1, pageSize = 10) => {
         setLoading(true);
-        setError('');
+        setListError('');
+        clearActionFeedback();
         try {
             const response = await adminGetAllUsers({ page, pageSize });
-            setUsers(response.data.data.map(u => ({
-                ...u,
-                // Убедимся, что availableBusinessRoles - это массив, даже если пришел как строка
-                availableBusinessRoles: typeof u.availableBusinessRoles === 'string'
-                    ? JSON.parse(u.availableBusinessRoles)
-                    : (Array.isArray(u.availableBusinessRoles) ? u.availableBusinessRoles : [])
-            })));
-            setPagination(response.data.pagination);
+            if (response.data && response.data.data) {
+                setUsers(response.data.data.map(u => ({
+                    ...u,
+                    availableBusinessRoles: typeof u.availableBusinessRoles === 'string'
+                        ? JSON.parse(u.availableBusinessRoles)
+                        : (Array.isArray(u.availableBusinessRoles) ? u.availableBusinessRoles : [])
+                })));
+                setPagination(response.data.pagination);
+            } else {
+                setUsers([]);
+                setPagination({ currentPage: 1, totalPages: 1, pageSize: 10, totalItems: 0 });
+            }
         } catch (err) {
             console.error("Ошибка загрузки пользователей:", err);
-            setError('Не удалось загрузить список пользователей. ' + (err.response?.data?.message || err.message));
+            setListError('Не удалось загрузить список пользователей. ' + (err.response?.data?.message || err.response?.data?.error || err.message));
         } finally {
             setLoading(false);
         }
@@ -49,23 +56,23 @@ const ManageUsersPage = () => {
 
     useEffect(() => {
         fetchUsers(pagination.currentPage, pagination.pageSize);
-    }, [fetchUsers, pagination.currentPage, pagination.pageSize]); // Добавили зависимости для перезагрузки при смене страницы
+    }, [fetchUsers, pagination.currentPage, pagination.pageSize]);
 
     const handleStatusToggle = async (userId, currentIsActive) => {
         const actionText = currentIsActive ? 'заблокировать' : 'активировать';
         if (!window.confirm(`Вы уверены, что хотите ${actionText} этого пользователя (ID: ${userId})?`)) return;
 
-        setActionError('');
-        setSubmittingAction(true);
+        clearActionFeedback();
+        setActionInProgress(true);
         try {
             await adminUpdateUserStatus(userId, !currentIsActive);
-            fetchUsers(pagination.currentPage, pagination.pageSize); // Обновить список
-            alert(`Статус пользователя ID: ${userId} успешно изменен.`);
+            setActionFeedback({ type: 'success', message: `Статус пользователя ID: ${userId} успешно изменен.` });
+            fetchUsers(pagination.currentPage, pagination.pageSize);
         } catch (err) {
             console.error("Ошибка изменения статуса:", err);
-            setActionError('Ошибка изменения статуса: ' + (err.response?.data?.message || err.message));
+            setActionFeedback({ type: 'danger', message: 'Ошибка изменения статуса: ' + (err.response?.data?.message || err.response?.data?.error || err.message) });
         } finally {
-            setSubmittingAction(false);
+            setActionInProgress(false);
         }
     };
 
@@ -73,7 +80,7 @@ const ManageUsersPage = () => {
         setEditingUser(user);
         setSelectedRolesInModal(user.availableBusinessRoles || []);
         setIsRoleModalOpen(true);
-        setActionError('');
+        clearActionFeedback();
     };
 
     const handleRoleCheckboxChange = (roleValue) => {
@@ -86,46 +93,45 @@ const ManageUsersPage = () => {
 
     const handleSaveRoles = async () => {
         if (!editingUser) return;
-        setActionError('');
-        setSubmittingAction(true);
+        clearActionFeedback();
+        setActionInProgress(true);
         try {
             await adminUpdateUserRoles(editingUser.id, selectedRolesInModal);
             setIsRoleModalOpen(false);
             setEditingUser(null);
-            fetchUsers(pagination.currentPage, pagination.pageSize); // Обновить список
-            alert(`Роли для пользователя ID: ${editingUser.id} успешно обновлены.`);
+            setActionFeedback({ type: 'success', message: `Роли для пользователя ID: ${editingUser.id} успешно обновлены.` });
+            fetchUsers(pagination.currentPage, pagination.pageSize);
         } catch (err) {
             console.error("Ошибка изменения ролей:", err);
-            setActionError('Ошибка изменения ролей: ' + (err.response?.data?.message || err.message));
+            // Ошибка будет отображаться в модальном окне, если оно еще открыто,
+            // или как общее сообщение, если модальное окно успело закрыться.
+            // Для согласованности, можно всегда отображать ошибку действия в модальном окне.
+            setActionFeedback({ type: 'danger', message: 'Ошибка изменения ролей: ' + (err.response?.data?.message || err.response?.data?.error || err.message) });
         } finally {
-            setSubmittingAction(false);
+            setActionInProgress(false);
         }
     };
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= pagination.totalPages) {
+        if (newPage >= 1 && newPage <= pagination.totalPages && newPage !== pagination.currentPage && !loading) {
             setPagination(prev => ({ ...prev, currentPage: newPage }));
         }
     };
 
-    const tableHeaders = [
-        { label: 'ID' },
-        { label: 'ФИО' },
-        { label: 'Email' },
-        { label: 'Статус' },
-        { label: 'Доступные роли' },
-        { label: 'Действия' },
+    const tableHeaders = [ /* ... как было ... */
+        { label: 'ID' }, { label: 'ФИО' }, { label: 'Email' },
+        { label: 'Статус' }, { label: 'Доступные роли' }, { label: 'Действия' },
     ];
 
-    if (loading && users.length === 0) { // Показываем лоадер только при первой загрузке
+    if (loading && users.length === 0 && pagination.currentPage === 1) {
         return <Loader text="Загрузка пользователей..." />;
     }
 
     return (
         <div className="manage-users-page container">
             <h1>Управление пользователями</h1>
-            {error && <Alert message={error} type="danger" onClose={() => setError('')} />}
-            {actionError && <Alert message={actionError} type="danger" onClose={() => setActionError('')} />}
+            {listError && <Alert message={listError} type="danger" onClose={() => setListError('')} />}
+            {actionFeedback.message && !isRoleModalOpen && <Alert message={actionFeedback.message} type={actionFeedback.type} onClose={clearActionFeedback} />}
 
             <Table
                 headers={tableHeaders}
@@ -141,7 +147,7 @@ const ManageUsersPage = () => {
                             <Button
                                 variant={user.isActive ? "warning" : "success"}
                                 onClick={() => handleStatusToggle(user.id, user.isActive)}
-                                disabled={submittingAction}
+                                disabled={actionInProgress}
                                 className="button-sm"
                             >
                                 {user.isActive ? 'Блок.' : 'Актив.'}
@@ -149,7 +155,7 @@ const ManageUsersPage = () => {
                             <Button
                                 variant="info"
                                 onClick={() => openRoleModal(user)}
-                                disabled={submittingAction}
+                                disabled={actionInProgress}
                                 className="button-sm"
                             >
                                 Роли
@@ -157,37 +163,34 @@ const ManageUsersPage = () => {
                         </td>
                     </tr>
                 )}
-                emptyMessage="Пользователи не найдены или не соответствуют фильтрам."
+                emptyMessage="Пользователи не найдены."
             />
 
-            {/* Простая пагинация */}
             {pagination.totalPages > 1 && (
-                <div className="pagination-controls">
-                    <Button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1 || loading}>
-                        Назад
-                    </Button>
-                    <span>Страница {pagination.currentPage} из {pagination.totalPages} (Всего: {pagination.totalItems})</span>
-                    <Button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages || loading}>
-                        Вперед
-                    </Button>
-                </div>
+                <Pagination
+                    currentPage={pagination.currentPage}
+                    totalPages={pagination.totalPages}
+                    onPageChange={handlePageChange}
+                    totalItems={pagination.totalItems}
+                    disabled={loading || actionInProgress}
+                />
             )}
 
             {editingUser && (
                 <Modal
                     isOpen={isRoleModalOpen}
-                    onClose={() => setIsRoleModalOpen(false)}
+                    onClose={() => { setIsRoleModalOpen(false); clearActionFeedback(); }}
                     title={`Редактировать роли для: ${editingUser.fullName}`}
                     footer={
                         <>
-                            <Button variant="secondary" onClick={() => setIsRoleModalOpen(false)} disabled={submittingAction}>Отмена</Button>
-                            <Button variant="primary" onClick={handleSaveRoles} disabled={submittingAction}>
-                                {submittingAction ? 'Сохранение...' : 'Сохранить роли'}
+                            <Button variant="secondary" onClick={() => { setIsRoleModalOpen(false); clearActionFeedback(); }} disabled={actionInProgress}>Отмена</Button>
+                            <Button variant="primary" onClick={handleSaveRoles} disabled={actionInProgress}>
+                                {actionInProgress ? 'Сохранение...' : 'Сохранить роли'}
                             </Button>
                         </>
                     }
                 >
-                    {actionError && <Alert message={actionError} type="danger" onClose={() => setActionError('')} />}
+                    {actionFeedback.message && <Alert message={actionFeedback.message} type={actionFeedback.type} onClose={clearActionFeedback} />}
                     <p>Выберите доступные бизнес-роли:</p>
                     {availableBusinessRolesForAssignment.map(roleOption => (
                         <div key={roleOption.value} className="form-check">
@@ -198,7 +201,7 @@ const ManageUsersPage = () => {
                                 checked={selectedRolesInModal.includes(roleOption.value)}
                                 onChange={() => handleRoleCheckboxChange(roleOption.value)}
                                 className="form-check-input"
-                                disabled={submittingAction}
+                                disabled={actionInProgress}
                             />
                             <label htmlFor={`role-${roleOption.value}-${editingUser.id}`} className="form-check-label">
                                 {roleOption.label}

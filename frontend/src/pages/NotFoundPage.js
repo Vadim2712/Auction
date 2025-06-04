@@ -1,18 +1,22 @@
 // src/pages/NotFoundPage.js
 import React from 'react';
 import { Link } from 'react-router-dom';
-// import './NotFoundPage.css'; // Если нужны специфичные стили
+import Button from '../components/common/Button'; // Using common Button
+// import './NotFoundPage.css'; // Only if specific styles beyond App.css are needed
 
 const NotFoundPage = () => {
     return (
-        <div className="container text-center" style={{ marginTop: '50px' }}>
-            <h1>404 - Страница не найдена</h1>
-            <p>Извините, страница, которую вы ищете, не существует.</p>
-            <p>
-                <Link to="/" className="button button-primary">
-                    Вернуться на главную
-                </Link>
+        <div className="container text-center" style={{ marginTop: '60px', padding: '40px 0' }}>
+            <h1 style={{ fontSize: '3rem', marginBottom: '20px', color: '#343a40' }}>404</h1>
+            <h2 style={{ fontSize: '1.75rem', marginBottom: '25px', color: '#495057' }}>Страница не найдена</h2>
+            <p style={{ fontSize: '1.1rem', color: '#6c757d', marginBottom: '30px' }}>
+                Извините, страница, которую вы ищете, не существует или была перемещена.
             </p>
+            <Link to="/">
+                <Button variant="primary" className="button-lg"> {/* Assuming Button can take className */}
+                    Вернуться на главную
+                </Button>
+            </Link>
         </div>
     );
 };

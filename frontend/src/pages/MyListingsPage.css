@@ -9,100 +9,88 @@
 .listings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+    gap: 25px;
+    /* Немного увеличил gap */
 }
 
-.listing-item.card {
-    background-color: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.3s ease;
+/* Стили для .listing-item и .card теперь управляются компонентом Card и его CSS,
+   а также App.css. Если нужны специфичные для этой страницы отступы или поведение карточки: */
+.listing-item.custom-card {
+    /* Если Card.js использует custom-card как основной класс */
+    /* Дополнительные стили для карточки в этом контексте, если нужны */
+    /* Например, можно убрать margin-bottom, если gap в grid уже достаточен */
+    margin-bottom: 0;
 }
 
-.listing-item.card:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.listing-item .card-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.listing-item .card-header h3 {
-    margin: 0;
-    font-size: 1.3rem;
-}
-
-.listing-item .card-header h3 a {
+.listing-item .custom-card-header h3 a {
+    /* Стили для заголовка внутри Card */
     color: #0056b3;
     text-decoration: none;
+    font-size: 1.2rem;
+    /* Уменьшил, т.к. Card.js уже имеет .custom-card-title */
 }
 
-.listing-item .card-header h3 a:hover {
+.listing-item .custom-card-header h3 a:hover {
     text-decoration: underline;
 }
 
-.status-badge {
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    font-weight: 600;
-    color: #fff;
-    text-transform: capitalize;
-    white-space: nowrap;
-}
-
-/* Статусы лотов - убедитесь, что они соответствуют классам, генерируемым в LotCard и других местах */
-.status-badge.status-lot-ожидает-торгов {
-    background-color: #ffc107;
-    color: #333;
-}
-
-.status-badge.status-lot-идет-торг {
-    background-color: #28a745;
-}
-
-.status-badge.status-lot-продан {
-    background-color: #17a2b8;
-}
-
-.status-badge.status-lot-не-продан {
-    background-color: #6c757d;
-}
-
-.listing-item .card-body {
-    padding: 20px;
-    flex-grow: 1;
-}
-
-.listing-item .card-body p {
-    margin: 0 0 10px 0;
-    color: #555;
-    font-size: 0.95rem;
-}
-
-.listing-item .card-body p strong {
-    color: #333;
-}
-
-.listing-item .card-footer {
-    padding: 15px 20px;
-    background-color: #f9f9f9;
-    border-top: 1px solid #eee;
+/* Контейнер для значка статуса, если он выносится из Card.title */
+.listing-item-status-badge-container {
     text-align: right;
+    /* Пример выравнивания, если значок отдельно */
+    margin-bottom: 10px;
+    /* Отступ под значком */
 }
 
-.error-message {
-    color: #dc3545;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 20px;
+/* Стили для .status-badge уже должны быть в App.css */
+
+
+.listing-item .custom-card-body p {
+    margin: 0 0 0.75rem 0;
+    /* Уменьшил немного отступы */
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.listing-item .custom-card-body p strong {
+    color: #333;
+}
+
+.listing-item-footer {
+    /* Заменили .card-footer на более специфичный класс */
+    padding: 1rem 1.25rem;
+    /* Отступы как у card-body */
+    background-color: transparent;
+    /* Убрали фон, чтобы не отличался от card-body */
+    border-top: 1px solid #f0f0f0;
+    /* Тонкая линия */
+    text-align: right;
+    margin-top: auto;
+    /* Прижимает футер карточки вниз */
+}
+
+.listing-item-footer .button-sm {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.8rem;
+}
+
+/* Стили для .error-message и .pagination-controls должны быть глобальными или в их компонентах */
+
+/* Границы для статусов, если Card.js их не обрабатывает через className */
+.listing-item.status-lot-идет-торг {
+    border-left: 5px solid #28a745;
+}
+
+.listing-item.status-lot-ожидает-торгов {
+    border-left: 5px solid #ffc107;
+}
+
+.listing-item.status-lot-продан {
+    border-left: 5px solid #17a2b8;
+    opacity: 0.9;
+}
+
+.listing-item.status-lot-не-продан {
+    border-left: 5px solid #6c757d;
+    opacity: 0.8;
 }
