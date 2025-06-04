@@ -14,7 +14,7 @@ import AuctionDetailPage from './pages/AuctionDetailPage';
 import CreateAuctionPage from './pages/CreateAuctionPage';
 import MyListingsPage from './pages/MyListingsPage';
 import AddLotPage from './pages/AddLotPage';
-import EditLotPage from './pages/EditLotPage'; // <<-- НОВЫЙ ИМПОРТ
+import EditLotPage from './pages/EditLotPage';
 import MyActivityPage from './pages/MyActivityPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProfilePage from './pages/ProfilePage';
@@ -41,7 +41,8 @@ function App() {
             <Route
               path="/profile"
               element={
-                <ProtectedRoute roles={['buyer', 'seller', 'SYSTEM_ADMIN', 'admin']}> {/* Добавил SYSTEM_ADMIN и 'admin' для полноты */}
+                // Доступно всем аутентифицированным пользователям с бизнес-ролью или системному администратору
+                <ProtectedRoute roles={['buyer', 'seller', 'SYSTEM_ADMIN']}>
                   <ProfilePage />
                 </ProtectedRoute>
               }
@@ -49,7 +50,8 @@ function App() {
             <Route
               path="/create-auction"
               element={
-                <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller', 'admin']}> {/* 'admin' - если есть обобщенная, 'seller' - новая логика */}
+                // Создавать аукционы могут SYSTEM_ADMIN и пользователи с активной ролью 'seller'
+                <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller']}>
                   <CreateAuctionPage />
                 </ProtectedRoute>
               }
@@ -57,15 +59,17 @@ function App() {
             <Route
               path="/auctions/:auctionId/add-lot"
               element={
-                <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller', 'admin']}>
+                // Добавлять лоты могут SYSTEM_ADMIN и пользователи с активной ролью 'seller'
+                <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller']}>
                   <AddLotPage />
                 </ProtectedRoute>
               }
             />
-            <Route // <<-- НОВЫЙ МАРШРУТ ДЛЯ РЕДАКТИРОВАНИЯ ЛОТА
+            <Route
               path="/auctions/:auctionId/lots/:lotId/edit"
               element={
-                <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller', 'admin']}> {/* Права аналогичны добавлению/удалению */}
+                // Редактировать лоты могут SYSTEM_ADMIN и пользователи с активной ролью 'seller'
+                <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller']}>
                   <EditLotPage />
                 </ProtectedRoute>
               }
@@ -73,7 +77,7 @@ function App() {
             <Route
               path="/my-activity"
               element={
-                <ProtectedRoute roles={['buyer', 'seller', 'SYSTEM_ADMIN', 'admin']}>
+                <ProtectedRoute roles={['buyer', 'seller', 'SYSTEM_ADMIN']}>
                   <MyActivityPage />
                 </ProtectedRoute>
               }
@@ -81,7 +85,7 @@ function App() {
             <Route
               path="/my-listings"
               element={
-                <ProtectedRoute roles={['seller', 'SYSTEM_ADMIN', 'admin']}>
+                <ProtectedRoute roles={['seller', 'SYSTEM_ADMIN']}>
                   <MyListingsPage />
                 </ProtectedRoute>
               }
@@ -89,7 +93,7 @@ function App() {
             <Route
               path="/admin/dashboard"
               element={
-                <ProtectedRoute roles={['SYSTEM_ADMIN', 'admin']}> {/* 'admin' - если используете обобщенную роль в AuthContext */}
+                <ProtectedRoute roles={['SYSTEM_ADMIN']}>
                   <AdminDashboardPage />
                 </ProtectedRoute>
               }
@@ -97,7 +101,7 @@ function App() {
             <Route
               path="/admin/users"
               element={
-                <ProtectedRoute roles={['SYSTEM_ADMIN', 'admin']}>
+                <ProtectedRoute roles={['SYSTEM_ADMIN']}>
                   <ManageUsersPage />
                 </ProtectedRoute>
               }
@@ -105,12 +109,14 @@ function App() {
             <Route
               path="/reports"
               element={
-                <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller', 'admin']}>
+                // Отчеты доступны SYSTEM_ADMIN и пользователям с активной ролью 'seller'
+                <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller']}>
                   <ReportPage />
                 </ProtectedRoute>
               }
             />
 
+            {/* Маршрут для ненайденных страниц */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </MainLayout>

@@ -8,7 +8,6 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     transition: box-shadow 0.3s ease;
     position: relative;
-    /* Для позиционирования значка статуса, если нужно */
 }
 
 .lot-card:hover {
@@ -38,7 +37,6 @@
 
 .lot-current-price strong {
     color: #007bff;
-    /* Или цвет бренда */
     font-size: 1.2rem;
 }
 
@@ -49,39 +47,7 @@
     font-style: italic;
 }
 
-.lot-status-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    border-radius: 4px;
-    color: #fff;
-    text-transform: capitalize;
-}
-
-.lot-status-badge.status-ожидает-торгов {
-    background-color: #ffc107;
-    color: #333;
-}
-
-.lot-status-badge.status-идет-торг {
-    background-color: #28a745;
-}
-
-.lot-status-badge.status-продан {
-    background-color: #17a2b8;
-}
-
-.lot-status-badge.status-не-продан {
-    background-color: #6c757d;
-}
-
-.lot-status-badge.status-завершен {
-    background-color: #6c757d;
-}
-
-/* Общий для завершенных */
-
+/* Стили для .lot-status-badge и его вариаций УДАЛЕНЫ - теперь используются глобальные .status-badge и .status-lot-* из App.css */
 
 .bid-form {
     margin-top: 15px;
@@ -89,44 +55,22 @@
     border-top: 1px solid #eee;
 }
 
-.bid-form .form-group {
+/* Стили для .form-group и input[type="number"] в bid-form остаются, если они специфичны 
+   или если компонент Input не используется/не покрывает их полностью.
+   Компонент Input уже имеет свои стили .form-group-common и .form-control.
+   Если здесь используется компонент Input, эти стили можно упростить или удалить.
+   Предполагаем, что Input используется, и его стили применяются.
+*/
+.bid-form .form-group-common {
+    /* Если Input используется и имеет этот класс */
     margin-bottom: 10px;
 }
 
-.bid-form input[type="number"] {
-    width: calc(100% - 24px);
-    /* Учитываем padding input */
-    padding: 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 1rem;
-    margin-bottom: 5px;
-}
-
-.button-bid {
+.button-bid.btn {
+    /* Специфичные стили для кнопки ставки, если они нужны поверх Button.js */
     width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    /* Стили кнопки уже должны быть определены (.button, .button-primary)
-     но можно добавить специфичный цвет для ставки */
-    background-color: #28a745;
-    /* Зеленый для ставки */
-    border-color: #28a745;
-    color: white;
-}
-
-.button-bid:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
-}
-
-
-.bid-error-message {
-    color: #dc3545;
-    font-size: 0.85rem;
-    margin-top: 5px;
-    margin-bottom: 10px;
+    /* Уже есть в Button.js через fullWidth, но можно оставить для явности */
+    /* background-color и другие стили варианта 'success' придут из Button.css */
 }
 
 .login-prompt,
@@ -150,26 +94,25 @@
     text-decoration: underline;
 }
 
-/* Граница карточки в зависимости от статуса лота */
-.lot-card.status-идет-торг {
+/* Границы карточки в зависимости от статуса лота */
+/* Используем префикс status-lot- как в App.css */
+.lot-card.status-lot-идет-торг {
     border-left: 5px solid #28a745;
-    /* Зеленая полоса для активных торгов */
 }
 
-.lot-card.status-ожидает-торгов {
+.lot-card.status-lot-ожидает-торгов {
     border-left: 5px solid #ffc107;
-    /* Желтая для ожидания */
 }
 
-.lot-card.status-продан {
+.lot-card.status-lot-продан {
     border-left: 5px solid #17a2b8;
-    /* Голубая для проданных */
-    opacity: 0.8;
+    opacity: 0.85;
+    /* Немного увеличил opacity для лучшей читаемости */
 }
 
-.lot-card.status-не-продан,
-.lot-card.status-завершен {
+.lot-card.status-lot-не-продан {
+    /* Объединил с завершенным, если стили одинаковы */
     border-left: 5px solid #6c757d;
-    /* Серая для не проданных/завершенных */
-    opacity: 0.7;
+    opacity: 0.75;
+    /* Немного увеличил opacity */
 }

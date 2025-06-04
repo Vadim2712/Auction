@@ -21,7 +21,8 @@ import Pagination from '../components/common/Pagination';
 import './ReportPage.css';
 
 const ReportPage = () => {
-    const { loading: authLoading, isAuthenticated, user } = useAuth();
+    // Используем activeRole для проверки прав доступа к странице
+    const { loading: authLoading, isAuthenticated, activeRole } = useAuth();
     const [loadingReport, setLoadingReport] = useState(false);
     const [error, setError] = useState('');
     const [reportData, setReportData] = useState(null);
@@ -52,7 +53,6 @@ const ReportPage = () => {
 
     const handleParamChange = (e) => {
         const { name, value } = e.target;
-        // Сбрасываем страницу на 1 при изменении любого фильтра, кроме самой страницы и размера страницы
         const shouldResetPage = name !== 'page' && name !== 'pageSize';
         setReportParams(prev => ({
             ...prev,
@@ -70,7 +70,7 @@ const ReportPage = () => {
             return;
         }
 
-        setCurrentReportType(reportTypeToGenerate); // Устанавливаем сразу, чтобы параметры отобразились
+        setCurrentReportType(reportTypeToGenerate);
         setCurrentReportLabel(config.label);
         setLoadingReport(true); setError(''); setReportData(null);
 
@@ -84,7 +84,6 @@ const ReportPage = () => {
                     }
                 }
             }
-            // Передаем только те параметры, которые ожидает функция API отчета
             const relevantParams = {};
             if (config.params.includes('limit')) relevantParams.limit = parseInt(paramsForApi.limit, 10) || 3;
             if (config.params.includes('auctionIdForItems')) relevantParams.auctionIdForItems = paramsForApi.auctionIdForItems;
@@ -108,7 +107,6 @@ const ReportPage = () => {
         }
     }, [reportsConfig]);
 
-    // Используется для автоматической перезагрузки при смене страницы через пагинацию
     useEffect(() => {
         if (currentReportType) {
             const config = reportsConfig.find(r => r.type === currentReportType);
@@ -117,8 +115,8 @@ const ReportPage = () => {
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [reportParams.page]); // Только reportParams.page для реакции на кнопки пагинации
-    // executeReportGeneration сама возьмет актуальные reportParams
+    }, [reportParams.page, currentReportType]); // Перезапрос при смене страницы или типа отчета (если он пагинируемый)
+
 
     const renderReportParamsInputs = () => {
         if (!currentReportType) return null;
@@ -129,7 +127,7 @@ const ReportPage = () => {
             <div className="report-params-form">
                 {config.params.map(paramName => {
                     let inputType = "text";
-                    let label = paramName; // Будет заменено ниже, если есть совпадение
+                    let label = paramName;
                     let placeholder = '';
                     let min, max, step;
 
@@ -145,7 +143,6 @@ const ReportPage = () => {
                         required: config.requiredParams?.includes(paramName),
                     };
 
-                    // Настройка лейблов и типов
                     switch (paramName) {
                         case 'limit': label = "Кол-во записей (N)"; inputType = "number"; commonInputProps.min = 1; break;
                         case 'auctionIdForItems': label = "ID Аукциона"; break;
@@ -171,7 +168,6 @@ const ReportPage = () => {
         let headers = [];
         let rowRenderer;
 
-        // Используем camelCase для доступа к полям item
         switch (reportTypeForTable) {
             case 'auctionsNoSales':
                 headers = [{ label: 'ID' }, { label: 'Название/Специфика' }, { label: 'Дата' }, { label: 'Статус' }];
@@ -215,7 +211,6 @@ const ReportPage = () => {
         if (!reportData && error) return null;
         if (!reportData) return null;
 
-        // Используем camelCase для доступа к полям reportData и его вложенных объектов
         switch (currentReportType) {
             case 'lotMaxPriceDiff':
                 return reportData.lot ? (
@@ -254,16 +249,17 @@ const ReportPage = () => {
         setError('');
         const config = reportsConfig.find(r => r.type === newType);
         if (config && config.paginated) {
-            setReportParams(prev => ({ ...prev, page: 1, pageSize: 10 })); // Сброс пагинации для нового отчета
-        } else {
-            setReportParams(prev => ({ ...prev, page: 1 })); // Сброс страницы, pageSize остается
+            setReportParams(prev => ({ ...prev, page: 1, pageSize: 10 }));
+        } else { // Для непагинируемых отчетов сбрасываем только страницу, pageSize может быть нерелевантен
+            setReportParams(prev => ({ ...prev, page: 1 }));
         }
     };
 
-    if (authLoading) return <Loader text="Проверка авторизации..." />;
-    // Уточняем проверку роли - user.role это activeRole из AuthContext
-    if (!isAuthenticated || !(user?.role === 'SYSTEM_ADMIN' || user?.role === 'seller')) {
-        return <Alert message="Доступ к странице отчетов ограничен." type="danger" />;
+    if (authLoading) return <div className="container page-loader-container"><Loader text="Проверка авторизации..." /></div>;
+
+    // Используем activeRole для проверки прав
+    if (!isAuthenticated || !(activeRole === 'SYSTEM_ADMIN' || activeRole === 'seller')) {
+        return <div className="container"><Alert message="Доступ к этой странице ограничен. Требуется роль Администратора или Продавца." type="danger" /></div>;
     }
 
     return (
@@ -308,7 +304,7 @@ const ReportPage = () => {
                 <Pagination
                     currentPage={reportParams.page}
                     totalPages={reportData.pagination.totalPages}
-                    onPageChange={(newPage) => setReportParams(p => ({ ...p, page: newPage }))} // Обновляем страницу в reportParams
+                    onPageChange={(newPage) => setReportParams(p => ({ ...p, page: newPage }))}
                     totalItems={reportData.pagination.totalItems}
                     disabled={loadingReport}
                 />

@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }) => {
             throw error.response?.data || new Error(error.message || 'Ошибка регистрации');
         }
     };
-
+    console.log('[AuthContext State] loading:', loading, 'isAuthenticated:', isAuthenticated, 'currentUser:', currentUser, 'activeRole:', activeRole);
     return (
         <AuthContext.Provider value={{
             currentUser,

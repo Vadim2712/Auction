@@ -1,26 +1,27 @@
 /* src/pages/MyActivityPage.css */
 .my-activity-page h1 {
     margin-bottom: 25px;
+    /* Согласовано с другими страницами */
     color: #333;
     border-bottom: 2px solid #007bff;
     padding-bottom: 10px;
 }
 
 .page-loader-container {
-    /* Для центрирования Loader */
     padding-top: 50px;
     text-align: center;
 }
 
 .activity-card.custom-card {
-    /* Используем имя класса из Card.js */
     margin-bottom: 30px;
 }
 
 .activity-card .custom-card-title {
-    /* Стилизация заголовка карточки */
     font-size: 1.5rem;
+    /* Согласовано с другими страницами */
     color: #0056b3;
+    margin-bottom: 1rem;
+    /* Добавлен отступ снизу */
 }
 
 .activity-list {
@@ -30,15 +31,16 @@
 
 .activity-item {
     background-color: #fff;
-    /* Фон для элемента списка, если он не внутри .card-body */
     border: 1px solid #e9ecef;
-    padding: 15px;
+    /* Немного светлее */
+    padding: 15px 20px;
+    /* Увеличен горизонтальный padding */
     margin-bottom: 12px;
     border-radius: 5px;
     display: flex;
     flex-direction: column;
-    /* или row если нужно item-info и item-details в строку */
     gap: 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .activity-item:hover {
@@ -52,6 +54,7 @@
 
 .item-info a {
     color: #007bff;
+    /* Ярче, чем #0056b3 */
     text-decoration: none;
     font-weight: bold;
 }
@@ -64,7 +67,6 @@
     font-size: 0.85em;
     color: #6c757d;
     display: block;
-    /* Чтобы было на новой строке */
     margin-top: 4px;
 }
 
@@ -72,18 +74,21 @@
     font-size: 0.95em;
     color: #555;
     display: flex;
-    /* Для расположения цены и статуса в строку */
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    /* Перенос, если не влезает */
     gap: 10px;
+    margin-top: 5px;
+    /* Небольшой отступ сверху */
 }
 
 .item-details strong {
     color: #0056b3;
+    /* Для акцента на цене */
 }
 
+/* Стили для .status-badge и его вариаций .status-lot-* УДАЛЕНЫ - используются из App.css */
+/* Убедитесь, что в JSX используется className="status-badge status-lot-..." */
 
 .leading-bid-item {
     border-left: 5px solid #28a745;
@@ -93,10 +98,15 @@
     border-left: 5px solid #ffc107;
 }
 
-/* Стили для .status-badge и его вариантов ТЕПЕРЬ В App.css */
-
 .auction-rule-reminder {
-    /* Заменяем стили на использование Alert или свои */
     margin-top: 20px;
-    /* Стили из Alert.css будут применены, если Alert используется */
+    /* Стили для этого элемента теперь должны браться из компонента Alert, если он используется,
+       либо нужно оставить/адаптировать эти стили, если это простой div */
+    /* background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    color: #856404;
+    padding: 15px; */
 }
+
+/* Стили для .pagination-controls должны быть в Pagination.css или App.css */

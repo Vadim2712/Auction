@@ -6,14 +6,15 @@ import { useAuth } from '../context/AuthContext';
 import Loader from '../components/common/Loader';
 import Alert from '../components/common/Alert';
 import Pagination from '../components/common/Pagination';
-import Card from '../components/common/Card'; // Можно использовать Card для секций
+import Card from '../components/common/Card';
 import './MyActivityPage.css';
 
 const MyActivityPage = () => {
-    const { user, loading: authLoading } = useAuth();
+    // Исправляем деструктуризацию: currentUser переименовываем в user
+    const { currentUser: user, isAuthenticated, loading: authLoading } = useAuth();
     const [activity, setActivity] = useState({ leadingBids: [], wonLots: [] });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(true); // Локальный лоадер для данных активности
+    const [pageError, setPageError] = useState(''); // Переименовано из error для ясности
 
     const [pagination, setPagination] = useState({
         currentPage: 1,
@@ -23,11 +24,15 @@ const MyActivityPage = () => {
     });
 
     const fetchActivity = useCallback(async (page = 1) => {
-        if (!user) return;
+        // Теперь user здесь будет корректным объектом currentUser
+        if (!user?.id) { // Проверяем наличие user.id перед запросом
+            setLoading(false);
+            // setError("Данные пользователя не найдены, не удается загрузить активность."); // Можно не выводить ошибку, если ProtectedRoute уже сработал
+            return;
+        }
         setLoading(true);
-        setError('');
+        setPageError('');
         try {
-            // Передаем параметры пагинации в getMyActivity
             const response = await getMyActivity({ page, pageSize: pagination.pageSize });
 
             const responseData = response.data || {};
@@ -39,17 +44,14 @@ const MyActivityPage = () => {
             if (responseData.pagination) {
                 setPagination(responseData.pagination);
             } else {
-                // Если API не возвращает пагинацию, эмулируем на основе полученных данных
-                // Это будет неточно, если API возвращает только часть данных без totalItems/totalPages
                 const itemsOnPage = Math.max(leadingBidsData.length, wonLotsData.length);
                 const calculatedTotalItems = (page - 1) * pagination.pageSize + itemsOnPage;
-                // Если это единственная страница или данных меньше чем pageSize
                 const calculatedTotalPages = (itemsOnPage < pagination.pageSize && itemsOnPage > 0 && page === 1) ? 1 : Math.ceil(calculatedTotalItems / pagination.pageSize) || 1;
 
                 setPagination(prev => ({
                     ...prev,
                     currentPage: page,
-                    totalItems: prev.totalItems > calculatedTotalItems && prev.currentPage > page ? prev.totalItems : calculatedTotalItems, // Пытаемся сохранить totalItems если уже было больше
+                    totalItems: prev.totalItems > calculatedTotalItems && prev.currentPage > page ? prev.totalItems : calculatedTotalItems,
                     totalPages: prev.totalPages > calculatedTotalPages && prev.currentPage > page ? prev.totalPages : calculatedTotalPages,
                 }));
             }
@@ -57,41 +59,54 @@ const MyActivityPage = () => {
         } catch (err) {
             console.error("Ошибка загрузки активности пользователя:", err);
             const errMsg = err.response?.data?.message || err.response?.data?.error || 'Не удалось загрузить данные об активности.';
-            setError(errMsg);
+            setPageError(errMsg);
             setActivity({ leadingBids: [], wonLots: [] });
             setPagination(prev => ({ ...prev, currentPage: 1, totalPages: 1, totalItems: 0 }));
         } finally {
             setLoading(false);
         }
-    }, [user, pagination.pageSize]); // fetchActivity зависит от user и pagination.pageSize
+    }, [user, pagination.pageSize]); // Добавляем user в зависимости useCallback
 
     useEffect(() => {
-        if (!authLoading && user) {
-            fetchActivity(pagination.currentPage);
-        } else if (!authLoading && !user) {
-            setLoading(false); // Убедимся, что лоадер выключен
-            setError("Пожалуйста, войдите, чтобы просмотреть эту страницу.");
+        if (!authLoading) {
+            if (isAuthenticated && user) {
+                fetchActivity(pagination.currentPage);
+            } else {
+                setLoading(false);
+                // Если ProtectedRoute не отработал, setPageError здесь может быть полезен
+                // Но если ProtectedRoute есть, то до этого условия не должно доходить
+                if (!isAuthenticated) { // Явная проверка, если вдруг ProtectedRoute не справился
+                    setPageError("Пожалуйста, войдите, чтобы просмотреть эту страницу.");
+                }
+            }
         }
-        // Зависимость от pagination.currentPage обеспечит перезагрузку при смене страницы
-        // Зависимость от fetchActivity также важна, так как он мемоизирован
-    }, [user, authLoading, fetchActivity, pagination.currentPage]);
+    }, [user, isAuthenticated, authLoading, fetchActivity, pagination.currentPage]);
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages && newPage !== pagination.currentPage) {
             setPagination(prev => ({ ...prev, currentPage: newPage }));
+            // useEffect will react to pagination.currentPage change and call fetchActivity
         }
-    };
 
-    if (authLoading || (loading && pagination.currentPage === 1 && activity.leadingBids.length === 0 && activity.wonLots.length === 0)) {
+    };
+    // 1. Сначала проверяем глобальную загрузку AuthContext
+    if (authLoading) {
+        return <div className="container page-loader-container"><Loader text="Проверка сессии..." /></div>;
+    }
+
+    // 2. Если AuthContext загрузился, но пользователь не аутентифицирован
+    if (!isAuthenticated) {
+        return <div className="container"><Alert message={pageError || "Для доступа к этой странице необходимо войти в систему."} type="warning" /></div>;
+    }
+
+    // 3. Если пользователь аутентифицирован, но данные страницы еще грузятся (и это первая загрузка)
+    if (loading && pagination.currentPage === 1 && activity.leadingBids.length === 0 && activity.wonLots.length === 0) {
         return <div className="container page-loader-container"><Loader text="Загрузка вашей активности..." /></div>;
     }
 
-    if (!user && !authLoading && !error) {
-        return <div className="container"><Alert message={"Для доступа к этой странице необходимо войти в систему."} type="warning" /></div>;
-    }
-
-    if (error) {
-        return <div className="container"><Alert message={error} type="danger" onClose={() => setError('')} /></div>;
+    // 4. Если есть ошибка загрузки данных страницы (и нет данных для отображения)
+    if (pageError && (!activity.leadingBids.length && !activity.wonLots.length)) {
+        return <div className="container"><Alert message={pageError} type="danger" onClose={() => setPageError('')} /></div>;
     }
 
     const { leadingBids, wonLots } = activity;
@@ -99,8 +114,12 @@ const MyActivityPage = () => {
     return (
         <div className="my-activity-page container">
             <h1>Моя активность на аукционах</h1>
+            {/* Ошибка, не связанная с загрузкой пустого списка, может быть показана здесь, если fetchActivity ее установит */}
+            {pageError && (activity.leadingBids.length > 0 || activity.wonLots.length > 0) &&
+                <Alert message={pageError} type="danger" onClose={() => setPageError('')} />
+            }
 
-            <Card title={`Лоты, где вы лидируете (${leadingBids.length})`} className="activity-card">
+            <Card title={`Лоты, где вы лидируете (${leadingBids.length > 0 ? `${leadingBids.length}` : '0'})`} className="activity-card">
                 {leadingBids.length > 0 ? (
                     <ul className="activity-list">
                         {leadingBids.map(item => (
@@ -122,7 +141,7 @@ const MyActivityPage = () => {
                 )}
             </Card>
 
-            <Card title={`Выигранные лоты (${wonLots.length})`} className="activity-card">
+            <Card title={`Выигранные лоты (${wonLots.length > 0 ? `${wonLots.length}` : '0'})`} className="activity-card">
                 {wonLots.length > 0 ? (
                     <ul className="activity-list">
                         {wonLots.map(item => (

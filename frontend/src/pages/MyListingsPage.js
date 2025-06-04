@@ -7,14 +7,14 @@ import Loader from '../components/common/Loader';
 import Alert from '../components/common/Alert';
 import Button from '../components/common/Button';
 import Pagination from '../components/common/Pagination';
-import Card from '../components/common/Card'; // Импортируем Card
+import Card from '../components/common/Card';
 import './MyListingsPage.css';
 
 const MyListingsPage = () => {
-    const { user, loading: authLoading } = useAuth();
+    const { currentUser: user, isAuthenticated, loading: authLoading, activeRole } = useAuth();
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [pageError, setPageError] = useState(''); // Переименовано для ясности
+    const [pageError, setPageError] = useState('');
     const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' });
     const [pagination, setPagination] = useState({
         currentPage: 1,
@@ -23,41 +23,59 @@ const MyListingsPage = () => {
         totalItems: 0
     });
 
+    // console.log('[MyListingsPage Render/State Update]', { authLoading, loading, isAuthenticated, user, pageError, listingsLength: listings.length, pagination });
+
     const clearActionFeedback = () => setActionFeedback({ type: '', message: '' });
 
     const fetchListings = useCallback(async (page = 1) => {
-        if (!user) return;
+        console.log('[MyListingsPage] fetchListings called for page:', page, 'User ID:', user?.id);
+        if (!user?.id) {
+            setLoading(false);
+            console.log('[MyListingsPage] fetchListings aborted, no user or user.id.');
+            return;
+        }
         setLoading(true);
         setPageError('');
         clearActionFeedback();
         try {
             const response = await getMyListings({ page, pageSize: pagination.pageSize });
+            console.log('[MyListingsPage] API response from getMyListings:', response.data);
             if (response.data && response.data.data) {
-                // Данные (lot) внутри LotWithAuctionInfo должны быть camelCase
                 setListings(response.data.data);
                 setPagination(response.data.pagination);
             } else {
                 setListings([]);
-                setPagination({ currentPage: 1, totalPages: 1, pageSize: pagination.pageSize, totalItems: 0 });
+                setPagination({ currentPage: page, totalPages: 1, pageSize: pagination.pageSize, totalItems: 0 });
+                console.warn("[MyListingsPage] API response from getMyListings did not contain expected data/pagination structure.");
             }
         } catch (err) {
-            console.error("Ошибка загрузки списка лотов продавца:", err);
-            setPageError('Не удалось загрузить ваши лоты. ' + (err.response?.data?.message || err.response?.data?.error || err.message));
+            console.error("[MyListingsPage] Ошибка загрузки списка лотов продавца:", err);
+            const errMsg = err.response?.data?.message || err.response?.data?.error || 'Не удалось загрузить ваши лоты.';
+            setPageError(errMsg);
+            setListings([]); // Clear listings on error
+            setPagination({ currentPage: 1, totalPages: 1, pageSize: pagination.pageSize, totalItems: 0 }); // Reset pagination
         } finally {
             setLoading(false);
+            console.log('[MyListingsPage] fetchListings finished, local loading set to false.');
         }
     }, [user, pagination.pageSize]);
 
     useEffect(() => {
-        if (!authLoading && user) {
-            fetchListings(pagination.currentPage);
-        } else if (!authLoading && !user) {
-            setLoading(false);
-            setPageError("Пожалуйста, войдите, чтобы просмотреть эту страницу.");
+        console.log('[MyListingsPage useEffect] Auth state change:', { authLoading, isAuthenticated, userExists: !!user });
+        if (!authLoading) {
+            if (isAuthenticated && user) {
+                fetchListings(pagination.currentPage);
+            } else {
+                setLoading(false); // Stop local loader if not authenticated after auth check
+                if (!isAuthenticated) { // Set error only if definitively not authenticated
+                    setPageError("Пожалуйста, войдите, чтобы просмотреть эту страницу.");
+                }
+            }
         }
-    }, [user, authLoading, fetchListings, pagination.currentPage]);
+    }, [user, isAuthenticated, authLoading, fetchListings, pagination.currentPage]);
 
     const handlePageChange = (newPage) => {
+        console.log('[MyListingsPage] handlePageChange to:', newPage);
         if (newPage >= 1 && newPage <= pagination.totalPages && newPage !== pagination.currentPage) {
             setPagination(prev => ({ ...prev, currentPage: newPage }));
         }
@@ -66,61 +84,87 @@ const MyListingsPage = () => {
     const handleDeleteLot = async (auctionId, lotId) => {
         if (!window.confirm(`Вы уверены, что хотите удалить лот ID: ${lotId} из аукциона ID: ${auctionId}?`)) return;
         clearActionFeedback();
-        // Можно добавить локальный индикатор загрузки для конкретной карточки, если потребуется
+        // setActionInProgress(true); // Можно добавить, если есть отдельный индикатор для действия
         try {
             await deleteLot(auctionId, lotId);
             setActionFeedback({ type: 'success', message: "Лот успешно удален." });
-            fetchListings(pagination.currentPage); // Обновить список
+            if (listings.length === 1 && pagination.currentPage > 1) {
+                handlePageChange(pagination.currentPage - 1);
+            } else {
+                fetchListings(pagination.currentPage);
+            }
         } catch (err) {
             console.error("Ошибка удаления лота:", err);
             setActionFeedback({ type: 'danger', message: `Ошибка удаления лота: ${err.response?.data?.message || err.response?.data?.error || err.message}` });
+        } finally {
+            // setActionInProgress(false);
         }
     };
 
-    if (authLoading || (loading && listings.length === 0 && pagination.currentPage === 1)) {
-        return <Loader text="Загрузка ваших лотов..." />;
+    if (authLoading) {
+        return <div className="container page-loader-container"><Loader text="Проверка сессии..." /></div>;
+    }
+
+    if (!isAuthenticated) {
+        return (
+            <div className="container">
+                <Alert message={pageError || "Для доступа к этой странице необходимо войти в систему."} type="warning" />
+                <Link to="/login" style={{ marginTop: '10px', display: 'inline-block' }}><Button variant='primary'>Войти</Button></Link>
+            </div>
+        );
+    }
+
+    // Локальный лоадер для данных страницы, если пользователь аутентифицирован
+    if (loading && listings.length === 0 && pagination.currentPage === 1) {
+        return <div className="container page-loader-container"><Loader text="Загрузка ваших лотов..." /></div>;
+    }
+
+    // Ошибка загрузки данных, но пользователь аутентифицирован
+    if (pageError && listings.length === 0) {
+        return <div className="container"><Alert message={pageError} type="danger" onClose={() => setPageError('')} /></div>;
     }
 
     return (
         <div className="my-listings-page container">
             <h1>Мои выставленные лоты</h1>
-            {pageError && <Alert message={pageError} type="danger" onClose={() => setPageError('')} />}
+            {/* Показываем ошибку от API, если она есть, даже если какие-то старые данные еще отображаются */}
+            {pageError && listings.length > 0 && <Alert message={pageError} type="danger" onClose={() => setPageError('')} />}
             {actionFeedback.message && <Alert message={actionFeedback.message} type={actionFeedback.type} onClose={clearActionFeedback} />}
 
             {listings.length > 0 ? (
                 <>
                     <div className="listings-grid">
-                        {listings.map(lot => ( // lot - это LotWithAuctionInfo, все поля должны быть camelCase
-                            <Card
-                                key={`${lot.auctionId}-${lot.id}`}
-                                className={`listing-item status-lot-${lot.status?.toLowerCase().replace(/ /g, '-')}`}
-                                title={<Link to={`/auctions/${lot.auctionId}`}>{lot.name}</Link>}
-                            // Можно вынести значок статуса в header карточки, если Card это поддерживает или кастомизировать Card
-                            // Либо оставить его внутри card-body
-                            >
-                                {/* Card.Header уже отрендерен через title, теперь Card.Body */}
-                                <div className="listing-item-status-badge-container">
-                                    <span className={`status-badge status-lot-${lot.status?.toLowerCase().replace(/ /g, '-')}`}>{lot.status}</span>
-                                </div>
-                                <p><strong>Аукцион:</strong> {lot.auctionName} (ID: {lot.auctionId})</p>
-                                <p><strong>Стартовая цена:</strong> {lot.startPrice} руб.</p>
-                                <p><strong>Текущая цена:</strong> {lot.currentPrice} руб.</p>
-                                {lot.status === 'Продан' && lot.finalPrice && (
-                                    <p><strong>Продано за:</strong> {lot.finalPrice} руб. (Покупатель: {lot.FinalBuyer?.fullName || `ID ${lot.finalBuyerId}`})</p>
-                                )}
-                                {lot.highestBidderId && lot.status !== 'Продан' && (
-                                    <p><strong>Лидирующая ставка от:</strong> {lot.HighestBidder?.fullName || `Участник ID ${lot.highestBidderId}`}</p>
-                                )}
-                                <p><strong>Статус аукциона:</strong> {lot.auctionStatus}</p>
+                        {listings.map(lot => {
+                            const canManageLot = isAuthenticated &&
+                                (lot.status === 'Ожидает торгов' && lot.auctionStatus === 'Запланирован') &&
+                                (user?.id === lot.sellerId || activeRole === 'SYSTEM_ADMIN');
+                            return (
+                                <Card
+                                    key={`${lot.auctionId}-${lot.id}`}
+                                    className={`listing-item status-lot-${lot.status?.toLowerCase().replace(/ /g, '-')}`}
+                                    title={<Link to={`/auctions/${lot.auctionId}`}>{lot.name}</Link>}
+                                >
+                                    <div className="listing-item-status-badge-container">
+                                        <span className={`status-badge status-lot-${lot.status?.toLowerCase().replace(/ /g, '-')}`}>{lot.status}</span>
+                                    </div>
+                                    <p><strong>Аукцион:</strong> {lot.auctionName} (ID: {lot.auctionId})</p>
+                                    <p><strong>Стартовая цена:</strong> {lot.startPrice} руб.</p>
+                                    <p><strong>Текущая цена:</strong> {lot.currentPrice} руб.</p>
+                                    {lot.status === 'Продан' && lot.finalPrice && (
+                                        <p><strong>Продано за:</strong> {lot.finalPrice} руб. (Покупатель: {lot.FinalBuyer?.fullName || `ID ${lot.finalBuyerId}`})</p>
+                                    )}
+                                    {lot.highestBidderId && lot.status !== 'Продан' && (
+                                        <p><strong>Лидирующая ставка от:</strong> {lot.HighestBidder?.fullName || `Участник ID ${lot.highestBidderId}`}</p>
+                                    )}
+                                    <p><strong>Статус аукциона:</strong> {lot.auctionStatus}</p>
 
-                                <div className="listing-item-footer">
-                                    <Link to={`/auctions/${lot.auctionId}`}>
-                                        <Button variant="secondary" className="button-sm">
-                                            К аукциону
-                                        </Button>
-                                    </Link>
-                                    {(lot.status === 'Ожидает торгов' && lot.auctionStatus === 'Запланирован') && (
-                                        (user && (user.id === lot.sellerId || user.role === 'SYSTEM_ADMIN' || user.role === 'seller' || user.role === 'admin')) && (
+                                    <div className="listing-item-footer">
+                                        <Link to={`/auctions/${lot.auctionId}`}>
+                                            <Button variant="secondary" className="button-sm">
+                                                К аукциону
+                                            </Button>
+                                        </Link>
+                                        {canManageLot && (
                                             <>
                                                 <Link to={`/auctions/${lot.auctionId}/lots/${lot.id}/edit`} style={{ marginLeft: '10px' }}>
                                                     <Button variant="info" className="button-sm">Редактировать</Button>
@@ -129,11 +173,11 @@ const MyListingsPage = () => {
                                                     Удалить
                                                 </Button>
                                             </>
-                                        )
-                                    )}
-                                </div>
-                            </Card>
-                        ))}
+                                        )}
+                                    </div>
+                                </Card>
+                            );
+                        })}
                     </div>
                     {pagination.totalPages > 1 && !loading && (
                         <Pagination
