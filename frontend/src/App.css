@@ -15,10 +15,12 @@ body,
   -moz-osx-font-smoothing: grayscale;
   background-color: #f4f7f6;
   color: #333;
+  font-size: 16px;
+  line-height: 1.6;
+  /* Улучшаем читаемость текста */
 }
 
 .main-layout-container {
-  /* Если используется в MainLayout.js */
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -27,7 +29,8 @@ body,
 .main-content {
   flex-grow: 1;
   padding-top: 20px;
-  padding-bottom: 20px;
+  padding-bottom: 40px;
+  /* Увеличил отступ до футера */
 }
 
 .container {
@@ -35,16 +38,26 @@ body,
   max-width: 1200px;
   margin-right: auto;
   margin-left: auto;
-  padding-right: 15px;
-  padding-left: 15px;
+  padding-right: 20px;
+  /* Немного увеличил боковые отступы */
+  padding-left: 20px;
+  box-sizing: border-box;
 }
+
+/* src/App.css */
+/* ... (предыдущие стили html, body, #root, main-layout-container, main-content, container) ... */
 
 /* --- Navbar --- */
 .navbar {
-  background-color: #ffffff;
-  padding: 1rem 2rem;
+  background-color: #f8f9fa;
+  /* Светло-серый фон, как у Bootstrap .bg-light */
+  padding: 0.75rem 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid #dee2e6;
+  /* Более подходящая граница для светло-серого фона */
+  position: sticky;
+  top: 0;
+  z-index: 1020;
 }
 
 .navbar-container {
@@ -54,13 +67,15 @@ body,
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+  flex-wrap: wrap;
 }
 
 .navbar-logo {
   color: #007bff;
-  font-size: 1.75rem;
+  font-size: 1.4rem;
   text-decoration: none;
   font-weight: bold;
+  margin-right: 1rem;
 }
 
 .navbar-logo:hover {
@@ -73,43 +88,107 @@ body,
   margin: 0;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
 }
-
-.navbar-menu.navbar-user-actions {
-  margin-left: auto;
-}
-
 
 .navbar-item {
-  margin-left: 1.25rem;
+  margin-left: 0.75rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
 }
 
+.navbar-item:first-child {
+  margin-left: 0;
+}
+
+
 .navbar-links {
-  color: #495057;
+  color: #343a40;
+  /* Темнее для лучшего контраста на светло-сером фоне */
   text-decoration: none;
   font-weight: 500;
-  padding: 0.5rem 0;
+  padding: 0.4rem 0.6rem;
   transition: color 0.15s ease-in-out;
+  font-size: 0.9rem;
+  display: block;
+  border-radius: 0.2rem;
 }
 
 .navbar-links:hover {
-  color: #007bff;
+  color: #0056b3;
+  /* Темнее при наведении */
+  background-color: #e9ecef;
+  /* Более темный фон при наведении */
 }
 
 .navbar-user-greeting {
   color: #495057;
-  margin-right: 1rem;
+  margin-right: 0.75rem;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.6rem;
+  white-space: nowrap;
 }
+
+.navbar .logout-button.btn-secondary {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  /* Можно изменить цвет кнопки для лучшего сочетания с новым фоном навбара */
+  /* background-color: #6c757d; 
+       color: #fff; */
+}
+
+/* --- Footer --- */
+/* (Стили футера пока без изменений, если они вас устраивают) */
+.footer {
+  background-color: #212529;
+  /* Более темный фон для футера */
+  color: rgba(255, 255, 255, 0.9);
+  /* Чуть ярче текст */
+  text-align: center;
+  padding: 2rem 1rem;
+  /* Увеличил вертикальные отступы */
+  border-top: 4px solid #007bff;
+  /* Более выраженная верхняя граница */
+  margin-top: auto;
+  font-size: 0.9em;
+}
+
+.footer p {
+  margin-bottom: 0.5rem;
+  /* Увеличил отступ между параграфами */
+  line-height: 1.5;
+}
+
+.footer a {
+  color: #0096FF;
+  /* Яркий синий для ссылок в футере */
+  text-decoration: none;
+  font-weight: 500;
+  /* Сделаем ссылки чуть жирнее */
+}
+
+.footer a:hover {
+  color: #80caff;
+  /* Светлее при наведении */
+  text-decoration: underline;
+}
+
+.footer-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
 
 /* --- Footer --- */
 .footer {
   background-color: #343a40;
   color: rgba(255, 255, 255, 0.85);
   text-align: center;
-  padding: 1.5rem 0;
+  padding: 1.25rem 1rem;
   border-top: 3px solid #007bff;
   margin-top: auto;
-  font-size: 0.9em;
+  font-size: 0.85em;
 }
 
 .footer p {
@@ -135,11 +214,11 @@ body,
 /* --- Forms --- */
 .form-container {
   background: #fff;
-  padding: 25px 30px;
+  padding: 20px;
   border-radius: 8px;
   box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
-  max-width: 550px;
-  margin: 30px auto;
+  max-width: 500px;
+  margin: 20px auto;
 }
 
 .form-hint {
@@ -157,6 +236,10 @@ body,
   margin-bottom: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Чтобы внутренние элементы не вылезали за рамки border-radius */
 }
 
 .card:hover {
@@ -164,14 +247,12 @@ body,
 }
 
 /* --- Общие стили для статусных значков (status badges) --- */
+/* (остаются как были в предыдущем ответе) */
 .status-badge,
 .status {
-  /* .status используется в AuctionDetailPage */
   display: inline-block;
   padding: 0.3em 0.65em;
-  /* Немного адаптировал padding */
   font-size: 0.78rem;
-  /* Немного адаптировал размер шрифта */
   font-weight: 600;
   line-height: 1;
   text-align: center;
@@ -179,62 +260,52 @@ body,
   vertical-align: baseline;
   border-radius: 0.25rem;
   color: #fff;
-  text-transform: capitalize;
-  /* Оставляем, если названия статусов на английском */
-  /* Если статусы всегда на русском, можно убрать */
 }
 
-/* Статусы Аукционов - используются с классом .status-${auction.status.toLowerCase().replace(/ /g, '-')} */
 .status-запланирован {
   background-color: #ffc107;
-  color: #212529;
+  color: #212529 !important;
 }
 
 .status-идет-торг {
   background-color: #28a745;
-  color: #fff;
+  color: #fff !important;
 }
 
-/* Явно указал цвет текста */
 .status-завершен {
   background-color: #6c757d;
-  color: #fff;
+  color: #fff !important;
 }
 
-/* .status-отменен { background-color: #dc3545; color: #fff; } // Если будет такой статус */
-
-/* Статусы Лотов - используются с классом .status-lot-${lot.status.toLowerCase().replace(/ /g, '-')} */
 .status-lot-ожидает-торгов {
   background-color: #ffc107;
-  color: #212529;
+  color: #212529 !important;
 }
 
 .status-lot-идет-торг {
   background-color: #28a745;
-  color: #fff;
+  color: #fff !important;
 }
 
 .status-lot-продан {
   background-color: #17a2b8;
-  color: #fff;
+  color: #fff !important;
 }
 
 .status-lot-не-продан {
   background-color: #dc3545;
-  color: #fff;
+  color: #fff !important;
 }
-
-/* Сделаем более явным */
 
 
 /* Utility Classes */
+/* (остаются как были) */
 .text-danger {
   color: #dc3545 !important;
   font-size: 0.875em;
 }
 
 .error-message {
-  /* Может использоваться компонентом Alert или напрямую */
   color: #721c24;
   background-color: #f8d7da;
   border: 1px solid #f5c6cb;
@@ -247,26 +318,195 @@ body,
   text-align: center;
 }
 
-.mb-1 {
-  margin-bottom: 0.25rem !important;
+
+/* --- Адаптивность --- */
+/* Общие стили для сеток */
+.auctions-grid,
+.lots-grid,
+.listings-grid,
+.admin-actions-grid,
+.report-params-form {
+  display: grid;
+  gap: 20px;
 }
 
-.mb-2 {
-  margin-bottom: 0.5rem !important;
+.auctions-grid,
+.lots-grid,
+.listings-grid,
+.admin-actions-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  /* Базовое значение для карточек */
 }
 
-.mb-3 {
-  margin-bottom: 1rem !important;
+.report-params-form {
+  /* Для формы параметров отчетов */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
-.mt-1 {
-  margin-top: 0.25rem !important;
+
+@media (max-width: 992px) {
+
+  /* Планшеты */
+  .container {
+    max-width: 960px;
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
+  .auctions-grid,
+  .lots-grid,
+  .listings-grid,
+  .admin-actions-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    /* Чуть меньше карточки */
+  }
+
+  .report-params-form {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
 }
 
-.mt-2 {
-  margin-top: 0.5rem !important;
+@media (max-width: 768px) {
+
+  /* Маленькие планшеты и большие телефоны */
+  #root {
+    font-size: 15px;
+  }
+
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+
+  .navbar-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .navbar-logo {
+    margin-bottom: 0.5rem;
+  }
+
+  .navbar-menu {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .navbar-menu.navbar-user-actions {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
+  .navbar-item {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .navbar-links {
+    padding: 0.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .navbar-links:hover {
+    background-color: #f8f9fa;
+  }
+
+  .navbar-item:last-child .navbar-links {
+    border-bottom: none;
+  }
+
+  .navbar-user-greeting {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .navbar .logout-button.btn {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+
+  .auctions-list-page .page-header,
+  .my-listings-page .page-header,
+  .my-activity-page .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    /* Увеличил gap для page-header */
+  }
+
+  .page-header h1,
+  /* Общий класс для заголовков страниц, если он будет */
+  .auctions-list-page h1,
+  .my-listings-page h1,
+  .my-activity-page h1,
+  .profile-page h1,
+  .admin-dashboard-page h1,
+  .manage-users-page h1,
+  .report-page h1,
+  .create-auction-page h1,
+  .add-lot-page h1,
+  .edit-lot-page h1,
+  .auction-detail-page .auction-header h1 {
+    font-size: 1.5rem;
+  }
+
+
+  .auctions-grid,
+  .lots-grid,
+  .listings-grid,
+  .admin-actions-grid,
+  .report-params-form {
+    grid-template-columns: 1fr;
+  }
+
+  .form-container {
+    padding: 15px;
+    margin: 15px auto;
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pagination-controls .btn {
+    width: auto;
+    min-width: 100px;
+  }
 }
 
-.mt-3 {
-  margin-top: 1rem !important;
+@media (max-width: 576px) {
+
+  /* Очень маленькие телефоны */
+  #root {
+    font-size: 14px;
+  }
+
+  .main-content {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .container {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .auctions-grid,
+  .lots-grid,
+  .listings-grid,
+  .admin-actions-grid {
+    gap: 15px;
+  }
+
+  .report-page .report-controls.card {
+    padding: 15px;
+  }
+
+  .report-page .report-display-area {
+    padding: 15px;
+  }
 }

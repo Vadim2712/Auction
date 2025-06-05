@@ -19,7 +19,6 @@
 }
 
 .auction-header p {
-    /* Общие стили для параграфов в хедере */
     font-size: 1rem;
     color: #495057;
     margin-bottom: 0.75rem;
@@ -30,23 +29,19 @@
     color: #212529;
 }
 
-/* Стили для .status (значок статуса аукциона) и его вариаций УДАЛЕНЫ - используются глобальные .status-badge и .status-* из App.css */
-/* Убедитесь, что в JSX используется className="status-badge status-..." */
+/* Стили для .status (значок статуса аукциона) и его вариаций УДАЛЕНЫ.
+   Используйте <span className="status-badge status-ИМЯ_СТАТУСА_АУКЦИОНА"> в JSX. */
 
 
 .auction-description {
-    /* Переименовано из auction-description-full для краткости */
     font-size: 1rem;
     color: #343a40;
     line-height: 1.6;
     margin-bottom: 0;
-    /* Последний элемент в хедере */
 }
 
 .admin-actions.auction-status-controls {
-    /* Уточненный селектор */
     background-color: #f0f3f5;
-    /* Немного другой оттенок для блока админа */
     padding: 20px;
     border-radius: 5px;
     margin: 25px 0;
@@ -60,15 +55,13 @@
     font-size: 1.25rem;
 }
 
-.admin-actions .button {
-    /* Общие стили для кнопок в этом блоке */
+.admin-actions .btn {
+    /* Применяем к компоненту Button */
     margin-right: 10px;
     margin-bottom: 10px;
-    /* Для случая переноса кнопок */
-    /* padding: 10px 15px; -- управляется Button.js */
 }
 
-.admin-actions .button:last-child {
+.admin-actions .btn:last-child {
     margin-right: 0;
 }
 
@@ -85,7 +78,6 @@
 .add-lot-action {
     margin: 25px 0;
     text-align: center;
-    /* Или слева/справа по дизайну */
 }
 
 .auction-in-progress-note {
@@ -94,7 +86,6 @@
     padding: 15px;
     margin: 20px 0;
     font-size: 1.05rem;
-    /* Немного уменьшил */
     color: #155724;
     border-radius: 4px;
     text-align: center;
@@ -116,7 +107,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 25px;
-    /* Увеличен gap */
 }
 
 .lot-wrapper {
@@ -129,42 +119,17 @@
     justify-content: flex-end;
     gap: 10px;
     padding: 8px 0 12px 0;
-    /* Скорректировал отступы */
-    /* margin-top: -10px; -- убрал, если LotCard не имеет большого margin-bottom */
 }
 
-.lot-management-actions .button-sm {
-    /* Уже есть в MyListingsPage.css, лучше в App.css или Button.css как модификатор */
-    padding: 0.25rem 0.6rem;
-    font-size: 0.8rem;
+.lot-management-actions .button-sm.btn {
+    /* Для компонента Button с классом button-sm */
+    padding: 0.25rem 0.6rem !important;
+    /* !important для переопределения, если нужно */
+    font-size: 0.8rem !important;
 }
 
-.bid-feedback {
-    padding: 8px 12px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    text-align: center;
-}
-
-.bid-feedback.alert-info {
-    /* Для статуса submitting */
-    color: #0c5460;
-    background-color: #d1ecf1;
-    border-color: #bee5eb;
-}
-
-.bid-feedback.alert-success {
-    color: #155724;
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-}
-
-.bid-feedback.alert-danger {
-    color: #721c24;
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-}
+/* Стили для .bid-feedback и его вариаций УДАЛЕНЫ, 
+   так как теперь используется компонент Alert. */
 
 
 @media (max-width: 768px) {
@@ -176,7 +141,8 @@
         grid-template-columns: 1fr;
     }
 
-    .admin-actions .button {
+    .admin-actions .btn {
+        /* Для компонента Button */
         display: block;
         width: 100%;
         margin-right: 0;
@@ -185,4 +151,10 @@
     .lot-management-actions {
         justify-content: center;
     }
+}
+
+.page-loader-container {
+    /* Добавлен для единообразия */
+    padding-top: 50px;
+    text-align: center;
 }

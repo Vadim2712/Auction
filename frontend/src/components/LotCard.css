@@ -4,6 +4,7 @@
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 20px;
+    /* Оставляем, т.к. это отступ между карточками лотов */
     background-color: #fff;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     transition: box-shadow 0.3s ease;
@@ -32,7 +33,6 @@
     color: #555;
     margin-bottom: 12px;
     min-height: 40px;
-    /* Чтобы карточки были примерно одной высоты */
 }
 
 .lot-current-price strong {
@@ -43,34 +43,16 @@
 .lot-highest-bidder {
     font-size: 0.9rem;
     color: #28a745;
-    /* Зеленый для лидера */
     font-style: italic;
 }
 
-/* Стили для .lot-status-badge и его вариаций УДАЛЕНЫ - теперь используются глобальные .status-badge и .status-lot-* из App.css */
+/* Стили для .lot-status-badge и его цветовых вариаций УДАЛЕНЫ. 
+   Используйте <span className="status-badge status-lot-ИМЯ_СТАТУСА"> в JSX. */
 
 .bid-form {
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid #eee;
-}
-
-/* Стили для .form-group и input[type="number"] в bid-form остаются, если они специфичны 
-   или если компонент Input не используется/не покрывает их полностью.
-   Компонент Input уже имеет свои стили .form-group-common и .form-control.
-   Если здесь используется компонент Input, эти стили можно упростить или удалить.
-   Предполагаем, что Input используется, и его стили применяются.
-*/
-.bid-form .form-group-common {
-    /* Если Input используется и имеет этот класс */
-    margin-bottom: 10px;
-}
-
-.button-bid.btn {
-    /* Специфичные стили для кнопки ставки, если они нужны поверх Button.js */
-    width: 100%;
-    /* Уже есть в Button.js через fullWidth, но можно оставить для явности */
-    /* background-color и другие стили варианта 'success' придут из Button.css */
 }
 
 .login-prompt,
@@ -94,8 +76,6 @@
     text-decoration: underline;
 }
 
-/* Границы карточки в зависимости от статуса лота */
-/* Используем префикс status-lot- как в App.css */
 .lot-card.status-lot-идет-торг {
     border-left: 5px solid #28a745;
 }
@@ -107,12 +87,9 @@
 .lot-card.status-lot-продан {
     border-left: 5px solid #17a2b8;
     opacity: 0.85;
-    /* Немного увеличил opacity для лучшей читаемости */
 }
 
 .lot-card.status-lot-не-продан {
-    /* Объединил с завершенным, если стили одинаковы */
     border-left: 5px solid #6c757d;
     opacity: 0.75;
-    /* Немного увеличил opacity */
 }

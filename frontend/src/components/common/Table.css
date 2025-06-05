@@ -5,56 +5,69 @@
     overflow-x: auto;
     /* Позволяет горизонтальную прокрутку для очень широких таблиц */
     -webkit-overflow-scrolling: touch;
-    /* Плавная прокрутка на iOS */
     margin-bottom: 1rem;
+    border: 1px solid #dee2e6;
+    /* Добавим рамку к обертке, если таблица прокручивается */
+    border-radius: 0.25rem;
+    /* Скругление углов обертки */
 }
 
 .custom-table {
     width: 100%;
+    min-width: 600px;
+    /* Минимальная ширина, чтобы показать необходимость прокрутки */
     border-collapse: collapse;
-    /* Убираем двойные рамки */
     background-color: #fff;
-    /* Белый фон для таблицы */
     font-size: 0.9rem;
 }
 
 .custom-table th,
 .custom-table td {
-    padding: 0.75rem;
-    /* Отступы в ячейках */
-    vertical-align: top;
-    /* Выравнивание по верху для многострочного контента */
+    padding: 0.6rem 0.75rem;
+    /* Немного скорректировал padding */
+    vertical-align: middle;
+    /* Изменил на middle для лучшего вида с кнопками */
     border-top: 1px solid #dee2e6;
-    /* Горизонтальные линии */
     text-align: left;
-    /* Выравнивание текста по левому краю */
+    white-space: nowrap;
+    /* Предотвращаем нежелательный перенос в ячейках, если данные длинные */
 }
+
+.custom-table td:last-child,
+/* Для ячеек с действиями, чтобы текст не переносился */
+.custom-table th:last-child {
+    white-space: normal;
+    /* Разрешаем перенос для последней колонки (действия) */
+}
+
 
 .custom-table thead th {
     vertical-align: bottom;
     border-bottom: 2px solid #dee2e6;
-    /* Более жирная линия под заголовками */
     font-weight: 600;
-    /* Полужирный для заголовков */
     color: #495057;
     background-color: #f8f9fa;
-    /* Светло-серый фон для заголовков */
+    white-space: nowrap;
+    /* Заголовки тоже не переносим */
 }
 
-.custom-table tbody tr:nth-of-type(odd) {
-    background-color: rgba(0, 0, 0, 0.02);
-    /* Легкая "зебра" для строк, если нужна */
+/* Убираем верхнюю границу у первой строки, т.к. есть граница у thead */
+.custom-table tbody tr:first-child td {
+    border-top: none;
 }
 
 .custom-table tbody tr:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    /* Подсветка строки при наведении */
+    background-color: rgba(0, 123, 255, 0.05);
+    /* Легкая подсветка при наведении */
 }
 
 .table-empty-message {
     padding: 20px;
     text-align: center;
     color: #6c757d;
-    /* Серый текст */
     font-style: italic;
 }
+
+/* Медиа-запросы для таблиц обычно не нужны, если используется overflow-x.
+   Но если нужно менять display ячеек на block для мобильных, это делается здесь.
+   Для данного проекта, горизонтальная прокрутка - приемлемое решение. */

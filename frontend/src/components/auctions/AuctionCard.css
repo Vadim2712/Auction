@@ -1,19 +1,28 @@
 /* src/components/auctions/AuctionCard.css */
 .auction-card {
+    /* Этот класс используется как основной для карточки аукциона */
     margin-bottom: 20px;
     padding: 20px;
+    /* Если используется <Card>, этот padding может быть в Card.css */
     border: 1px solid #e0e0e0;
+    /* Аналогично */
     border-radius: 8px;
+    /* Аналогично */
     background-color: #fff;
+    /* Аналогично */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    /* Аналогично */
     transition: box-shadow 0.3s ease-in-out;
+    /* Аналогично */
 }
 
 .auction-card:hover {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    /* Аналогично */
 }
 
 .auction-card .card-title {
+    /* Если <Card title="..."> используется, этот селектор может не понадобиться */
     font-size: 1.4rem;
     color: #333;
     margin-bottom: 15px;
@@ -30,11 +39,4 @@
     color: #333;
 }
 
-.auction-card .button {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 8px 16px;
-    font-size: 0.9rem;
-    text-decoration: none;
-    /* Убираем подчеркивание у ссылок-кнопок */
-}
+/* Стили для .button УДАЛЕНЫ - используйте компонент <Button /> */
