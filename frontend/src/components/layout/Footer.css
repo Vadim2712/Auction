@@ -1,16 +1,12 @@
 /* src/components/layout/Footer.css */
 .footer {
     background-color: #343a40;
-    /* Темный фон, как у Bootstrap .bg-dark */
     color: rgba(255, 255, 255, 0.75);
-    /* Светлый текст с небольшой прозрачностью */
     padding: 20px 0;
     text-align: center;
     margin-top: auto;
-    /* Прижимает футер к низу, если основной контент короткий (требует правильной структуры родителя) */
     font-size: 0.9em;
     border-top: 3px solid #007bff;
-    /* Верхняя граница для акцента, цвет как у .btn-primary */
 }
 
 .footer p {
@@ -19,21 +15,16 @@
 
 .footer a {
     color: #ffffff;
-    /* Белый цвет для ссылок */
     text-decoration: none;
 }
 
 .footer a:hover {
     color: #007bff;
-    /* Цвет при наведении, как у .btn-primary */
     text-decoration: underline;
 }
 
 .footer-content {
     max-width: 960px;
-    /* Ограничение ширины контента футера */
     margin: 0 auto;
-    /* Центрирование контента */
     padding: 0 15px;
-    /* Небольшие отступы по бокам */
 }

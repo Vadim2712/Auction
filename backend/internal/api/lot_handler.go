@@ -2,7 +2,7 @@
 package api
 
 import (
-	"auction-app/backend/internal/models" // Убедимся, что models импортированы
+	"auction-app/backend/internal/models"
 	"auction-app/backend/internal/services"
 	"net/http"
 	"strconv"
@@ -147,7 +147,7 @@ func (h *LotHandler) UpdateLotDetails(c *gin.Context) {
 		return
 	}
 
-	var input models.UpdateLotInput // Используем models.UpdateLotInput
+	var input models.UpdateLotInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Некорректные входные данные для обновления лота: " + err.Error()})
 		return

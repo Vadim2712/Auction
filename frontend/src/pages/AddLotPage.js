@@ -20,7 +20,7 @@ const AddLotPage = () => {
     });
     const [auctionName, setAuctionName] = useState('');
     const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState(''); // Для сообщения об успехе
+    const [successMessage, setSuccessMessage] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [loadingAuction, setLoadingAuction] = useState(true);
 
@@ -76,7 +76,7 @@ const AddLotPage = () => {
             setSuccessMessage('Лот успешно добавлен! Вы будете перенаправлены на страницу аукциона.');
             setTimeout(() => {
                 navigate(`/auctions/${auctionId}`);
-            }, 2000); // Небольшая задержка, чтобы пользователь увидел сообщение
+            }, 2000);
 
         } catch (err) {
             console.error("Ошибка добавления лота:", err);
@@ -89,7 +89,7 @@ const AddLotPage = () => {
     if (loadingAuction) {
         return <Loader text="Загрузка информации об аукционе..." />;
     }
-    if (error && !auctionName) { // Если ошибка загрузки аукциона и имя не получено
+    if (error && !auctionName) {
         return <div className="container"><Alert message={error} type="danger" /></div>;
     }
 
@@ -101,7 +101,6 @@ const AddLotPage = () => {
             <form onSubmit={handleSubmit} className="form-container">
                 {error && <Alert message={error} type="danger" onClose={() => setError('')} />}
                 {successMessage && <Alert message={successMessage} type="success" />}
-                {/* onClose для success не нужен, т.к. будет редирект */}
 
                 <Input
                     label="Название предмета*"

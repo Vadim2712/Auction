@@ -8,18 +8,15 @@
 
 .status-active {
     color: #28a745;
-    /* Зеленый */
     font-weight: bold;
 }
 
 .status-inactive {
     color: #dc3545;
-    /* Красный */
     font-weight: bold;
 }
 
 .actions-cell .button-sm {
-    /* Добавим класс для меньших кнопок в таблице */
     padding: 0.25rem 0.5rem;
     font-size: 0.8rem;
     margin-right: 5px;
@@ -30,7 +27,6 @@
 }
 
 
-/* Стили для пагинации */
 .pagination-controls {
     margin-top: 20px;
     text-align: center;
@@ -45,7 +41,6 @@
     vertical-align: middle;
 }
 
-/* Стили для чекбоксов в модальном окне */
 .form-check {
     display: flex;
     align-items: center;
@@ -54,19 +49,14 @@
 
 .form-check-input {
     margin-right: 0.5rem;
-    /* Уменьшим размер чекбокса, если нужно */
-    /* width: 1em; 
-    height: 1em; */
 }
 
 .form-check-label {
     font-weight: normal;
-    /* Убираем жирность с метки чекбокса */
     color: #333;
 }
 
 .error-message {
-    /* Уже может быть в App.css или Alert.css */
     color: #721c24;
     background-color: #f8d7da;
     border-color: #f5c6cb;

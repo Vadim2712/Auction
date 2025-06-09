@@ -35,7 +35,6 @@ func (s *UserService) GetAllUsers(page, pageSize int, roleFilter string) ([]mode
 	if err != nil {
 		return nil, 0, fmt.Errorf("ошибка получения списка пользователей: %w", err)
 	}
-	// Пароли уже очищены в userStore.GetAllUsers
 	return users, total, nil
 }
 
@@ -85,11 +84,9 @@ func (s *UserService) UpdateUserAvailableRoles(userID uint, roles []string, admi
 		return nil, errors.New("нельзя изменить доступные бизнес-роли системному администратору")
 	}
 
-	// Валидация ролей: "auction_manager" больше не является допустимой назначаемой ролью.
 	validBusinessRoles := map[models.UserRole]bool{
 		models.RoleBuyer:  true,
 		models.RoleSeller: true,
-		// models.RoleAuctionManager: true, // Убрано
 	}
 	for _, r := range roles {
 		roleCandidate := models.UserRole(r)

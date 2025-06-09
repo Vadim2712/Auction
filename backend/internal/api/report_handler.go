@@ -124,7 +124,7 @@ func (h *ReportHandler) GetItemsForSaleByDateAndAuction(c *gin.Context) {
 
 	items, err := h.reportService.GetItemsForSaleByDateAndAuction(uint(auctionID), dateStr)
 	if err != nil {
-		if strings.Contains(err.Error(), "не найден") || strings.Contains(err.Error(), "не проводился в дату") { // Добавлена проверка на несоответствие даты
+		if strings.Contains(err.Error(), "не найден") || strings.Contains(err.Error(), "не проводился в дату") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else if strings.Contains(err.Error(), "некорректный формат даты") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -134,8 +134,6 @@ func (h *ReportHandler) GetItemsForSaleByDateAndAuction(c *gin.Context) {
 		return
 	}
 	if len(items) == 0 {
-		// Сообщение из сервиса будет более точным, если аукцион завершен или отменен
-		// Здесь общее сообщение, если сервис вернул пустой список без ошибки выше
 		c.JSON(http.StatusNotFound, gin.H{"message": "Предметы на указанную дату и аукцион не найдены или аукцион неактивен/завершен/отменен."})
 		return
 	}
@@ -173,25 +171,15 @@ func (h *ReportHandler) GetBuyersOfItemsWithSpecificity(c *gin.Context) {
 	})
 }
 
-// GetSellersByItemCategory (переименован из GetSellersReportBySpecificity в main.go и ReportService для соответствия эндпоинту)
-// или это отдельный эндпоинт, тогда нужен отдельный метод в сервисе.
-// Предполагаем, что это тот же отчет, что и GetSellersReportBySpecificity.
-// Если это был эндпоинт /sellers-by-category, то он должен вызывать соответствующий метод сервиса.
-// Для исправления ошибки компиляции, если GetSellersByItemCategory - это отдельный обработчик,
-// он должен вызывать существующий метод, например, GetSellersWithSalesByAuctionSpecificity.
-// Если это разные отчеты, то в ReportService должен быть метод GetSellersByItemCategory.
-// Сейчас ReportService не имеет GetSellersByItemCategory.
-// Изменим этот обработчик, чтобы он вызывал GetSellersWithSalesByAuctionSpecificity,
-// используя "category" как "specificity" и minSales по умолчанию 0.
 func (h *ReportHandler) GetSellersByItemCategory(c *gin.Context) {
-	category := c.Query("category") // "category" будет использоваться как "specificity"
+	category := c.Query("category")
 	if category == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Параметр 'category' (специфика) обязателен"})
 		return
 	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
-	minSalesStr := c.DefaultQuery("minSales", "0") // Добавим возможность передать minSales
+	minSalesStr := c.DefaultQuery("minSales", "0")
 	minSales, _ := strconv.ParseFloat(minSalesStr, 64)
 
 	if page < 1 {
@@ -215,10 +203,6 @@ func (h *ReportHandler) GetSellersByItemCategory(c *gin.Context) {
 		"pagination": gin.H{"currentPage": page, "pageSize": pageSize, "totalItems": total, "totalPages": (total + int64(pageSize) - 1) / int64(pageSize)},
 	})
 }
-
-// GetSellersReportBySpecificity - этот обработчик уже есть, он маппится на /reports/sellers-sales-by-specificity
-// в main.go. Если GetSellersByItemCategory - это псевдоним для него, то один из них не нужен.
-// Оставим этот как основной для /reports/sellers-sales-by-specificity.
 func (h *ReportHandler) GetSellersReportBySpecificity(c *gin.Context) {
 	specificity := c.Query("specificity")
 	minSalesStr := c.DefaultQuery("minSales", "0")

@@ -1,8 +1,8 @@
 package store
 
 import (
-	"auction-app/backend/config"          // Путь к вашему пакету config
-	"auction-app/backend/internal/models" // Путь к вашим моделям
+	"auction-app/backend/config"
+	"auction-app/backend/internal/models"
 	"errors"
 	"fmt"
 	"log"
@@ -12,17 +12,15 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// DB представляет собой экземпляр GORM базы данных
-var DB *gorm.DB // Глобальная переменная для доступа к БД, можно сделать и через DI
+var DB *gorm.DB
 
-// InitDB инициализирует подключение к базе данных и выполняет автомиграции
 func InitDB(cfg *config.Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Europe/Moscow",
 		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
 
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info), // Уровень логирования GORM
+		Logger: logger.Default.LogMode(logger.Info),
 	})
 
 	if err != nil {
@@ -32,11 +30,9 @@ func InitDB(cfg *config.Config) (*gorm.DB, error) {
 
 	log.Println("Database connection established successfully.")
 
-	// Автоматическая миграция схем (создание таблиц на основе моделей)
-	// В реальном проекте лучше использовать отдельные файлы миграций
 	err = DB.AutoMigrate(
 		&models.User{},
-		&models.Auction{}, // Раскомментируйте, когда создадите эти модели
+		&models.Auction{},
 		&models.Lot{},
 		&models.Bid{},
 	)
@@ -49,8 +45,6 @@ func InitDB(cfg *config.Config) (*gorm.DB, error) {
 	return DB, nil
 }
 
-// GetDB возвращает текущий экземпляр БД (если он был инициализирован)
-// Это простой способ доступа, для больших приложений лучше использовать Dependency Injection
 func GetDB() *gorm.DB {
 	if DB == nil {
 		log.Fatal("Database instance is not initialized. Call InitDB first.")
@@ -63,12 +57,11 @@ func SeedSystemAdmin(db *gorm.DB) {
 	err := db.Where("email = ?", "sysadmin@auction.app").First(&existingAdmin).Error
 
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		// Пользователь не найден, создаем его
 		adminUser := models.User{
 			FullName:               "Системный Администратор",
 			Email:                  "sysadmin@auction.app",
 			Role:                   models.RoleSystemAdmin,
-			AvailableBusinessRoles: "[]", // Пустой, т.к. не выбирает бизнес-роль
+			AvailableBusinessRoles: "[]",
 			PassportData:           "0000000000",
 			IsActive:               true,
 		}
@@ -83,10 +76,8 @@ func SeedSystemAdmin(db *gorm.DB) {
 			log.Println("Системный администратор успешно создан.")
 		}
 	} else if err != nil {
-		// Другая ошибка при поиске
 		log.Printf("Ошибка проверки существования системного администратора: %v", err)
 	} else {
-		// Пользователь уже существует
 		log.Println("Системный администратор уже существует.")
 	}
 }

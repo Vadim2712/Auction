@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	// или v5
 )
 
 // AuthMiddleware проверяет JWT токен авторизации
@@ -39,8 +38,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		// Сохраняем ID пользователя и его активную роль в контексте Gin для последующего использования в обработчиках
-		userIDClaim, okID := claims["user_id"].(float64) // JWT парсит числа как float64
+		userIDClaim, okID := claims["user_id"].(float64)
 		userRoleClaim, okRole := claims["role"].(string)
 
 		if !okID || !okRole {
@@ -49,7 +47,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 		}
 
 		c.Set("userID", uint(userIDClaim))
-		c.Set("userRole", userRoleClaim) // Сохраняем активную роль
+		c.Set("userRole", userRoleClaim)
 
 		c.Next()
 	}

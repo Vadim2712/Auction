@@ -19,19 +19,14 @@
 }
 
 .action-card .custom-card-body p {
-    /* Targeting p inside Card's body */
     margin-bottom: 1.5rem;
-    /* More space before the button */
     min-height: 40px;
-    /* To align cards a bit if text length varies */
 }
 
 .action-card .custom-card-title {
-    /* Targeting title inside Card's header */
     color: #0056b3;
 }
 
-/* Ensure buttons inside cards stretch if fullWidth is used */
 .action-card .btn-fullwidth {
     width: 100%;
 }

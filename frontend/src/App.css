@@ -17,7 +17,6 @@ body,
   color: #333;
   font-size: 16px;
   line-height: 1.6;
-  /* Улучшаем читаемость текста */
 }
 
 .main-layout-container {
@@ -30,7 +29,6 @@ body,
   flex-grow: 1;
   padding-top: 20px;
   padding-bottom: 40px;
-  /* Увеличил отступ до футера */
 }
 
 .container {
@@ -39,22 +37,16 @@ body,
   margin-right: auto;
   margin-left: auto;
   padding-right: 20px;
-  /* Немного увеличил боковые отступы */
   padding-left: 20px;
   box-sizing: border-box;
 }
 
-/* src/App.css */
-/* ... (предыдущие стили html, body, #root, main-layout-container, main-content, container) ... */
-
 /* --- Navbar --- */
 .navbar {
   background-color: #343a40;
-  /* Светло-серый фон, как у Bootstrap .bg-light */
   padding: 0.75rem 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   border-bottom: 1px solid #dee2e6;
-  /* Более подходящая граница для светло-серого фона */
   position: sticky;
   top: 0;
   z-index: 1020;
@@ -104,7 +96,6 @@ body,
 
 .navbar-links {
   color: #f8f9fa;
-  /* Темнее для лучшего контраста на светло-сером фоне */
   text-decoration: none;
   font-weight: 500;
   padding: 0.4rem 0.6rem;
@@ -116,9 +107,7 @@ body,
 
 .navbar-links:hover {
   color: #0056b3;
-  /* Темнее при наведении */
   background-color: #e9ecef;
-  /* Более темный фон при наведении */
 }
 
 .navbar-user-greeting {
@@ -132,76 +121,32 @@ body,
 .navbar .logout-button.btn-secondary {
   padding: 0.3rem 0.6rem;
   font-size: 0.85rem;
-  /* Можно изменить цвет кнопки для лучшего сочетания с новым фоном навбара */
-  /* background-color: #6c757d; 
-       color: #fff; */
 }
 
 /* --- Footer --- */
-/* (Стили футера пока без изменений, если они вас устраивают) */
 .footer {
   background-color: #212529;
-  /* Более темный фон для футера */
   color: rgba(255, 255, 255, 0.9);
-  /* Чуть ярче текст */
   text-align: center;
   padding: 2rem 1rem;
-  /* Увеличил вертикальные отступы */
   border-top: 4px solid #007bff;
-  /* Более выраженная верхняя граница */
   margin-top: auto;
   font-size: 0.9em;
 }
 
 .footer p {
   margin-bottom: 0.5rem;
-  /* Увеличил отступ между параграфами */
   line-height: 1.5;
 }
 
 .footer a {
   color: #0096FF;
-  /* Яркий синий для ссылок в футере */
   text-decoration: none;
   font-weight: 500;
-  /* Сделаем ссылки чуть жирнее */
 }
 
 .footer a:hover {
   color: #80caff;
-  /* Светлее при наведении */
-  text-decoration: underline;
-}
-
-.footer-content {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 15px;
-}
-
-
-/* --- Footer --- */
-.footer {
-  background-color: #343a40;
-  color: rgba(255, 255, 255, 0.85);
-  text-align: center;
-  padding: 1.25rem 1rem;
-  border-top: 3px solid #007bff;
-  margin-top: auto;
-  font-size: 0.85em;
-}
-
-.footer p {
-  margin-bottom: 0.3rem;
-}
-
-.footer a {
-  color: #fff;
-  text-decoration: none;
-}
-
-.footer a:hover {
-  color: #007bff;
   text-decoration: underline;
 }
 
@@ -239,7 +184,6 @@ body,
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* Чтобы внутренние элементы не вылезали за рамки border-radius */
 }
 
 .card:hover {
@@ -315,7 +259,6 @@ body,
 
 
 /* --- Адаптивность --- */
-/* Общие стили для сеток */
 .auctions-grid,
 .lots-grid,
 .listings-grid,
@@ -330,11 +273,9 @@ body,
 .listings-grid,
 .admin-actions-grid {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  /* Базовое значение для карточек */
 }
 
 .report-params-form {
-  /* Для формы параметров отчетов */
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
@@ -353,7 +294,6 @@ body,
   .listings-grid,
   .admin-actions-grid {
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    /* Чуть меньше карточки */
   }
 
   .report-params-form {
@@ -374,11 +314,9 @@ body,
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
-    /* Увеличил gap для page-header */
   }
 
   .page-header h1,
-  /* Общий класс для заголовков страниц, если он будет */
   .auctions-list-page h1,
   .my-listings-page h1,
   .my-activity-page h1,

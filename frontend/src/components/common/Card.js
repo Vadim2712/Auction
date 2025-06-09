@@ -1,6 +1,6 @@
 // src/components/common/Card.js
 import React from 'react';
-import './Card.css'; // Создадим стили для Card
+import './Card.css';
 
 const Card = ({ children, className = '', title, footer }) => {
     const cardClasses = `custom-card ${className}`;

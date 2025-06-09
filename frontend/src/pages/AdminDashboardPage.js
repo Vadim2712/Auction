@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
-import './AdminDashboardPage.css'; // Create this for specific dashboard styles
+import './AdminDashboardPage.css';
 
 const AdminDashboardPage = () => {
     return (
@@ -29,16 +29,6 @@ const AdminDashboardPage = () => {
                         </Button>
                     </Link>
                 </Card>
-
-                {/* Future sections can be added here as new cards */}
-                {/* Example:
-                <Card title="Настройки системы" className="action-card">
-                    <p>Глобальные настройки приложения.</p>
-                    <Button variant="secondary" fullWidth disabled>
-                        Настройки (в разработке)
-                    </Button>
-                </Card>
-                */}
             </div>
         </div>
     );

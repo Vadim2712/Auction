@@ -41,7 +41,6 @@ function App() {
             <Route
               path="/profile"
               element={
-                // Доступно всем аутентифицированным пользователям с бизнес-ролью или системному администратору
                 <ProtectedRoute roles={['buyer', 'seller', 'SYSTEM_ADMIN']}>
                   <ProfilePage />
                 </ProtectedRoute>
@@ -50,7 +49,6 @@ function App() {
             <Route
               path="/create-auction"
               element={
-                // Создавать аукционы могут SYSTEM_ADMIN и пользователи с активной ролью 'seller'
                 <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller']}>
                   <CreateAuctionPage />
                 </ProtectedRoute>
@@ -59,7 +57,6 @@ function App() {
             <Route
               path="/auctions/:auctionId/add-lot"
               element={
-                // Добавлять лоты могут SYSTEM_ADMIN и пользователи с активной ролью 'seller'
                 <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller']}>
                   <AddLotPage />
                 </ProtectedRoute>
@@ -68,7 +65,6 @@ function App() {
             <Route
               path="/auctions/:auctionId/lots/:lotId/edit"
               element={
-                // Редактировать лоты могут SYSTEM_ADMIN и пользователи с активной ролью 'seller'
                 <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller']}>
                   <EditLotPage />
                 </ProtectedRoute>
@@ -109,7 +105,6 @@ function App() {
             <Route
               path="/reports"
               element={
-                // Отчеты доступны SYSTEM_ADMIN и пользователям с активной ролью 'seller'
                 <ProtectedRoute roles={['SYSTEM_ADMIN', 'seller']}>
                   <ReportPage />
                 </ProtectedRoute>

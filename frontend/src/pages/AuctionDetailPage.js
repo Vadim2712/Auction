@@ -178,7 +178,7 @@ const AuctionDetailPage = () => {
                             </Link>
                         </div>
                     )}
-                    {auction.status === 'Идет торг' && !isPrivilegedForAuctionManagement && isAuthenticated && ( // Только если аутентифицирован, но не админ/менеджер
+                    {auction.status === 'Идет торг' && !isPrivilegedForAuctionManagement && isAuthenticated && (
                         <p className="auction-in-progress-note">Аукцион активен! Делайте ваши ставки.</p>
                     )}
 
@@ -187,11 +187,9 @@ const AuctionDetailPage = () => {
                         {auction.lots && auction.lots.length > 0 ? (
                             <div className="lots-grid">
                                 {auction.lots.map(lot => {
-                                    // Условия для управления КОНКРЕТНЫМ лотом
                                     const canManageThisSpecificLot = isAuthenticated &&
                                         (lot.status === 'Ожидает торгов' && auction.status === 'Запланирован') &&
                                         (activeRole === 'SYSTEM_ADMIN' || (activeRole === 'seller' && user?.id === lot.sellerId) || (activeRole === 'seller' && user?.id === auction.createdByUserId));
-                                    // Админ может всегда. Продавец-владелец лота может. Продавец-создатель аукциона может.
 
                                     return (
                                         <div key={lot.id} className="lot-wrapper">

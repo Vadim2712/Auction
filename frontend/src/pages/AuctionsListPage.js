@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import Loader from '../components/common/Loader';
 import Alert from '../components/common/Alert';
 import Button from '../components/common/Button';
-import Pagination from '../components/common/Pagination'; // Предполагаем, что создадим этот компонент
+import Pagination from '../components/common/Pagination';
 import './AuctionsListPage.css';
 
 const AuctionsListPage = () => {
@@ -18,7 +18,7 @@ const AuctionsListPage = () => {
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
-        pageSize: 10, // Стандартный размер страницы
+        pageSize: 10,
         totalItems: 0
     });
 
@@ -28,7 +28,7 @@ const AuctionsListPage = () => {
         try {
             const response = await getAllAuctions({ page, pageSize: pagination.pageSize });
             if (response.data && response.data.data) {
-                setAuctions(response.data.data); // Бэкенд возвращает данные в camelCase
+                setAuctions(response.data.data);
                 setPagination(response.data.pagination);
             } else {
                 setAuctions([]);
@@ -42,7 +42,7 @@ const AuctionsListPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [pagination.pageSize]); // Зависимость от pageSize, если он будет меняться
+    }, [pagination.pageSize]);
 
     useEffect(() => {
         if (!authLoading) {
@@ -53,7 +53,6 @@ const AuctionsListPage = () => {
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages && newPage !== pagination.currentPage) {
             setPagination(prev => ({ ...prev, currentPage: newPage }));
-            // useEffect среагирует на изменение pagination.currentPage
         }
     };
 

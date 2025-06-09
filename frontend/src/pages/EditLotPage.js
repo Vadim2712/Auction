@@ -7,7 +7,6 @@ import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Alert from '../components/common/Alert';
 import Loader from '../components/common/Loader';
-// import './EditLotPage.css'; // Если нужны специфичные стили
 
 const EditLotPage = () => {
     const { auctionId, lotId } = useParams();
@@ -19,7 +18,7 @@ const EditLotPage = () => {
         description: '',
         startPrice: '',
     });
-    const [originalLotData, setOriginalLotData] = useState(null); // Для отслеживания изменений
+    const [originalLotData, setOriginalLotData] = useState(null);
     const [auctionName, setAuctionName] = useState('');
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
@@ -79,7 +78,6 @@ const EditLotPage = () => {
             return;
         }
 
-        // Собираем только измененные поля для DTO (UpdateLotInput ожидает указатели)
         const payload = {};
         if (lotData.name !== originalLotData.name) {
             payload.name = lotData.name;
@@ -115,10 +113,10 @@ const EditLotPage = () => {
     if (loadingPage) {
         return <Loader text="Загрузка данных лота для редактирования..." />;
     }
-    if (error && !originalLotData) { // Если ошибка загрузки и данных нет
+    if (error && !originalLotData) {
         return <div className="container"><Alert message={error} type="danger" onClose={() => navigate(`/auctions/${auctionId}`)} /></div>;
     }
-    if (!originalLotData) { // Если нет данных после загрузки (маловероятно, если нет ошибки)
+    if (!originalLotData) {
         return <div className="container"><Alert message="Не удалось загрузить данные лота." type="warning" /></div>;
     }
 

@@ -14,7 +14,6 @@ const (
 	StatusScheduled AuctionStatus = "Запланирован"
 	StatusActive    AuctionStatus = "Идет торг"
 	StatusCompleted AuctionStatus = "Завершен"
-	// Можно добавить другие статусы, например, "Отменен"
 )
 
 // Auction представляет модель аукциона
@@ -22,13 +21,13 @@ type Auction struct {
 	ID              uint           `gorm:"primaryKey;autoIncrement" json:"id"`
 	NameSpecificity string         `gorm:"size:255;not null" json:"nameSpecificity"`
 	DescriptionFull string         `gorm:"type:text" json:"descriptionFull,omitempty"`
-	AuctionDate     time.Time      `gorm:"not null" json:"auctionDate"`        // Только дата
-	AuctionTime     string         `gorm:"size:5;not null" json:"auctionTime"` // Время в формате HH:MM
+	AuctionDate     time.Time      `gorm:"not null" json:"auctionDate"`
+	AuctionTime     string         `gorm:"size:5;not null" json:"auctionTime"`
 	Location        string         `gorm:"size:255;not null" json:"location"`
 	Status          AuctionStatus  `gorm:"type:varchar(50);not null;default:'Запланирован'" json:"status"`
-	CreatedByUserID uint           `gorm:"not null" json:"createdByUserId"`            // ID администратора или менеджера
-	User            User           `gorm:"foreignKey:CreatedByUserID" json:"-"`        // Связь для GORM, не для JSON
-	Lots            []Lot          `gorm:"foreignKey:AuctionID" json:"lots,omitempty"` // Список лотов аукциона
+	CreatedByUserID uint           `gorm:"not null" json:"createdByUserId"`
+	User            User           `gorm:"foreignKey:CreatedByUserID" json:"-"`
+	Lots            []Lot          `gorm:"foreignKey:AuctionID" json:"lots,omitempty"`
 	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updatedAt"`
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
@@ -38,8 +37,8 @@ type Auction struct {
 type CreateAuctionInput struct {
 	NameSpecificity string `json:"nameSpecificity" binding:"required,min=5"`
 	DescriptionFull string `json:"descriptionFull"`
-	AuctionDateStr  string `json:"auctionDate" binding:"required"`       // Дата как строка "YYYY-MM-DD"
-	AuctionTime     string `json:"auctionTime" binding:"required,len=5"` // Время "HH:MM"
+	AuctionDateStr  string `json:"auctionDate" binding:"required"`
+	AuctionTime     string `json:"auctionTime" binding:"required,len=5"`
 	Location        string `json:"location" binding:"required,min=3"`
 }
 
@@ -49,11 +48,10 @@ type UpdateAuctionStatusInput struct {
 }
 
 // UpdateAuctionInput определяет поля, которые можно обновить для аукциона.
-// Используем указатели, чтобы разрешить частичные обновления (только непустые поля учитываются при обновлении).
 type UpdateAuctionInput struct {
 	NameSpecificity *string `json:"nameSpecificity,omitempty"`
 	DescriptionFull *string `json:"descriptionFull,omitempty"`
-	AuctionDateStr  *string `json:"auctionDate,omitempty"` // "YYYY-MM-DD"
-	AuctionTime     *string `json:"auctionTime,omitempty"` // "HH:MM"
+	AuctionDateStr  *string `json:"auctionDate,omitempty"`
+	AuctionTime     *string `json:"auctionTime,omitempty"`
 	Location        *string `json:"location,omitempty"`
 }

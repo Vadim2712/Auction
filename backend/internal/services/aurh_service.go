@@ -38,8 +38,6 @@ func (s *AuthService) RegisterUser(input models.RegisterUserInput) (*models.User
 		return nil, errors.New("пользователь с таким email уже существует")
 	}
 
-	// Обновленные доступные роли по умолчанию: "Менеджер аукциона" убран.
-	// Функции менеджера теперь выполняет "Продавец".
 	availableRoles := []string{string(models.RoleBuyer), string(models.RoleSeller)}
 	availableRolesJSON, errJSON := json.Marshal(availableRoles)
 	if errJSON != nil {
@@ -52,8 +50,8 @@ func (s *AuthService) RegisterUser(input models.RegisterUserInput) (*models.User
 		Email:                  input.Email,
 		AvailableBusinessRoles: string(availableRolesJSON),
 		PassportData:           input.PassportData,
-		Role:                   models.RoleBuyer, // Основная/дефолтная роль при регистрации
-		IsActive:               true,             // Новый пользователь активен по умолчанию
+		Role:                   models.RoleBuyer,
+		IsActive:               true,
 	}
 
 	if err := user.SetPassword(input.Password); err != nil {
@@ -67,7 +65,7 @@ func (s *AuthService) RegisterUser(input models.RegisterUserInput) (*models.User
 	}
 
 	log.Printf("[AuthService] User %s registered successfully with ID %d", user.Email, user.ID)
-	user.PasswordHash = "" // Убираем хеш пароля перед возвратом клиенту
+	user.PasswordHash = ""
 	return &user, nil
 }
 
@@ -106,8 +104,6 @@ func (s *AuthService) LoginUser(input models.LoginInput, chosenRole models.UserR
 			log.Printf("[AuthService] No role chosen for non-admin user: %s", input.Email)
 			return "", nil, "", errors.New("активная роль не была выбрана")
 		}
-		// Роль "auction_manager" больше не выбирается отдельно, ее функции выполняет "seller".
-		// Проверка, что выбранная роль (buyer или seller) действительно доступна пользователю.
 		var availableRoles []string
 		if errUnmarshal := json.Unmarshal([]byte(user.AvailableBusinessRoles), &availableRoles); errUnmarshal != nil {
 			log.Printf("[AuthService] Error unmarshalling AvailableBusinessRoles for user %s: %v. Stored JSON: %s", user.Email, errUnmarshal, user.AvailableBusinessRoles)

@@ -70,9 +70,7 @@
      ```sql
      CREATE DATABASE auction_db;
      CREATE USER auction_user WITH PASSWORD 'auction_password';
-     ALTER DATABASE auction_db OWNER TO auction_user; -- Делаем auction_user владельцем
-     -- Подключитесь к auction_db под auction_user или postgres
-     -- GRANT ALL ON SCHEMA public TO auction_user; -- Если владелец не auction_user
+     ALTER DATABASE auction_db OWNER TO auction_user; 
      ```
      Если `auction_user` является владельцем БД, то права на схему `public` обычно есть. Если нет, их нужно выдать явно, как показано в закомментированной строке (выполнять под владельцем БД или суперпользователем).
 
@@ -100,15 +98,11 @@
    * Установите зависимости:
      ```bash
      npm install
-     # или
-     # yarn install
      ```
    * Убедитесь, что в `frontend/src/services/apiClient.js` переменная `API_BASE_URL` указывает на ваш запущенный бэкенд (`http://localhost:8080/api/v1`).
    * Запустите фронтенд:
      ```bash
      npm start
-     # или
-     # yarn start
      ```
      Фронтенд будет доступен по адресу `http://localhost:3000`.
 

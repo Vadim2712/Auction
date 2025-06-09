@@ -12,7 +12,7 @@ type LotStatus string
 
 const (
 	StatusPending   LotStatus = "Ожидает торгов"
-	StatusLotActive LotStatus = "Идет торг" // Используем другое имя, чтобы не конфликтовало с AuctionStatus
+	StatusLotActive LotStatus = "Идет торг"
 	StatusSold      LotStatus = "Продан"
 	StatusUnsold    LotStatus = "Не продан"
 )
@@ -20,21 +20,21 @@ const (
 // Lot представляет модель лота (предмета) на аукционе
 type Lot struct {
 	ID              uint           `gorm:"primaryKey;autoIncrement" json:"id"`
-	AuctionID       uint           `gorm:"not null;index" json:"auctionId"` // Внешний ключ на Auction
-	LotNumber       int            `gorm:"not null" json:"lotNumber"`       // Порядковый номер лота в рамках аукциона
+	AuctionID       uint           `gorm:"not null;index" json:"auctionId"`
+	LotNumber       int            `gorm:"not null" json:"lotNumber"`
 	Name            string         `gorm:"size:255;not null" json:"name"`
 	Description     string         `gorm:"type:text" json:"description,omitempty"`
-	SellerID        uint           `gorm:"not null" json:"sellerId"`     // Внешний ключ на User (Продавец)
-	User            *User          `gorm:"foreignKey:SellerID" json:"-"` // Связь для GORM (Продавец)
+	SellerID        uint           `gorm:"not null" json:"sellerId"`
+	User            *User          `gorm:"foreignKey:SellerID" json:"-"`
 	StartPrice      float64        `gorm:"not null" json:"startPrice"`
 	CurrentPrice    float64        `gorm:"not null" json:"currentPrice"`
-	FinalPrice      *float64       `json:"finalPrice,omitempty"` // Указатель, так как может быть NULL
+	FinalPrice      *float64       `json:"finalPrice,omitempty"`
 	Status          LotStatus      `gorm:"type:varchar(50);not null;default:'Ожидает торгов'" json:"status"`
-	HighestBidderID *uint          `gorm:"index" json:"highestBidderId,omitempty"`                        // Внешний ключ на User (Покупатель), указатель
-	HighestBidder   *User          `gorm:"foreignKey:HighestBidderID" json:"highestBidderInfo,omitempty"` // Для предзагрузки информации о лидере
-	FinalBuyerID    *uint          `gorm:"index" json:"finalBuyerId,omitempty"`                           // Внешний ключ на User (Покупатель), указатель
-	FinalBuyer      *User          `gorm:"foreignKey:FinalBuyerID" json:"finalBuyerInfo,omitempty"`       // Для предзагрузки информации о покупателе
-	Biddings        []Bid          `gorm:"foreignKey:LotID" json:"-"`                                     // Если нужна полная история ставок для лота
+	HighestBidderID *uint          `gorm:"index" json:"highestBidderId,omitempty"`
+	HighestBidder   *User          `gorm:"foreignKey:HighestBidderID" json:"highestBidderInfo,omitempty"`
+	FinalBuyerID    *uint          `gorm:"index" json:"finalBuyerId,omitempty"`
+	FinalBuyer      *User          `gorm:"foreignKey:FinalBuyerID" json:"finalBuyerInfo,omitempty"`
+	Biddings        []Bid          `gorm:"foreignKey:LotID" json:"-"`
 	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"createdAt"`
 	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updatedAt"`
 	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
@@ -48,7 +48,6 @@ type CreateLotInput struct {
 }
 
 // UpdateLotInput определяет поля, которые можно обновить для лота.
-// Используем указатели, чтобы разрешить частичные обновления.
 type UpdateLotInput struct {
 	Name        *string  `json:"name,omitempty"`
 	Description *string  `json:"description,omitempty"`

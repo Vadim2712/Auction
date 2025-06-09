@@ -29,9 +29,6 @@
     border-radius: 4px;
 }
 
-/* Остальные стили .form-container, .form-group, input, textarea, .alert-danger, .button
-   могут быть взяты из глобальных стилей или из CreateAuctionPage.css */
-/* Если нет, добавьте их здесь аналогично CreateAuctionPage.css */
 .form-container {
     background-color: #fff;
     padding: 30px;

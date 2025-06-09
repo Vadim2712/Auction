@@ -10,7 +10,6 @@ import './ProfilePage.css';
 
 const ProfilePage = () => {
     const { currentUser, activeRole, loading: authLoading, authToken } = useAuth();
-    // const { refreshCurrentUser } = useAuth(); // Функция для обновления currentUser в AuthContext после успешного сохранения
 
     const [pageError, setPageError] = useState('');
     const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' });
@@ -20,7 +19,6 @@ const ProfilePage = () => {
 
     const [profileData, setProfileData] = useState({
         fullName: '',
-        // email: '', // Email обычно не редактируется пользователем
         passportData: ''
     });
     const [passwordData, setPasswordData] = useState({
@@ -42,7 +40,6 @@ const ProfilePage = () => {
             setPageError('');
             setProfileData({
                 fullName: currentUser.fullName || '',
-                // email: currentUser.email || '', // Email только для отображения
                 passportData: currentUser.passportData || ''
             });
         }
@@ -76,9 +73,8 @@ const ProfilePage = () => {
                 displayAvailableRoles = rolesArray.map(role => {
                     if (role === 'buyer') return 'Покупатель';
                     if (role === 'seller') return 'Продавец';
-                    // 'auction_manager' не должен появляться для новых пользователей
                     if (role === 'auction_manager') return 'Менеджер аукциона (устар.)';
-                    return role.charAt(0).toUpperCase() + role.slice(1); // Для 'admin' или 'SYSTEM_ADMIN'
+                    return role.charAt(0).toUpperCase() + role.slice(1);
                 }).join(', ');
             } else if (Array.isArray(rolesArray) && rolesArray.length === 0 && (currentUser.role === 'SYSTEM_ADMIN' || activeRole === 'SYSTEM_ADMIN')) {
                 displayAvailableRoles = "N/A (Системный Администратор)";
@@ -96,7 +92,7 @@ const ProfilePage = () => {
         setIsEditingProfile(prev => !prev);
         setIsChangingPassword(false);
         clearFeedback();
-        if (!isEditingProfile && currentUser) { // При переходе в режим редактирования, заполняем форму текущими данными
+        if (!isEditingProfile && currentUser) {
             setProfileData({
                 fullName: currentUser.fullName || '',
                 passportData: currentUser.passportData || ''
@@ -119,24 +115,10 @@ const ProfilePage = () => {
             return;
         }
         setIsSubmitting(true);
-
-        // ЗАГЛУШКА: Имитация API вызова для обновления профиля
-        // В реальном приложении:
-        // try {
-        //     const updatedUserData = await apiClient.updateUserProfile(profileData); // Ожидаем, что API вернет обновленного пользователя
-        //     refreshCurrentUser(updatedUserData); // Обновляем currentUser в AuthContext
-        //     setActionFeedback({type: 'success', message: "Данные профиля успешно обновлены."});
-        //     setIsEditingProfile(false);
-        // } catch (err) {
-        //     setActionFeedback({type: 'danger', message: err.response?.data?.message || err.response?.data?.error || 'Ошибка обновления профиля.'});
-        // } finally {
-        //     setIsSubmitting(false);
-        // }
         console.log("Отправка данных профиля (имитация):", profileData);
         setTimeout(() => {
             setIsSubmitting(false);
             setActionFeedback({ type: 'info', message: "Функционал обновления профиля находится в разработке. Данные не были сохранены." });
-            // setIsEditingProfile(false); // Оставляем форму открытой для демонстрации
         }, 1000);
     };
 
@@ -156,25 +138,10 @@ const ProfilePage = () => {
             return;
         }
         setIsSubmitting(true);
-        // ЗАГЛУШКА: Имитация API вызова для смены пароля
-        // try {
-        //     await apiClient.changePassword(passwordData);
-        //     setActionFeedback({type: 'success', message: "Пароль успешно изменен. Рекомендуется войти в систему заново."});
-        //     setIsChangingPassword(false);
-        //     setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
-        //     // logout(); // Возможно, потребуется разлогинить пользователя
-        //     // navigate('/login');
-        // } catch (err) {
-        //     setActionFeedback({type: 'danger', message: err.response?.data?.message || err.response?.data?.error || 'Ошибка смены пароля.'});
-        // } finally {
-        //    setIsSubmitting(false);
-        // }
         console.log("Отправка данных для смены пароля (имитация):", passwordData);
         setTimeout(() => {
             setIsSubmitting(false);
             setActionFeedback({ type: 'info', message: "Функционал смены пароля находится в разработке. Пароль не был изменен." });
-            // setIsChangingPassword(false); // Оставляем форму открытой
-            // setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
         }, 1000);
     };
 

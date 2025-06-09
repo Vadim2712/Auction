@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Alert from '../components/common/Alert';
-// import './CreateAuctionPage.css'; // Если есть специфичные стили
 
 const CreateAuctionPage = () => {
     const navigate = useNavigate();

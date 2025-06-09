@@ -2,8 +2,6 @@
 
 .hero-section {
     background: linear-gradient(rgba(40, 58, 90, 0.7), rgba(40, 58, 90, 0.7)), url('https://images.unsplash.com/photo-1563170921-26ab458a2253?q=80&w=2070&auto=format&fit=crop') no-repeat center center/cover;
-    /* Вы можете заменить URL на свое фоновое изображение или просто использовать цвет */
-    /* background-color: #283a5a; */
     color: #fff;
     padding: 60px 0;
     text-align: center;
@@ -24,7 +22,6 @@
 }
 
 .hero-button.btn {
-    /* Стилизация кнопки Button.js в hero секции */
     padding: 12px 28px;
     font-size: 1.1rem;
     font-weight: bold;
@@ -41,9 +38,6 @@
     margin-bottom: 30px;
     color: #333;
 }
-
-/* Стили для .auctions-grid уже есть в App.css */
-/* Можно добавить специфичные для главной страницы, если нужно */
 
 @media (max-width: 768px) {
     .hero-title {

@@ -1,8 +1,7 @@
 // src/pages/NotFoundPage.js
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Button from '../components/common/Button'; // Using common Button
-// import './NotFoundPage.css'; // Only if specific styles beyond App.css are needed
+import Button from '../components/common/Button';
 
 const NotFoundPage = () => {
     return (
@@ -13,7 +12,7 @@ const NotFoundPage = () => {
                 Извините, страница, которую вы ищете, не существует или была перемещена.
             </p>
             <Link to="/">
-                <Button variant="primary" className="button-lg"> {/* Assuming Button can take className */}
+                <Button variant="primary" className="button-lg">
                     Вернуться на главную
                 </Button>
             </Link>

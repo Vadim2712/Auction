@@ -9,17 +9,13 @@
     background-clip: border-box;
     border: 1px solid rgba(0, 0, 0, 0.125);
     border-radius: 0.25rem;
-    /* 4px */
     margin-bottom: 1.5rem;
-    /* Соответствует mb-3 в Bootstrap или около того */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    /* Легкая тень, как в App.css .card */
     transition: box-shadow 0.3s ease;
 }
 
 .custom-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    /* Тень при наведении, как в App.css .card:hover */
 }
 
 
@@ -36,19 +32,14 @@
 
 .custom-card-title {
     margin-bottom: 0;
-    /* Убираем нижний отступ у заголовка в .custom-card-header */
     font-size: 1.25rem;
-    /* Как в App.css .card-title */
     font-weight: bold;
-    /* Как в App.css .card-title */
     color: #333;
-    /* Как в App.css .card-title */
 }
 
 .custom-card-body {
     flex: 1 1 auto;
     padding: 1.25rem;
-    /* Соответствует .card-body или .p-3 / .p-4 в Bootstrap */
 }
 
 .custom-card-footer {

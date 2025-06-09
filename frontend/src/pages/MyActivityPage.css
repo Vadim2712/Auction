@@ -79,7 +79,6 @@
     color: #0056b3;
 }
 
-/* Стили для .status и его вариаций .status-lot-* УДАЛЕНЫ - используются из App.css */
 
 .leading-bid-item {
     border-left: 5px solid #28a745;
@@ -90,8 +89,5 @@
 }
 
 .auction-rule-reminder .alert-info {
-    /* Если используется Alert для напоминания */
     margin-top: 20px;
 }
-
-/* Стили для .pagination-controls должны быть в Pagination.css или App.css */

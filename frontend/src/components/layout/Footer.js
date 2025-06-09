@@ -11,7 +11,6 @@ const Footer = () => {
                 <p>
                     Разработано в рамках курсового проекта. <a href="https://github.com/Vadim2712/Auction" target="_blank" rel="noopener noreferrer">GitHub проекта</a>
                 </p>
-                {/* Можете добавить другую информацию или ссылки сюда */}
             </div>
         </footer>
     );

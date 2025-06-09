@@ -25,9 +25,7 @@ const AuctionCard = ({ auction }) => {
 
     return (
         <div className="auction-card card">
-            {/* Используем auction.nameSpecificity вместо auction.name_specificity */}
             <h3 className="card-title">{auction.nameSpecificity || 'Название аукциона отсутствует'}</h3>
-            {/* Используем auction.auctionDate вместо auction.auction_date */}
             <p className="card-text"><strong>Дата проведения:</strong> {formatDate(auction.auctionDate)}</p>
             <p className="card-text"><strong>Время:</strong> {auction.auctionTime || 'Время не указано'}</p>
             <p className="card-text"><strong>Место:</strong> {auction.location || 'Место не указано'}</p>

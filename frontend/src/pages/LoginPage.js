@@ -7,13 +7,12 @@ import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 import Alert from '../components/common/Alert';
 import Loader from '../components/common/Loader';
-// import './LoginPage.css'; // Если есть специфичные стили
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false); // Локальный loading для формы
+    const [isLoading, setIsLoading] = useState(false);
 
     const [loginStep, setLoginStep] = useState(1);
     const [availableRoles, setAvailableRoles] = useState([]);
@@ -40,11 +39,7 @@ const LoginPage = () => {
             setIsLoading(false);
             return;
         }
-        // Мок ролей для не-админа. В реальном приложении бэкенд бы возвращал доступные роли
-        // после проверки логина/пароля, если бы был такой эндпоинт.
-        // Либо /auth/login возвращает их, если роль не указана или неверна.
-        // Наш /auth/login требует роль, поэтому мы даем выбрать ее ДО вызова.
-        const mockAvailableRoles = ['buyer', 'seller']; // 'auction_manager' больше не предлагаем
+        const mockAvailableRoles = ['buyer', 'seller'];
 
         if (email.toLowerCase() === "sysadmin@auction.app") {
             handleFinalLogin('SYSTEM_ADMIN');
@@ -73,7 +68,7 @@ const LoginPage = () => {
         } catch (err) {
             console.error('Ошибка входа на странице LoginPage:', err.response?.data || err.message);
             setError(err.response?.data?.message || err.response?.data?.error || 'Ошибка входа. Проверьте данные и выбранную роль.');
-            if (roleToLoginWith !== 'SYSTEM_ADMIN') { // Возвращаем на шаг 1 только если это был не прямой логин админа
+            if (roleToLoginWith !== 'SYSTEM_ADMIN') {
                 setLoginStep(1);
             }
         } finally {
@@ -105,7 +100,7 @@ const LoginPage = () => {
                         label="Email:"
                         type="email"
                         id="email"
-                        name="email" // Добавлено для согласованности, хотя здесь напрямую используется setEmail
+                        name="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -115,7 +110,7 @@ const LoginPage = () => {
                         label="Пароль:"
                         type="password"
                         id="password"
-                        name="password" // Добавлено
+                        name="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -130,14 +125,14 @@ const LoginPage = () => {
             {loginStep === 2 && (
                 <form onSubmit={handleRoleSubmit} className="form-container">
                     <p>Пользователь: {email}</p>
-                    <div className="form-group-common"> {/* Обертка для select */}
+                    <div className="form-group-common">
                         <label htmlFor="roleSelect">Войти как:</label>
                         <select
                             id="roleSelect"
                             value={selectedRole}
                             onChange={handleRoleSelectChange}
                             required
-                            className="form-control" // Общий класс для полей ввода
+                            className="form-control"
                             disabled={isLoading}
                         >
                             {availableRoles.map(role => (

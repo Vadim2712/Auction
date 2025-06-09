@@ -23,8 +23,6 @@ const MyListingsPage = () => {
         totalItems: 0
     });
 
-    // console.log('[MyListingsPage Render/State Update]', { authLoading, loading, isAuthenticated, user, pageError, listingsLength: listings.length, pagination });
-
     const clearActionFeedback = () => setActionFeedback({ type: '', message: '' });
 
     const fetchListings = useCallback(async (page = 1) => {
@@ -52,8 +50,8 @@ const MyListingsPage = () => {
             console.error("[MyListingsPage] Ошибка загрузки списка лотов продавца:", err);
             const errMsg = err.response?.data?.message || err.response?.data?.error || 'Не удалось загрузить ваши лоты.';
             setPageError(errMsg);
-            setListings([]); // Clear listings on error
-            setPagination({ currentPage: 1, totalPages: 1, pageSize: pagination.pageSize, totalItems: 0 }); // Reset pagination
+            setListings([]);
+            setPagination({ currentPage: 1, totalPages: 1, pageSize: pagination.pageSize, totalItems: 0 });
         } finally {
             setLoading(false);
             console.log('[MyListingsPage] fetchListings finished, local loading set to false.');
@@ -66,8 +64,8 @@ const MyListingsPage = () => {
             if (isAuthenticated && user) {
                 fetchListings(pagination.currentPage);
             } else {
-                setLoading(false); // Stop local loader if not authenticated after auth check
-                if (!isAuthenticated) { // Set error only if definitively not authenticated
+                setLoading(false);
+                if (!isAuthenticated) {
                     setPageError("Пожалуйста, войдите, чтобы просмотреть эту страницу.");
                 }
             }
@@ -84,7 +82,6 @@ const MyListingsPage = () => {
     const handleDeleteLot = async (auctionId, lotId) => {
         if (!window.confirm(`Вы уверены, что хотите удалить лот ID: ${lotId} из аукциона ID: ${auctionId}?`)) return;
         clearActionFeedback();
-        // setActionInProgress(true); // Можно добавить, если есть отдельный индикатор для действия
         try {
             await deleteLot(auctionId, lotId);
             setActionFeedback({ type: 'success', message: "Лот успешно удален." });
@@ -97,7 +94,6 @@ const MyListingsPage = () => {
             console.error("Ошибка удаления лота:", err);
             setActionFeedback({ type: 'danger', message: `Ошибка удаления лота: ${err.response?.data?.message || err.response?.data?.error || err.message}` });
         } finally {
-            // setActionInProgress(false);
         }
     };
 
@@ -114,12 +110,10 @@ const MyListingsPage = () => {
         );
     }
 
-    // Локальный лоадер для данных страницы, если пользователь аутентифицирован
     if (loading && listings.length === 0 && pagination.currentPage === 1) {
         return <div className="container page-loader-container"><Loader text="Загрузка ваших лотов..." /></div>;
     }
 
-    // Ошибка загрузки данных, но пользователь аутентифицирован
     if (pageError && listings.length === 0) {
         return <div className="container"><Alert message={pageError} type="danger" onClose={() => setPageError('')} /></div>;
     }
@@ -127,7 +121,6 @@ const MyListingsPage = () => {
     return (
         <div className="my-listings-page container">
             <h1>Мои выставленные лоты</h1>
-            {/* Показываем ошибку от API, если она есть, даже если какие-то старые данные еще отображаются */}
             {pageError && listings.length > 0 && <Alert message={pageError} type="danger" onClose={() => setPageError('')} />}
             {actionFeedback.message && <Alert message={actionFeedback.message} type={actionFeedback.type} onClose={clearActionFeedback} />}
 

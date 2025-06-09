@@ -2,14 +2,13 @@
 package services
 
 import (
-	"auction-app/backend/internal/models" // Убедимся, что models импортированы
+	"auction-app/backend/internal/models"
 	"auction-app/backend/internal/store"
 	"errors"
 	"fmt"
 	"strings"
 
 	"gorm.io/gorm"
-	// "log" // Для отладки
 )
 
 type LotService struct {

@@ -6,20 +6,20 @@ import Button from '../components/common/Button';
 import Alert from '../components/common/Alert';
 import Loader from '../components/common/Loader';
 import Modal from '../components/common/Modal';
-import Pagination from '../components/common/Pagination'; // Добавим импорт Pagination
+import Pagination from '../components/common/Pagination';
 import './ManageUsersPage.css';
 
 const ManageUsersPage = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [listError, setListError] = useState(''); // Ошибка загрузки списка
+    const [listError, setListError] = useState('');
     const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1, pageSize: 10, totalItems: 0 });
 
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [selectedRolesInModal, setSelectedRolesInModal] = useState([]);
     const [actionInProgress, setActionInProgress] = useState(false);
-    const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' }); // Для ошибок и успеха действий
+    const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' });
 
     const availableBusinessRolesForAssignment = [
         { value: 'buyer', label: 'Покупатель' },
@@ -103,9 +103,6 @@ const ManageUsersPage = () => {
             fetchUsers(pagination.currentPage, pagination.pageSize);
         } catch (err) {
             console.error("Ошибка изменения ролей:", err);
-            // Ошибка будет отображаться в модальном окне, если оно еще открыто,
-            // или как общее сообщение, если модальное окно успело закрыться.
-            // Для согласованности, можно всегда отображать ошибку действия в модальном окне.
             setActionFeedback({ type: 'danger', message: 'Ошибка изменения ролей: ' + (err.response?.data?.message || err.response?.data?.error || err.message) });
         } finally {
             setActionInProgress(false);
@@ -118,7 +115,7 @@ const ManageUsersPage = () => {
         }
     };
 
-    const tableHeaders = [ /* ... как было ... */
+    const tableHeaders = [
         { label: 'ID' }, { label: 'ФИО' }, { label: 'Email' },
         { label: 'Статус' }, { label: 'Доступные роли' }, { label: 'Действия' },
     ];

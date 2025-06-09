@@ -21,7 +21,6 @@ import Pagination from '../components/common/Pagination';
 import './ReportPage.css';
 
 const ReportPage = () => {
-    // Используем activeRole для проверки прав доступа к странице
     const { loading: authLoading, isAuthenticated, activeRole } = useAuth();
     const [loadingReport, setLoadingReport] = useState(false);
     const [error, setError] = useState('');
@@ -114,9 +113,7 @@ const ReportPage = () => {
                 executeReportGeneration(currentReportType, reportParams);
             }
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [reportParams.page, currentReportType]); // Перезапрос при смене страницы или типа отчета (если он пагинируемый)
-
+    }, [reportParams.page, currentReportType]);
 
     const renderReportParamsInputs = () => {
         if (!currentReportType) return null;
@@ -250,14 +247,13 @@ const ReportPage = () => {
         const config = reportsConfig.find(r => r.type === newType);
         if (config && config.paginated) {
             setReportParams(prev => ({ ...prev, page: 1, pageSize: 10 }));
-        } else { // Для непагинируемых отчетов сбрасываем только страницу, pageSize может быть нерелевантен
+        } else {
             setReportParams(prev => ({ ...prev, page: 1 }));
         }
     };
 
     if (authLoading) return <div className="container page-loader-container"><Loader text="Проверка авторизации..." /></div>;
 
-    // Используем activeRole для проверки прав
     if (!isAuthenticated || !(activeRole === 'SYSTEM_ADMIN' || activeRole === 'seller')) {
         return <div className="container"><Alert message="Доступ к этой странице ограничен. Требуется роль Администратора или Продавца." type="danger" /></div>;
     }

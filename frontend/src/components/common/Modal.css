@@ -10,7 +10,6 @@
     align-items: center;
     justify-content: center;
     z-index: 1050;
-    /* Выше большинства элементов */
     overflow-y: auto;
     padding: 20px;
 }
@@ -18,14 +17,12 @@
 .modal-content {
     background-color: #fff;
     border-radius: 0.3rem;
-    /* Bootstrap-like */
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
     position: relative;
     display: flex;
     flex-direction: column;
     width: 100%;
     max-width: 500px;
-    /* Ограничение ширины модального окна */
     margin: 1.75rem auto;
     pointer-events: auto;
     outline: 0;
@@ -70,9 +67,7 @@
     flex: 1 1 auto;
     padding: 1rem;
     max-height: 70vh;
-    /* Ограничение высоты тела модального окна */
     overflow-y: auto;
-    /* Прокрутка для тела, если контент большой */
 }
 
 .modal-footer {
@@ -80,7 +75,6 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    /* Кнопки обычно справа */
     padding: 0.75rem;
     border-top: 1px solid #dee2e6;
     border-bottom-right-radius: calc(0.3rem - 1px);

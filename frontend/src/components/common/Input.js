@@ -1,6 +1,6 @@
 // src/components/common/Input.js
 import React from 'react';
-import './Input.css'; // Создадим стили для Input
+import './Input.css';
 
 const Input = ({
     id,
@@ -16,7 +16,7 @@ const Input = ({
     className = '',
     min,
     step,
-    rows // for textarea
+    rows
 }) => {
     const inputClasses = `form-control ${error ? 'is-invalid' : ''} ${className}`;
     const commonProps = {

@@ -5,7 +5,6 @@
     border: 1px solid transparent;
     border-radius: 0.25rem;
     position: relative;
-    /* For positioning the close button */
 }
 
 .alert-primary {

@@ -9,7 +9,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Config хранит все конфигурационные параметры приложения
 type Config struct {
 	DBHost       string
 	DBPort       int
@@ -21,12 +20,8 @@ type Config struct {
 	JWTExpiresIn int // в часах
 }
 
-// LoadConfig загружает конфигурацию из переменных окружения
-// или из .env файла (если он есть)
 func LoadConfig() (*Config, error) {
-	// Загружаем .env файл, если он существует в корне бэкенд-проекта
-	// Файл .env не должен попадать в систему контроля версий!
-	err := godotenv.Load() // Путь по умолчанию ".env"
+	err := godotenv.Load()
 	if err != nil {
 		log.Println("Warning: .env file not found, loading config from environment variables")
 	}
@@ -45,14 +40,13 @@ func LoadConfig() (*Config, error) {
 		DBHost:       getEnv("DB_HOST", "localhost"),
 		DBPort:       dbPort,
 		DBUser:       getEnv("DB_USER", "auction_user"),
-		DBPassword:   getEnv("DB_PASSWORD", "your_db_password"), // Замените на ваш пароль или установите через .env
+		DBPassword:   getEnv("DB_PASSWORD", "your_db_password"),
 		DBName:       getEnv("DB_NAME", "auction_db"),
 		ServerPort:   getEnv("SERVER_PORT", "8080"),
-		JWTSecret:    getEnv("JWT_SECRET", "your-very-secret-key-for-jwt"), // ОБЯЗАТЕЛЬНО измените на свой сложный ключ
+		JWTSecret:    getEnv("JWT_SECRET", "your-very-secret-key-for-jwt"),
 		JWTExpiresIn: jwtExpiresIn,
 	}
 
-	// Проверка обязательных параметров
 	if cfg.JWTSecret == "your-very-secret-key-for-jwt" {
 		log.Println("Warning: JWT_SECRET is set to default. Please set a strong secret key in .env or environment variables.")
 	}
@@ -63,7 +57,6 @@ func LoadConfig() (*Config, error) {
 	return cfg, nil
 }
 
-// getEnv получает значение переменной окружения или возвращает значение по умолчанию
 func getEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value

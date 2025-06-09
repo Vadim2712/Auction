@@ -10,10 +10,8 @@ const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Состояние для отслеживания, открыто ли мобильное меню
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // Закрываем меню при каждом переходе на новую страницу
     useEffect(() => {
         setIsMenuOpen(false);
     }, [location]);
@@ -24,7 +22,6 @@ const Navbar = () => {
         navigate('/');
     };
 
-    // Функция для закрытия меню, используется на ссылках
     const closeMobileMenu = () => setIsMenuOpen(false);
 
     return (
@@ -35,13 +32,10 @@ const Navbar = () => {
                     <span className="logo-text">Аукцион Онлайн</span>
                 </div>
 
-                {/* Иконка "Бургер" для мобильных устройств */}
                 <div className="menu-icon" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-                    {/* Для работы иконок нужно подключить Font Awesome в public/index.html */}
                     <i className={isMenuOpen ? 'fas fa-times' : 'fas fa-bars'} />
                 </div>
 
-                {/* Меню, которое будет сворачиваться */}
                 <ul className={isMenuOpen ? 'navbar-menu active' : 'navbar-menu'}>
                     <li className="navbar-item">
                         <Link to="/" className="navbar-links" onClick={closeMobileMenu}>
@@ -94,7 +88,6 @@ const Navbar = () => {
                         </li>
                     )}
 
-                    {/* Кнопка выхода для мобильной версии, появляется внизу списка */}
                     <li className="navbar-item-mobile">
                         {isAuthenticated && (
                             <Button onClick={handleLogout} variant="danger" fullWidth>
@@ -104,7 +97,6 @@ const Navbar = () => {
                     </li>
                 </ul>
 
-                {/* Элементы справа для десктопа (скрываются на мобильных) */}
                 <div className="navbar-user-actions-desktop">
                     {isAuthenticated ? (
                         <Button onClick={handleLogout} variant="secondary" className="logout-button">

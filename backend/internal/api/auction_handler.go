@@ -52,7 +52,6 @@ func (h *AuctionHandler) CreateAuction(c *gin.Context) {
 	}
 	currentUserRole := models.UserRole(currentUserRoleStr)
 
-	// Проверка прав: только системный администратор или продавец (в роли менеджера) могут создавать аукционы
 	if currentUserRole != models.RoleSystemAdmin && currentUserRole != models.RoleSeller {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Недостаточно прав для создания аукциона"})
 		return
@@ -60,7 +59,6 @@ func (h *AuctionHandler) CreateAuction(c *gin.Context) {
 
 	auction, err := h.auctionService.CreateAuction(input, currentUserID)
 	if err != nil {
-		// Проверяем специфичные ошибки из сервиса, если они есть
 		if strings.Contains(err.Error(), "некорректный формат") || strings.Contains(err.Error(), "дата аукциона не может быть в прошлом") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		} else {
@@ -82,7 +80,6 @@ func (h *AuctionHandler) GetAllAuctions(c *gin.Context) {
 	page, _ := strconv.Atoi(pageStr)
 	pageSize, _ := strconv.Atoi(pageSizeStr)
 
-	// Валидация page и pageSize уже есть в сервисе, но можно и здесь для быстрого ответа
 	if page < 1 {
 		page = 1
 	}
@@ -229,7 +226,6 @@ func (h *AuctionHandler) UpdateAuction(c *gin.Context) {
 		if strings.Contains(err.Error(), "не найден") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else if strings.Contains(err.Error(), "недостаточно прав") || strings.Contains(err.Error(), "только запланированные") || strings.Contains(err.Error(), "некорректный формат") {
-			// Используем StatusBadRequest для ошибок валидации данных/формата, StatusForbidden для прав
 			if strings.Contains(err.Error(), "некорректный формат") {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			} else {
@@ -272,7 +268,6 @@ func (h *AuctionHandler) DeleteAuction(c *gin.Context) {
 		if strings.Contains(err.Error(), "не найден") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else if strings.Contains(err.Error(), "недостаточно прав") || strings.Contains(err.Error(), "нельзя удалить") {
-			// StatusForbidden для недостатка прав, StatusBadRequest для нарушения бизнес-правил (нельзя удалить активный)
 			if strings.Contains(err.Error(), "недостаточно прав") {
 				c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 			} else {
@@ -303,7 +298,7 @@ func (h *AuctionHandler) FindAuctionsBySpecificity(c *gin.Context) {
 		pageSize = 10
 	}
 
-	filters := make(map[string]string) // Для FindAuctionsBySpecificity не используем доп. фильтры из query кроме `q`
+	filters := make(map[string]string)
 
 	auctions, total, err := h.auctionService.FindAuctionsBySpecificity(query, page, pageSize, filters)
 	if err != nil {

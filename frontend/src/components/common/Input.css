@@ -1,24 +1,19 @@
 /* src/components/common/Input.css */
 .form-group-common {
     margin-bottom: 1rem;
-    /* Соответствует .form-group из App.css или Bootstrap */
 }
 
 .form-group-common .form-label {
     display: block;
     margin-bottom: 0.5rem;
-    /* Соответствует .form-group label из App.css */
     font-weight: 600;
-    /* Соответствует .form-group label из App.css */
     color: #555;
-    /* Соответствует .form-group label из App.css */
 }
 
 .form-group-common .form-control {
     display: block;
     width: 100%;
     padding: 0.5rem 0.75rem;
-    /* Немного другие отступы, чем в App.css для .button */
     font-size: 1rem;
     font-weight: 400;
     line-height: 1.5;
@@ -26,28 +21,22 @@
     background-color: #fff;
     background-clip: padding-box;
     border: 1px solid #ced4da;
-    /* #ccc в App.css */
     border-radius: 0.25rem;
-    /* #4px в App.css */
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     box-sizing: border-box;
-    /* Добавлено из App.css */
 }
 
 .form-group-common .form-control:focus {
     color: #495057;
     background-color: #fff;
     border-color: #80bdff;
-    /* #007bff в App.css */
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    /* Как в App.css */
 }
 
 .form-group-common .form-control.is-invalid {
     border-color: #dc3545;
     padding-right: calc(1.5em + 0.75rem);
-    /* Место для иконки ошибки, если будет */
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right calc(0.375em + 0.1875rem) center;
@@ -62,23 +51,17 @@
 
 .form-group-common textarea.form-control {
     min-height: calc(1.5em * 3 + 0.75rem * 2 + 2px);
-    /* min-height: 100px; в App.css */
     resize: vertical;
-    /* Как в App.css */
 }
 
 .form-group-common .invalid-feedback {
     display: none;
-    /* По умолчанию скрыто */
     width: 100%;
     margin-top: 0.25rem;
     font-size: 0.875em;
-    /* Соответствует .text-danger */
     color: #dc3545;
-    /* Соответствует .text-danger */
 }
 
 .form-group-common .form-control.is-invalid~.invalid-feedback {
     display: block;
-    /* Показываем, если поле невалидно */
 }

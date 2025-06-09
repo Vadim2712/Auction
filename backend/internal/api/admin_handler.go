@@ -12,7 +12,6 @@ import (
 
 type AdminHandler struct {
 	userService *services.UserService
-	// другие сервисы, если нужны админу
 }
 
 func NewAdminHandler(us *services.UserService) *AdminHandler {
@@ -21,7 +20,6 @@ func NewAdminHandler(us *services.UserService) *AdminHandler {
 
 // GetAllUsers обрабатывает запрос на получение списка всех пользователей (для админа)
 func (h *AdminHandler) GetAllUsers(c *gin.Context) {
-	// Проверка, что это действительно системный администратор (хотя middleware уже должен был сделать это)
 	userRoleVal, _ := c.Get("userRole")
 	currentUserRole := models.UserRole(userRoleVal.(string))
 	if currentUserRole != models.RoleSystemAdmin {
@@ -31,7 +29,7 @@ func (h *AdminHandler) GetAllUsers(c *gin.Context) {
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
-	roleFilter := c.Query("role") // Фильтр по основной роли (buyer, seller, auction_manager)
+	roleFilter := c.Query("role")
 
 	if page < 1 {
 		page = 1

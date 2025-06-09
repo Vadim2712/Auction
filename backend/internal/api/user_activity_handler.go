@@ -35,18 +35,14 @@ func (h *UserActivityHandler) GetMyActivity(c *gin.Context) {
 		return
 	}
 
-	// Получаем параметры пагинации из query
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
 	if page < 1 {
 		page = 1
 	}
-	if pageSize < 1 || pageSize > 50 { // Ограничим максимальный размер страницы для этого запроса
+	if pageSize < 1 || pageSize > 50 {
 		pageSize = 10
 	}
-
-	// Проверка роли не так важна здесь, так как пользователь запрашивает свои собственные данные.
-	// Любой аутентифицированный пользователь может запросить свою активность.
 
 	activity, err := h.activityService.GetMyActivity(userID, page, pageSize)
 	if err != nil {
@@ -54,13 +50,6 @@ func (h *UserActivityHandler) GetMyActivity(c *gin.Context) {
 		return
 	}
 
-	// activityService.GetMyActivity теперь возвращает UserActivityOutput, который уже содержит пагинацию, если она там реализована
-	// Если пагинация не реализована в UserActivityOutput, а только данные, то можно обернуть здесь:
-	// c.JSON(http.StatusOK, gin.H{
-	//     "data": activity, // Если activity - это { leadingBids: [], wonLots: [] }
-	//     "pagination": gin.H{ /* ... пагинация ... */ },
-	// })
-	// Но так как мы планировали UserActivityOutput с полем Pagination, то просто:
 	c.JSON(http.StatusOK, activity)
 }
 
@@ -81,9 +70,6 @@ func (h *UserActivityHandler) GetMyListings(c *gin.Context) {
 	}
 	currentUserRole := models.UserRole(currentUserRoleStr)
 
-	// Доступ к "моим лотам" имеют продавцы, менеджеры аукционов (если они тоже могут выставлять лоты от себя)
-	// и системные администраторы (для просмотра лотов любого пользователя, если они запросят свои).
-	// В данном случае, мы проверяем, что у пользователя есть одна из этих активных ролей для доступа к "своим" листингам.
 	if currentUserRole != models.RoleSeller &&
 		currentUserRole != models.RoleSystemAdmin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Доступ к просмотру своих лотов запрещен для вашей текущей активной роли"})
@@ -106,7 +92,7 @@ func (h *UserActivityHandler) GetMyListings(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"data": listings, // listings - это []services.LotWithAuctionInfo
+		"data": listings,
 		"pagination": gin.H{
 			"currentPage": page,
 			"pageSize":    pageSize,

@@ -9,9 +9,9 @@ import (
 // Bid представляет модель ставки на лот
 type Bid struct {
 	ID        uint           `gorm:"primaryKey;autoIncrement" json:"id"`
-	LotID     uint           `gorm:"not null;index" json:"lotId"`                   // Внешний ключ на Lot
-	UserID    uint           `gorm:"not null;index" json:"userId"`                  // Внешний ключ на User (Покупатель)
-	User      User           `gorm:"foreignKey:UserID" json:"bidderInfo,omitempty"` // Для предзагрузки информации о сделавшем ставку
+	LotID     uint           `gorm:"not null;index" json:"lotId"`
+	UserID    uint           `gorm:"not null;index" json:"userId"`
+	User      User           `gorm:"foreignKey:UserID" json:"bidderInfo,omitempty"`
 	BidAmount float64        `gorm:"not null" json:"bidAmount"`
 	BidTime   time.Time      `gorm:"autoCreateTime" json:"bidTime"`
 	CreatedAt time.Time      `gorm:"autoCreateTime" json:"-"`
@@ -22,6 +22,4 @@ type Bid struct {
 // PlaceBidInput структура для данных при размещении ставки
 type PlaceBidInput struct {
 	Amount float64 `json:"amount" binding:"required,gt=0"`
-	// UserID будет браться из токена
-	// LotID и AuctionID из параметров URL
 }

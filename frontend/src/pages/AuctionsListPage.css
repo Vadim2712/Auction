@@ -25,28 +25,21 @@
     margin: 0;
 }
 
-/* Стили для кнопки "Создать новый аукцион" взяты из общих стилей .button */
 .auctions-list-page .button-primary {
-    /* Если хотите специфичный стиль для основной кнопки */
     background-color: #007bff;
-    /* Уже есть в .button */
 }
 
 .auctions-list-page .button-primary:hover {
     background-color: #0056b3;
-    /* Уже есть в .button:hover */
 }
 
 
 .auctions-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    /* Адаптивная сетка */
     gap: 20px;
-    /* Пространство между карточками */
 }
 
-/* Адаптивность для очень маленьких экранов */
 @media (max-width: 600px) {
     .auctions-list-page .page-header {
         flex-direction: column;
@@ -59,6 +52,5 @@
 
     .auctions-grid {
         grid-template-columns: 1fr;
-        /* Одна колонка на маленьких экранах */
     }
 }

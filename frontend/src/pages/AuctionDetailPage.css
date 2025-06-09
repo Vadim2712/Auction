@@ -29,10 +29,6 @@
     color: #212529;
 }
 
-/* Стили для .status (значок статуса аукциона) и его вариаций УДАЛЕНЫ.
-   Используйте <span className="status-badge status-ИМЯ_СТАТУСА_АУКЦИОНА"> в JSX. */
-
-
 .auction-description {
     font-size: 1rem;
     color: #343a40;
@@ -56,7 +52,6 @@
 }
 
 .admin-actions .btn {
-    /* Применяем к компоненту Button */
     margin-right: 10px;
     margin-bottom: 10px;
 }
@@ -122,15 +117,9 @@
 }
 
 .lot-management-actions .button-sm.btn {
-    /* Для компонента Button с классом button-sm */
     padding: 0.25rem 0.6rem !important;
-    /* !important для переопределения, если нужно */
     font-size: 0.8rem !important;
 }
-
-/* Стили для .bid-feedback и его вариаций УДАЛЕНЫ, 
-   так как теперь используется компонент Alert. */
-
 
 @media (max-width: 768px) {
     .auction-header h1 {
@@ -142,7 +131,6 @@
     }
 
     .admin-actions .btn {
-        /* Для компонента Button */
         display: block;
         width: 100%;
         margin-right: 0;
@@ -154,7 +142,6 @@
 }
 
 .page-loader-container {
-    /* Добавлен для единообразия */
     padding-top: 50px;
     text-align: center;
 }

@@ -24,7 +24,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.RegisterUser(input) // 'user' теперь будет использоваться
+	user, err := h.authService.RegisterUser(input)
 	if err != nil {
 		if strings.Contains(err.Error(), "уже существует") {
 			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
@@ -34,16 +34,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// Возвращаем информацию о созданном пользователе (без пароля)
 	userResponse := gin.H{
-		"id":       user.ID, // user.ID теперь используется
+		"id":       user.ID,
 		"fullName": user.FullName,
 		"email":    user.Email,
 		"message":  "Пользователь успешно зарегистрирован. Пожалуйста, войдите.",
-		// "role": user.Role, // Основная роль, если нужно
-		// "availableBusinessRoles": user.AvailableBusinessRoles, // Если нужно вернуть доступные роли
 	}
-	c.JSON(http.StatusCreated, userResponse) // Используем userResponse
+	c.JSON(http.StatusCreated, userResponse)
 }
 
 type LoginInputWithRole struct {
@@ -68,11 +65,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		}
 		return
 	}
-	// user.PasswordHash уже должен быть "" из сервиса
 	c.JSON(http.StatusOK, gin.H{
 		"token":      token,
-		"user":       userFromService,       // userFromService уже без хеша пароля
-		"activeRole": activeRoleFromService, // Используем роль, определенную сервисом
+		"user":       userFromService,
+		"activeRole": activeRoleFromService,
 	})
 }
 

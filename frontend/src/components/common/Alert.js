@@ -1,6 +1,6 @@
 // src/components/common/Alert.js
 import React from 'react';
-import './Alert.css'; // Создадим стили для Alert
+import './Alert.css';
 
 const Alert = ({ message, type = 'info', onClose }) => {
     if (!message) {

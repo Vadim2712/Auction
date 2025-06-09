@@ -27,18 +27,4 @@ const Table = ({ headers, data, renderRow, className = '', emptyMessage = "Не�
     );
 };
 
-// Определяем PropTypes для лучшей документации и проверки типов
-// import PropTypes from 'prop-types';
-// Table.propTypes = {
-//     headers: PropTypes.arrayOf(PropTypes.shape({
-//         key: PropTypes.string.isRequired, // Не используется в текущей реализации рендера, но полезно для структуры
-//         label: PropTypes.string.isRequired,
-//     })).isRequired,
-//     data: PropTypes.array.isRequired,
-//     renderRow: PropTypes.func.isRequired,
-//     className: PropTypes.string,
-//     emptyMessage: PropTypes.string,
-// };
-
-
 export default Table;

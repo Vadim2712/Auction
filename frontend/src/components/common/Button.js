@@ -1,6 +1,6 @@
 // src/components/common/Button.js
 import React from 'react';
-import './Button.css'; // Создадим стили для кнопки
+import './Button.css';
 
 const Button = ({ children, onClick, type = 'button', variant = 'primary', disabled = false, fullWidth = false, className = '' }) => {
     const buttonClasses = `

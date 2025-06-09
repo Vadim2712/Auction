@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"auction-app/backend/config" // Путь к вашему пакету config
+	"auction-app/backend/config"
 	"errors"
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4" // или v5, если используете ее
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // GenerateJWT генерирует новый JWT токен для пользователя
@@ -16,7 +16,7 @@ func GenerateJWT(userID uint, userRole string, cfg *config.Config) (string, erro
 	claims := &jwt.MapClaims{
 		"authorized": true,
 		"user_id":    userID,
-		"role":       userRole, // Добавляем роль в токен (это будет активная роль)
+		"role":       userRole,
 		"exp":        expirationTime.Unix(),
 	}
 

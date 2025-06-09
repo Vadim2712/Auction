@@ -22,10 +22,10 @@ type User struct {
 	FullName               string         `gorm:"size:255;not null" json:"fullName"`
 	Email                  string         `gorm:"size:255;not null;uniqueIndex" json:"email"`
 	PasswordHash           string         `gorm:"size:255;not null" json:"-"`
-	Role                   UserRole       `gorm:"type:varchar(50);default:'buyer'" json:"role"` // Основная/дефолтная роль, может быть не нужна, если есть AvailableBusinessRoles
-	AvailableBusinessRoles string         `gorm:"type:text" json:"availableBusinessRoles"`      // JSON массив строк ['buyer', 'seller', 'auction_manager']
+	Role                   UserRole       `gorm:"type:varchar(50);default:'buyer'" json:"role"`
+	AvailableBusinessRoles string         `gorm:"type:text" json:"availableBusinessRoles"`
 	PassportData           string         `gorm:"size:255" json:"passportData,omitempty"`
-	IsActive               bool           `gorm:"not null;default:true" json:"isActive"` // <--- НОВОЕ ПОЛЕ для блокировки
+	IsActive               bool           `gorm:"not null;default:true" json:"isActive"`
 	RegistrationDate       time.Time      `gorm:"autoCreateTime" json:"registrationDate"`
 	CreatedAt              time.Time      `gorm:"autoCreateTime" json:"-"`
 	UpdatedAt              time.Time      `gorm:"autoUpdateTime" json:"-"`
@@ -52,9 +52,8 @@ func (u *User) CheckPassword(password string) bool {
 type RegisterUserInput struct {
 	FullName     string `json:"fullName" binding:"required"`
 	Email        string `json:"email" binding:"required,email"`
-	Password     string `json:"password" binding:"required,min=6"` // Валидация на стороне Gin
+	Password     string `json:"password" binding:"required,min=6"`
 	PassportData string `json:"passportData" binding:"required"`
-	// Роль при регистрации может быть установлена по умолчанию или передаваться
 }
 
 // LoginInput структура для данных при входе пользователя
@@ -65,12 +64,12 @@ type LoginInput struct {
 
 // UpdateUserStatusInput структура для обновления статуса пользователя (активен/заблокирован)
 type UpdateUserStatusInput struct {
-	IsActive bool `json:"isActive"` // Не используем указатель, т.к. false - это валидное значение
+	IsActive bool `json:"isActive"`
 }
 
 // UpdateUserRolesInput структура для обновления доступных бизнес-ролей пользователя
 type UpdateUserRolesInput struct {
-	AvailableBusinessRoles []string `json:"availableBusinessRoles" binding:"required"` // Массив строк
+	AvailableBusinessRoles []string `json:"availableBusinessRoles" binding:"required"`
 }
 
 type SellerSalesReport struct {

@@ -6,7 +6,7 @@ import AuctionCard from '../components/auctions/AuctionCard';
 import Loader from '../components/common/Loader';
 import Alert from '../components/common/Alert';
 import Button from '../components/common/Button';
-import './HomePage.css'; // Создадим этот файл для стилей главной страницы
+import './HomePage.css';
 
 const HomePage = () => {
     const [auctions, setAuctions] = useState([]);
@@ -17,7 +17,6 @@ const HomePage = () => {
         setLoading(true);
         setError('');
         try {
-            // Загружаем только 3 последних/предстоящих аукциона для главной страницы
             const response = await getAllAuctions({ page: 1, pageSize: 3 });
             if (response.data && response.data.data) {
                 setAuctions(response.data.data);

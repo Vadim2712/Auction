@@ -6,7 +6,6 @@
     justify-content: center;
     align-items: center;
     font-size: 1rem;
-    /* Базовый размер шрифта для навбара */
     position: sticky;
     top: 0;
     z-index: 999;
@@ -40,7 +39,6 @@
 .logo-icon {
     margin-right: 0.5rem;
     width: 32px;
-    /* Пример размера иконки */
     height: 32px;
 }
 
@@ -55,7 +53,6 @@
 
 .navbar-item {
     height: 80px;
-    /* Высота элемента равна высоте навбара для красивого hover-эффекта */
 }
 
 .navbar-links {
@@ -76,15 +73,12 @@
 
 .menu-icon {
     display: none;
-    /* Скрыт на десктопах */
 }
 
-/* Скрываем мобильные элементы на десктопе */
 .navbar-item-mobile {
     display: none;
 }
 
-/* Показываем десктопные элементы */
 .navbar-user-actions-desktop {
     display: flex;
     align-items: center;
@@ -109,25 +103,19 @@
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
-        /* Начинаем сверху */
         width: 100%;
         height: calc(100vh - 80px);
-        /* Высота минус навбар */
         position: absolute;
         top: 80px;
         left: -100%;
-        /* Скрываем за левым краем */
         opacity: 1;
         transition: all 0.5s ease;
         background: #343a40;
-        /* Белый фон для выпадающего меню */
         padding-top: 2rem;
-        /* Отступ сверху в меню */
     }
 
     .navbar-menu.active {
         left: 0;
-        /* Показываем, выдвигая слева */
         opacity: 1;
         z-index: 1;
     }
@@ -135,7 +123,6 @@
     .navbar-links {
         text-align: center;
         padding: 1.5rem;
-        /* Увеличиваем область клика */
         width: 100%;
         display: table;
     }
@@ -144,16 +131,13 @@
         background-color: #f8f9fa;
         color: #007bff;
         border-bottom: none;
-        /* Убираем нижнюю границу */
     }
 
     .navbar-item {
         width: 100%;
         height: auto;
-        /* Высота по контенту */
     }
 
-    /* Показываем и стилизуем "бургер" */
     .menu-icon {
         display: block;
         position: absolute;
@@ -164,7 +148,6 @@
         cursor: pointer;
     }
 
-    /* Иконка 'крестик' (fa-times) или 'бургер' (fa-bars) из Font Awesome */
     .fa-times {
         color: #adadad;
     }
@@ -173,24 +156,20 @@
         color: #adadad;
     }
 
-    /* Скрываем десктопные элементы на мобильных */
     .navbar-user-actions-desktop {
         display: none;
     }
 
-    /* Показываем мобильные кнопки внизу меню */
     .navbar-item-mobile {
         display: block;
         text-align: center;
         margin-top: auto;
-        /* Прижимает к низу */
         padding: 2rem 0;
         width: 100%;
     }
 
     .navbar-item-mobile .btn {
         width: 80%;
-        /* Кнопки не на всю ширину для красоты */
         max-width: 250px;
     }
 

@@ -7,23 +7,20 @@ import (
 	"errors"
 	"fmt"
 	"time"
-	// "log" // Uncomment for debugging if needed
 )
 
 // AuctionService provides business logic for auction operations.
 type AuctionService struct {
 	auctionStore store.AuctionStore
-	lotStore     store.LotStore // Needed for updating lot statuses when an auction completes
+	lotStore     store.LotStore
 }
 
-// NewAuctionService creates a new instance of AuctionService.
+// NewAuctionService создает новый экземпляр AuctionService.
 func NewAuctionService(as store.AuctionStore, ls store.LotStore) *AuctionService {
 	return &AuctionService{auctionStore: as, lotStore: ls}
 }
 
-// CreateAuction handles the business logic for creating a new auction.
-// Права на создание проверяются в обработчике (api/auction_handler.go).
-// Здесь сервис просто выполняет создание, если вызван.
+// CreateAuction обрабатывает бизнес-логику для создания нового аукциона.
 func (s *AuctionService) CreateAuction(input models.CreateAuctionInput, createdByUserID uint) (*models.Auction, error) {
 	parsedDate, err := time.Parse("2006-01-02", input.AuctionDateStr)
 	if err != nil {
@@ -32,8 +29,6 @@ func (s *AuctionService) CreateAuction(input models.CreateAuctionInput, createdB
 	if len(input.AuctionTime) != 5 || input.AuctionTime[2] != ':' {
 		return nil, errors.New("некорректный формат времени (ожидается ЧЧ:ММ)")
 	}
-	// Дополнительная валидация (например, дата аукциона не в прошлом) может быть добавлена здесь.
-	// Например: if parsedDate.Before(time.Now().Truncate(24 * time.Hour)) { return nil, errors.New("дата аукциона не может быть в прошлом") }
 
 	auction := models.Auction{
 		NameSpecificity: input.NameSpecificity,
@@ -41,7 +36,7 @@ func (s *AuctionService) CreateAuction(input models.CreateAuctionInput, createdB
 		AuctionDate:     parsedDate,
 		AuctionTime:     input.AuctionTime,
 		Location:        input.Location,
-		Status:          models.StatusScheduled, // Аукционы по умолчанию "Запланирован"
+		Status:          models.StatusScheduled,
 		CreatedByUserID: createdByUserID,
 	}
 
@@ -51,7 +46,7 @@ func (s *AuctionService) CreateAuction(input models.CreateAuctionInput, createdB
 	return &auction, nil
 }
 
-// GetAllAuctions retrieves a paginated list of auctions, possibly filtered.
+// GetAllAuctions возвращает постраничный список аукционов, возможно, с фильтрацией.
 func (s *AuctionService) GetAllAuctions(page, pageSize int, filters map[string]string) ([]models.Auction, int64, error) {
 	if page < 1 {
 		page = 1
@@ -70,7 +65,7 @@ func (s *AuctionService) GetAllAuctions(page, pageSize int, filters map[string]s
 	return auctions, total, nil
 }
 
-// GetAuctionByID retrieves a single auction by its ID, including its lots.
+// GetAuctionByID извлекает информацию об одном аукционе по его идентификатору, включая лоты.
 func (s *AuctionService) GetAuctionByID(id uint) (*models.Auction, error) {
 	auction, err := s.auctionStore.GetAuctionByID(id)
 	if err != nil {
@@ -82,8 +77,7 @@ func (s *AuctionService) GetAuctionByID(id uint) (*models.Auction, error) {
 	return auction, nil
 }
 
-// UpdateAuction handles logic for updating an existing auction's details.
-// Only auctions in 'Scheduled' status can be updated by their creator (if Seller) or a SystemAdmin.
+// UpdateAuction обрабатывает логику для обновления сведений о существующем аукционе.
 func (s *AuctionService) UpdateAuction(auctionID uint, input models.UpdateAuctionInput, currentUserID uint, currentUserRole models.UserRole) (*models.Auction, error) {
 	auction, err := s.auctionStore.GetAuctionByID(auctionID)
 	if err != nil {
@@ -96,7 +90,7 @@ func (s *AuctionService) UpdateAuction(auctionID uint, input models.UpdateAuctio
 	canUpdate := false
 	if currentUserRole == models.RoleSystemAdmin {
 		canUpdate = true
-	} else if (currentUserRole == models.RoleSeller) && (auction.CreatedByUserID == currentUserID) { // Продавец (создатель) может редактировать
+	} else if (currentUserRole == models.RoleSeller) && (auction.CreatedByUserID == currentUserID) {
 		canUpdate = true
 	}
 
@@ -137,14 +131,13 @@ func (s *AuctionService) UpdateAuction(auctionID uint, input models.UpdateAuctio
 	return auction, nil
 }
 
-// UpdateAuctionStatus handles the logic for changing an auction's status.
-// Includes logic for updating lot statuses when an auction is completed.
+// UpdateAuctionStatus обрабатывает логику изменения статуса аукциона.
 func (s *AuctionService) UpdateAuctionStatus(auctionID uint, newStatus models.AuctionStatus, currentUserID uint, currentUserRole models.UserRole) (*models.Auction, error) {
-	if currentUserRole != models.RoleSystemAdmin && currentUserRole != models.RoleSeller { // Продавец может менять статус
+	if currentUserRole != models.RoleSystemAdmin && currentUserRole != models.RoleSeller {
 		return nil, errors.New("недостаточно прав для изменения статуса аукциона")
 	}
 
-	auction, err := s.auctionStore.GetAuctionByID(auctionID) // GetAuctionByID должен предзагружать Lots
+	auction, err := s.auctionStore.GetAuctionByID(auctionID)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка получения аукциона для смены статуса: %w", err)
 	}
@@ -153,7 +146,7 @@ func (s *AuctionService) UpdateAuctionStatus(auctionID uint, newStatus models.Au
 	}
 
 	if auction.Status == newStatus {
-		return auction, nil // Статус не изменился
+		return auction, nil
 	}
 	if auction.Status == models.StatusCompleted && newStatus != models.StatusCompleted {
 		return nil, errors.New("нельзя изменить статус уже завершенного аукциона (кроме как на 'Завершен' повторно)")
@@ -165,46 +158,39 @@ func (s *AuctionService) UpdateAuctionStatus(auctionID uint, newStatus models.Au
 	var lotsToUpdateInStore []models.Lot
 
 	if newStatus == models.StatusCompleted && auction.Status == models.StatusActive {
-		lotsWonByUsersOnThisAuction := make(map[uint]uint) // userID -> lotID (первого выигранного лота)
-
-		// Создаем изменяемую копию лотов для обновления
+		lotsWonByUsersOnThisAuction := make(map[uint]uint)
 		currentLots := make([]models.Lot, len(auction.Lots))
-		copy(currentLots, auction.Lots) // Копируем содержимое
+		copy(currentLots, auction.Lots)
 
 		for i := range currentLots {
-			lot := &currentLots[i] // Работаем с указателем для модификации копии
+			lot := &currentLots[i]
 
 			if (lot.Status == models.StatusLotActive || lot.Status == models.StatusPending) && lot.HighestBidderID != nil {
 				buyerID := *lot.HighestBidderID
 				if _, alreadyWon := lotsWonByUsersOnThisAuction[buyerID]; alreadyWon {
-					// Покупатель уже выиграл другой лот (winningLotID) на этом аукционе.
-					// Текущий лот (lot.ID) становится непроданным для этого покупателя.
 					if lot.Status != models.StatusUnsold {
 						lot.Status = models.StatusUnsold
-						lot.HighestBidderID = nil // Очищаем лидера, так как он не может купить этот лот
-						lot.FinalBuyerID = nil    // Убедимся, что и финальный покупатель очищен
-						lot.FinalPrice = nil      // И финальная цена
+						lot.HighestBidderID = nil
+						lot.FinalBuyerID = nil
+						lot.FinalPrice = nil
 						lotsToUpdateInStore = append(lotsToUpdateInStore, *lot)
 					}
 				} else {
-					// Это первый лот, который этот покупатель выигрывает на этом аукционе
 					lot.Status = models.StatusSold
 					lot.FinalPrice = &lot.CurrentPrice
 					lot.FinalBuyerID = lot.HighestBidderID
-					lotsWonByUsersOnThisAuction[buyerID] = lot.ID // Запоминаем ID выигранного лота
+					lotsWonByUsersOnThisAuction[buyerID] = lot.ID
 					lotsToUpdateInStore = append(lotsToUpdateInStore, *lot)
 				}
 			} else if lot.Status != models.StatusSold && lot.Status != models.StatusUnsold {
-				// Лоты без выигрышных ставок или уже обработанные становятся непроданными (если не были проданы)
 				lot.Status = models.StatusUnsold
-				lot.HighestBidderID = nil // Также очищаем, если не было ставок или ставка была, но лот стал непроданным
+				lot.HighestBidderID = nil
 				lot.FinalBuyerID = nil
 				lot.FinalPrice = nil
 				lotsToUpdateInStore = append(lotsToUpdateInStore, *lot)
 			}
 		}
 	} else if newStatus == models.StatusActive && auction.Status == models.StatusScheduled {
-		// При старте аукциона, все лоты со статусом Pending переводятся в LotActive
 		currentLots := make([]models.Lot, len(auction.Lots))
 		copy(currentLots, auction.Lots)
 		for i := range currentLots {
@@ -228,9 +214,7 @@ func (s *AuctionService) UpdateAuctionStatus(auctionID uint, newStatus models.Au
 	return updatedAuction, nil
 }
 
-// DeleteAuction handles logic for deleting an auction.
-// Only auctions in 'Scheduled' or 'Completed' status
-// can be deleted by their creator (if Seller) or a SystemAdmin.
+// DeleteAuction управляет логикой удаления аукциона.
 func (s *AuctionService) DeleteAuction(auctionID uint, currentUserID uint, currentUserRole models.UserRole) error {
 	auction, err := s.auctionStore.GetAuctionByID(auctionID)
 	if err != nil {
@@ -243,21 +227,16 @@ func (s *AuctionService) DeleteAuction(auctionID uint, currentUserID uint, curre
 	canDelete := false
 	if currentUserRole == models.RoleSystemAdmin {
 		canDelete = true
-	} else if (currentUserRole == models.RoleSeller) && (auction.CreatedByUserID == currentUserID) { // Продавец (создатель) может удалять
+	} else if (currentUserRole == models.RoleSeller) && (auction.CreatedByUserID == currentUserID) {
 		canDelete = true
 	}
 	if !canDelete {
 		return errors.New("недостаточно прав для удаления этого аукциона")
 	}
 
-	// Бизнес-правила для удаления (уже частично есть в store.DeleteAuction)
-	// Здесь можно добавить более высокоуровневые проверки, если store.DeleteAuction их не делает.
-	// Например, если store.DeleteAuction не проверяет статус, то проверить здесь:
 	if auction.Status == models.StatusActive {
 		return errors.New("нельзя удалить активный аукцион. Сначала завершите его")
 	}
-	// store.DeleteAuction также содержит проверки на активные/ожидающие лоты
-	// и на статус самого аукциона.
 
 	return s.auctionStore.DeleteAuction(auctionID)
 }

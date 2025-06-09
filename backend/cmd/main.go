@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-	// ... (инициализация cfg, db, stores, services, handlers как было) ...
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Ошибка загрузки конфигурации: %v", err)
@@ -45,7 +44,6 @@ func main() {
 	adminHandler := api.NewAdminHandler(userService)
 
 	router := gin.Default()
-	// Настройка CORS ... (как было)
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"http://localhost:3000"}
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
@@ -66,37 +64,31 @@ func main() {
 		// Общие маршруты для аукционов
 		auctionsBaseRoutes := v1.Group("/auctions")
 		{
-			auctionsBaseRoutes.GET("", auctionHandler.GetAllAuctions)                                 // GET /api/v1/auctions (список всех)
-			auctionsBaseRoutes.GET("/search", auctionHandler.FindAuctionsBySpecificity)               // GET /api/v1/auctions/search
-			auctionsBaseRoutes.POST("", middleware.AuthMiddleware(cfg), auctionHandler.CreateAuction) // POST /api/v1/auctions
+			auctionsBaseRoutes.GET("", auctionHandler.GetAllAuctions)
+			auctionsBaseRoutes.GET("/search", auctionHandler.FindAuctionsBySpecificity)
+			auctionsBaseRoutes.POST("", middleware.AuthMiddleware(cfg), auctionHandler.CreateAuction)
 		}
 
 		// Маршруты для конкретного аукциона /auctions/:auctionId
-		auctionSpecificRoutes := v1.Group("/auctions/:auctionId") // Используем :auctionId как общий параметр
+		auctionSpecificRoutes := v1.Group("/auctions/:auctionId")
 		{
-			auctionSpecificRoutes.GET("", auctionHandler.GetAuctionByID)                                               // GET /api/v1/auctions/:auctionId (детали аукциона)
-			auctionSpecificRoutes.PUT("", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuction)                // PUT /api/v1/auctions/:auctionId (обновить аукцион)
-			auctionSpecificRoutes.PATCH("/status", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuctionStatus) // PATCH /api/v1/auctions/:auctionId/status
-			auctionSpecificRoutes.DELETE("", middleware.AuthMiddleware(cfg), auctionHandler.DeleteAuction)             // DELETE /api/v1/auctions/:auctionId
+			auctionSpecificRoutes.GET("", auctionHandler.GetAuctionByID)
+			auctionSpecificRoutes.PUT("", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuction)
+			auctionSpecificRoutes.PATCH("/status", middleware.AuthMiddleware(cfg), auctionHandler.UpdateAuctionStatus)
+			auctionSpecificRoutes.DELETE("", middleware.AuthMiddleware(cfg), auctionHandler.DeleteAuction)
 
 			// Вложенные маршруты для лотов этого аукциона
-			// /api/v1/auctions/:auctionId/lots
 			lotsForAuctionRoutes := auctionSpecificRoutes.Group("/lots")
 			{
-				lotsForAuctionRoutes.GET("", lotHandler.GetLotsByAuctionID)                         // GET /api/v1/auctions/:auctionId/lots
-				lotsForAuctionRoutes.POST("", middleware.AuthMiddleware(cfg), lotHandler.CreateLot) // POST /api/v1/auctions/:auctionId/lots
+				lotsForAuctionRoutes.GET("", lotHandler.GetLotsByAuctionID)
+				lotsForAuctionRoutes.POST("", middleware.AuthMiddleware(cfg), lotHandler.CreateLot)
 
 				// Маршруты для конкретного лота в рамках аукциона
-				// /api/v1/auctions/:auctionId/lots/:lotId
 				specificLotRoutes := lotsForAuctionRoutes.Group("/:lotId")
 				{
-					// GET /api/v1/auctions/:auctionId/lots/:lotId - можно использовать lotHandler.GetLotByID, но он ожидает только lotId
-					// Если GetLotByID должен работать и здесь, то он должен игнорировать auctionId или проверять соответствие.
-					// Либо создать отдельный хендлер для этого.
-					// Пока оставим GetLotByID на /lots/:lotId
-					specificLotRoutes.PUT("", middleware.AuthMiddleware(cfg), lotHandler.UpdateLotDetails) // PUT /api/v1/auctions/:auctionId/lots/:lotId
-					specificLotRoutes.DELETE("", middleware.AuthMiddleware(cfg), lotHandler.DeleteLot)     // DELETE /api/v1/auctions/:auctionId/lots/:lotId
-					specificLotRoutes.POST("/bids", middleware.AuthMiddleware(cfg), lotHandler.PlaceBid)   // POST /api/v1/auctions/:auctionId/lots/:lotId/bids
+					specificLotRoutes.PUT("", middleware.AuthMiddleware(cfg), lotHandler.UpdateLotDetails)
+					specificLotRoutes.DELETE("", middleware.AuthMiddleware(cfg), lotHandler.DeleteLot)
+					specificLotRoutes.POST("/bids", middleware.AuthMiddleware(cfg), lotHandler.PlaceBid)
 				}
 			}
 		}

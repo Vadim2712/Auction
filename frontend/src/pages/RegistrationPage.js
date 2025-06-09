@@ -1,11 +1,10 @@
 // src/pages/RegistrationPage.js
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // useNavigate здесь не используется, можно убрать если не планируется редирект
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 import Alert from '../components/common/Alert';
-// import './RegistrationPage.css'; // Если есть специфичные стили
 
 const RegistrationPage = () => {
     const [fullName, setFullName] = useState('');
@@ -18,7 +17,6 @@ const RegistrationPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { processRegistration } = useAuth();
-    // const navigate = useNavigate(); // Если редирект не нужен, можно убрать
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -43,9 +41,6 @@ const RegistrationPage = () => {
         }
 
         try {
-            // Используем camelCase для payload, так как AuthContext.processRegistration
-            // передает это в apiClient.registerUser, который ожидает объект,
-            // соответствующий RegisterUserInput на бэкенде (с camelCase JSON тегами).
             const response = await processRegistration({
                 fullName,
                 email,
@@ -53,13 +48,11 @@ const RegistrationPage = () => {
                 password,
             });
             setSuccessMessage(response.message || 'Регистрация прошла успешно! Теперь вы можете войти.');
-            // Очистка формы после успешной регистрации
             setFullName('');
             setEmail('');
             setPassportData('');
             setPassword('');
             setConfirmPassword('');
-            // navigate('/login'); // Опциональный редирект на страницу входа
         } catch (err) {
             console.error('Ошибка регистрации на странице RegistrationPage:', err);
             setError(err.message || err.error || 'Ошибка регистрации. Пожалуйста, попробуйте снова.');

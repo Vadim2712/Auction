@@ -28,7 +28,7 @@ func (s *gormBidStore) GetBidsByLotID(lotID uint, offset, limit int) ([]models.B
 	}
 
 	err := queryBuilder.Order("bid_time DESC").Offset(offset).Limit(limit).
-		Preload("User"). // Пользователь, сделавший ставку
+		Preload("User").
 		Find(&bids).Error
 	return bids, total, err
 }

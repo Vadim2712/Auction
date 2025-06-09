@@ -7,7 +7,6 @@
 }
 
 .report-controls.card {
-    /* Применяем стили карточки к блоку управления */
     padding: 20px;
     margin-bottom: 30px;
 }
@@ -22,12 +21,10 @@
     font-weight: 600;
 }
 
-/* Стили для select.form-control уже должны быть в App.css или Input.css, если Input.js используется для select */
 .report-selection .form-control {
     display: block;
     width: 100%;
     max-width: 450px;
-    /* Ограничим ширину селекта */
     padding: 0.5rem 0.75rem;
     font-size: 1rem;
     line-height: 1.5;
@@ -56,11 +53,9 @@
     gap: 20px;
 }
 
-/* Стили для .form-group-common и .form-control внутри .report-params-form должны наследоваться от Input.css */
 
 .generate-report-btn {
     display: inline-block;
-    /* Чтобы не растягивалась на всю ширину */
     min-width: 200px;
 }
 
@@ -91,7 +86,6 @@
     overflow: auto;
 }
 
-/* Стили для пагинации (можно вынести в общий файл, если еще не сделано) */
 .pagination-controls {
     margin-top: 25px;
     padding-top: 15px;
@@ -100,7 +94,6 @@
 }
 
 .pagination-controls .btn {
-    /* Используем классы Button.js */
     margin: 0 8px;
 }
 

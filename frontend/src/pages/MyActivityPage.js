@@ -10,11 +10,10 @@ import Card from '../components/common/Card';
 import './MyActivityPage.css';
 
 const MyActivityPage = () => {
-    // Исправляем деструктуризацию: currentUser переименовываем в user
     const { currentUser: user, isAuthenticated, loading: authLoading } = useAuth();
     const [activity, setActivity] = useState({ leadingBids: [], wonLots: [] });
-    const [loading, setLoading] = useState(true); // Локальный лоадер для данных активности
-    const [pageError, setPageError] = useState(''); // Переименовано из error для ясности
+    const [loading, setLoading] = useState(true);
+    const [pageError, setPageError] = useState('');
 
     const [pagination, setPagination] = useState({
         currentPage: 1,
@@ -24,10 +23,8 @@ const MyActivityPage = () => {
     });
 
     const fetchActivity = useCallback(async (page = 1) => {
-        // Теперь user здесь будет корректным объектом currentUser
-        if (!user?.id) { // Проверяем наличие user.id перед запросом
+        if (!user?.id) {
             setLoading(false);
-            // setError("Данные пользователя не найдены, не удается загрузить активность."); // Можно не выводить ошибку, если ProtectedRoute уже сработал
             return;
         }
         setLoading(true);
@@ -65,7 +62,7 @@ const MyActivityPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [user, pagination.pageSize]); // Добавляем user в зависимости useCallback
+    }, [user, pagination.pageSize]);
 
     useEffect(() => {
         if (!authLoading) {
@@ -73,9 +70,7 @@ const MyActivityPage = () => {
                 fetchActivity(pagination.currentPage);
             } else {
                 setLoading(false);
-                // Если ProtectedRoute не отработал, setPageError здесь может быть полезен
-                // Но если ProtectedRoute есть, то до этого условия не должно доходить
-                if (!isAuthenticated) { // Явная проверка, если вдруг ProtectedRoute не справился
+                if (!isAuthenticated) {
                     setPageError("Пожалуйста, войдите, чтобы просмотреть эту страницу.");
                 }
             }
@@ -85,26 +80,21 @@ const MyActivityPage = () => {
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages && newPage !== pagination.currentPage) {
             setPagination(prev => ({ ...prev, currentPage: newPage }));
-            // useEffect will react to pagination.currentPage change and call fetchActivity
         }
 
     };
-    // 1. Сначала проверяем глобальную загрузку AuthContext
     if (authLoading) {
         return <div className="container page-loader-container"><Loader text="Проверка сессии..." /></div>;
     }
 
-    // 2. Если AuthContext загрузился, но пользователь не аутентифицирован
     if (!isAuthenticated) {
         return <div className="container"><Alert message={pageError || "Для доступа к этой странице необходимо войти в систему."} type="warning" /></div>;
     }
 
-    // 3. Если пользователь аутентифицирован, но данные страницы еще грузятся (и это первая загрузка)
     if (loading && pagination.currentPage === 1 && activity.leadingBids.length === 0 && activity.wonLots.length === 0) {
         return <div className="container page-loader-container"><Loader text="Загрузка вашей активности..." /></div>;
     }
 
-    // 4. Если есть ошибка загрузки данных страницы (и нет данных для отображения)
     if (pageError && (!activity.leadingBids.length && !activity.wonLots.length)) {
         return <div className="container"><Alert message={pageError} type="danger" onClose={() => setPageError('')} /></div>;
     }
@@ -114,7 +104,6 @@ const MyActivityPage = () => {
     return (
         <div className="my-activity-page container">
             <h1>Моя активность на аукционах</h1>
-            {/* Ошибка, не связанная с загрузкой пустого списка, может быть показана здесь, если fetchActivity ее установит */}
             {pageError && (activity.leadingBids.length > 0 || activity.wonLots.length > 0) &&
                 <Alert message={pageError} type="danger" onClose={() => setPageError('')} />
             }

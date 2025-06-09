@@ -20,9 +20,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange, totalItems }) => {
         }
     };
 
-    // Логика для отображения ограниченного количества номеров страниц (опционально)
-    // Здесь для простоты только кнопки "Назад" и "Вперед" и информация
-
     return (
         <div className="pagination-controls">
             <Button onClick={handlePrevious} disabled={currentPage === 1} variant="secondary">
