@@ -24,13 +24,13 @@
 
 .lot-number {
     font-size: 0.9rem;
-    color: #777;
+    color: #adadad;
     margin-bottom: 10px;
 }
 
 .lot-description {
     font-size: 1rem;
-    color: #555;
+    color: #adadad;
     margin-bottom: 12px;
     min-height: 40px;
 }
@@ -45,9 +45,6 @@
     color: #28a745;
     font-style: italic;
 }
-
-/* Стили для .lot-status-badge и его цветовых вариаций УДАЛЕНЫ. 
-   Используйте <span className="status-badge status-lot-ИМЯ_СТАТУСА"> в JSX. */
 
 .bid-form {
     margin-top: 15px;

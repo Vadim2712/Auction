@@ -49,7 +49,7 @@ body,
 
 /* --- Navbar --- */
 .navbar {
-  background-color: #f8f9fa;
+  background-color: #343a40;
   /* Светло-серый фон, как у Bootstrap .bg-light */
   padding: 0.75rem 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -103,7 +103,7 @@ body,
 
 
 .navbar-links {
-  color: #343a40;
+  color: #f8f9fa;
   /* Темнее для лучшего контраста на светло-сером фоне */
   text-decoration: none;
   font-weight: 500;
@@ -246,8 +246,6 @@ body,
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
-/* --- Общие стили для статусных значков (status badges) --- */
-/* (остаются как были в предыдущем ответе) */
 .status-badge,
 .status {
   display: inline-block;
@@ -293,13 +291,10 @@ body,
 }
 
 .status-lot-не-продан {
-  background-color: #dc3545;
+  background-color: #bf535e;
   color: #fff !important;
 }
 
-
-/* Utility Classes */
-/* (остаются как были) */
 .text-danger {
   color: #dc3545 !important;
   font-size: 0.875em;
@@ -372,61 +367,6 @@ body,
   #root {
     font-size: 15px;
   }
-
-  .navbar {
-    padding: 0.5rem 1rem;
-  }
-
-  .navbar-container {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .navbar-logo {
-    margin-bottom: 0.5rem;
-  }
-
-  .navbar-menu {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .navbar-menu.navbar-user-actions {
-    margin-left: 0;
-    margin-top: 0.5rem;
-  }
-
-  .navbar-item {
-    margin-left: 0;
-    width: 100%;
-  }
-
-  .navbar-links {
-    padding: 0.5rem;
-    border-bottom: 1px solid #f0f0f0;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .navbar-links:hover {
-    background-color: #f8f9fa;
-  }
-
-  .navbar-item:last-child .navbar-links {
-    border-bottom: none;
-  }
-
-  .navbar-user-greeting {
-    margin-right: 0;
-    margin-bottom: 0.5rem;
-  }
-
-  .navbar .logout-button.btn {
-    width: 100%;
-    margin-top: 0.5rem;
-  }
-
 
   .auctions-list-page .page-header,
   .my-listings-page .page-header,

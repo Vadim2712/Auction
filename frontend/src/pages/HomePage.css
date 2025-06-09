@@ -1,0 +1,56 @@
+/* src/pages/HomePage.css */
+
+.hero-section {
+    background: linear-gradient(rgba(40, 58, 90, 0.7), rgba(40, 58, 90, 0.7)), url('https://images.unsplash.com/photo-1563170921-26ab458a2253?q=80&w=2070&auto=format&fit=crop') no-repeat center center/cover;
+    /* Вы можете заменить URL на свое фоновое изображение или просто использовать цвет */
+    /* background-color: #283a5a; */
+    color: #fff;
+    padding: 60px 0;
+    text-align: center;
+}
+
+.hero-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto 2rem auto;
+    line-height: 1.6;
+}
+
+.hero-button.btn {
+    /* Стилизация кнопки Button.js в hero секции */
+    padding: 12px 28px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.featured-auctions {
+    padding: 40px 0;
+}
+
+.featured-auctions h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* Стили для .auctions-grid уже есть в App.css */
+/* Можно добавить специфичные для главной страницы, если нужно */
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+}

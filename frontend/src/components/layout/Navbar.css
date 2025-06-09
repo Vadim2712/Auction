@@ -1,40 +1,204 @@
 /* src/components/layout/Navbar.css */
+.navbar {
+    background: #343a40;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+    /* Базовый размер шрифта для навбара */
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    border-bottom: 1px solid #e9ecef;
+}
 
-/* Базовые стили Navbar, такие как background-color, padding, box-shadow,
-   а также display: flex для .navbar-container и .navbar-menu, 
-   теперь определены в App.css для лучшей адаптивности. */
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px;
+    z-index: 1;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
 
-/* Если есть какие-то очень специфичные стили, которые не должны быть в App.css,
-   их можно оставить здесь. Например, особый вид для .navbar-logo, если он сложнее,
-   или если есть выпадающие меню, которые требуют уникальной стилизации. */
-
-/* Для простоты и избежания конфликтов, если все основные стили адаптивности
-   перенесены в App.css, этот файл может быть почти пустым или содержать
-   только те стили, которые не влияют на общую раскладку (например, специфичные цвета
-   для активных ссылок, если это не сделано через JS). */
-
-/* .navbar-item + .navbar-item {
-    margin-left: 1rem; /* Заменено на margin-left в .navbar-item в App.css */
-/* } */
-
-/* .navbar-brand { */
-/* Заменено на .navbar-logo в App.css */
-/* font-size: 1.5rem;
-    font-weight: bold;
+.navbar-logo {
     color: #333;
-    text-decoration: none; */
-/* } */
-
-/* .nav-link { */
-/* Заменено на .navbar-links в App.css */
-/* color: #555;
+    cursor: pointer;
     text-decoration: none;
-    padding: 0.5rem 1rem;
-    display: block; */
-/* } */
-/* .nav-link:hover { */
-/* color: #007bff; */
-/* } */
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
 
-/* Этот файл может больше не понадобиться, если все стили навбара хорошо покрыты в App.css */
-/* Оставляем его пока, но он может быть кандидатом на удаление, если App.css достаточно. */
+.logo-icon {
+    margin-right: 0.5rem;
+    width: 32px;
+    /* Пример размера иконки */
+    height: 32px;
+}
+
+.navbar-menu {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar-item {
+    height: 80px;
+    /* Высота элемента равна высоте навбара для красивого hover-эффекта */
+}
+
+.navbar-links {
+    color: #343a40;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    padding: 0 1rem;
+    height: 100%;
+    transition: all 0.2s ease-out;
+    font-weight: 500;
+}
+
+.navbar-links:hover {
+    color: #007bff;
+    border-bottom: 3px solid #007bff;
+}
+
+.menu-icon {
+    display: none;
+    /* Скрыт на десктопах */
+}
+
+/* Скрываем мобильные элементы на десктопе */
+.navbar-item-mobile {
+    display: none;
+}
+
+/* Показываем десктопные элементы */
+.navbar-user-actions-desktop {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.login-register-desktop {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.navbar-user-actions-desktop .logout-button.btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+
+/* --- Медиа-запрос для мобильной версии --- */
+@media screen and (max-width: 960px) {
+    .navbar-menu {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        /* Начинаем сверху */
+        width: 100%;
+        height: calc(100vh - 80px);
+        /* Высота минус навбар */
+        position: absolute;
+        top: 80px;
+        left: -100%;
+        /* Скрываем за левым краем */
+        opacity: 1;
+        transition: all 0.5s ease;
+        background: #343a40;
+        /* Белый фон для выпадающего меню */
+        padding-top: 2rem;
+        /* Отступ сверху в меню */
+    }
+
+    .navbar-menu.active {
+        left: 0;
+        /* Показываем, выдвигая слева */
+        opacity: 1;
+        z-index: 1;
+    }
+
+    .navbar-links {
+        text-align: center;
+        padding: 1.5rem;
+        /* Увеличиваем область клика */
+        width: 100%;
+        display: table;
+    }
+
+    .navbar-links:hover {
+        background-color: #f8f9fa;
+        color: #007bff;
+        border-bottom: none;
+        /* Убираем нижнюю границу */
+    }
+
+    .navbar-item {
+        width: 100%;
+        height: auto;
+        /* Высота по контенту */
+    }
+
+    /* Показываем и стилизуем "бургер" */
+    .menu-icon {
+        display: block;
+        position: absolute;
+        top: 0;
+        right: 0;
+        transform: translate(-100%, 60%);
+        font-size: 1.8rem;
+        cursor: pointer;
+    }
+
+    /* Иконка 'крестик' (fa-times) или 'бургер' (fa-bars) из Font Awesome */
+    .fa-times {
+        color: #adadad;
+    }
+
+    .fa-bars {
+        color: #adadad;
+    }
+
+    /* Скрываем десктопные элементы на мобильных */
+    .navbar-user-actions-desktop {
+        display: none;
+    }
+
+    /* Показываем мобильные кнопки внизу меню */
+    .navbar-item-mobile {
+        display: block;
+        text-align: center;
+        margin-top: auto;
+        /* Прижимает к низу */
+        padding: 2rem 0;
+        width: 100%;
+    }
+
+    .navbar-item-mobile .btn {
+        width: 80%;
+        /* Кнопки не на всю ширину для красоты */
+        max-width: 250px;
+    }
+
+    .login-register-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        align-items: center;
+    }
+}
